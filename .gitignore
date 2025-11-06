@@ -1,4 +1,6 @@
-# IntelliJ IDEA
+# Editor directories and files
 *.iml
 .idea/
 out/
+.vscode/*
+!.vscode/extensions.json
