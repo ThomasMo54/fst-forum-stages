@@ -1,9 +1,7 @@
 package fr.fst.forumstages.backend.company;
 
 import fr.fst.forumstages.backend.company.dto.CompanyDto;
-import lombok.AccessLevel;
 import lombok.Data;
-import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 

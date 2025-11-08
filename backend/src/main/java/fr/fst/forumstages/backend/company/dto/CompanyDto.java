@@ -3,22 +3,29 @@ package fr.fst.forumstages.backend.company.dto;
 import fr.fst.forumstages.backend.company.CompanyEntity;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Length;
 
 public record CompanyDto(
     @NotBlank()
     String id,
+
     @NotBlank @Length(max = 100)
     String name,
-    @NotBlank @Email
+
+    @Email
     String contactEmail,
-    @NotBlank @Length(max = 200)
+
+    @Length(max = 200)
     String streetAddress,
-    @NotBlank @Length(max = 100)
+
+    @Length(max = 100)
     String city,
-    @NotBlank @Length(max = 20)
+
+    @Length(max = 20)
     String postalCode,
-    @NotBlank @Length(max = 50)
+
+    @Length(max = 50)
     String country
 ) {
 
