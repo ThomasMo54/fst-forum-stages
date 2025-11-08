@@ -12,7 +12,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class CompanyEntity {
 
     @Id
-    @Setter(AccessLevel.NONE)
     private String id;
 
     private String name;
