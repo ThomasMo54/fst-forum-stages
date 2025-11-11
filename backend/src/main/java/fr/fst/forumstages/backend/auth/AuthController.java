@@ -2,6 +2,8 @@ package fr.fst.forumstages.backend.auth;
 
 import fr.fst.forumstages.backend.auth.dto.AuthResponseDto;
 import fr.fst.forumstages.backend.auth.dto.LoginDto;
+import fr.fst.forumstages.backend.auth.dto.RefreshDto;
+import fr.fst.forumstages.backend.user.UserEntity;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,15 +17,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.NoSuchElementException;
+
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
     private final AuthenticationManager authenticationManager;
 
-    public AuthController(JwtService jwtService, AuthenticationManager authenticationManager) {
+    public AuthController(
+            JwtService jwtService,
+            RefreshTokenService refreshTokenService,
+            AuthenticationManager authenticationManager
+    ) {
         this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
         this.authenticationManager = authenticationManager;
     }
 
@@ -36,11 +46,26 @@ public class AuthController {
             );
             if (authentication.getPrincipal() instanceof UserDetails userDetails) {
                 String token = jwtService.generateToken(userDetails);
-                return ResponseEntity.ok(new AuthResponseDto(token));
+                RefreshTokenEntity refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
+                return ResponseEntity.ok(new AuthResponseDto(token, refreshToken.getToken()));
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    @PostMapping("/refresh")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<AuthResponseDto> refresh(@Valid @RequestBody RefreshDto refreshDto) {
+        String refreshTokenString = refreshDto.refreshToken();
+        RefreshTokenEntity refreshToken = refreshTokenService.findByToken(refreshTokenString)
+                .orElseThrow(() -> new NoSuchElementException("Refresh token not found"));
+        refreshTokenService.verifyExpiration(refreshToken);
+        UserEntity user = refreshToken.getUser();
+        String newAccessToken = jwtService.generateToken(user);
+        refreshTokenService.deleteByUserEmail(user.getEmail());
+        RefreshTokenEntity newRefreshToken = refreshTokenService.createRefreshToken(user.getEmail());
+        return ResponseEntity.ok(new AuthResponseDto(newAccessToken, newRefreshToken.getToken()));
     }
 }

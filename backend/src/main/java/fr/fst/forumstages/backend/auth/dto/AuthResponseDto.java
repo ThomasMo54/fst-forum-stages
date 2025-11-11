@@ -4,5 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 
 public record AuthResponseDto(
     @NotBlank
-    String token
+    String token,
+
+    @NotBlank
+    String refreshToken
 ) {}

@@ -1,5 +1,6 @@
 package fr.fst.forumstages.backend.config;
 
+import fr.fst.forumstages.backend.auth.exception.ExpiredRefreshTokenException;
 import fr.fst.forumstages.backend.error.dto.ErrorResponseDto;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,18 @@ public class GlobalExceptionHandler {
     @ResponseBody
     public ResponseEntity<ErrorResponseDto> duplicateKeyException(DuplicateKeyException ex) {
         return handleException(HttpStatus.CONFLICT, "Resource already exists.");
+    }
+
+    @ExceptionHandler(SecurityException.class)
+    @ResponseBody
+    public ResponseEntity<ErrorResponseDto> securityException(SecurityException ex) {
+        return handleException(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    @ExceptionHandler(ExpiredRefreshTokenException.class)
+    @ResponseBody
+    public ResponseEntity<ErrorResponseDto> expiredRefreshTokenException(ExpiredRefreshTokenException ex) {
+        return handleException(HttpStatus.FORBIDDEN, ex.getMessage());
     }
 
     private ResponseEntity<ErrorResponseDto> handleException(HttpStatus status, String message) {

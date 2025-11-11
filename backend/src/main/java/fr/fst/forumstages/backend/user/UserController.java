@@ -7,6 +7,7 @@ import fr.fst.forumstages.backend.user.dto.UserDto;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,13 +44,27 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public UserDto updateUser(@PathVariable("id") String id, @Valid @RequestBody UpdateUserDto updateUserDto) {
-        UserEntity userEntity = userService.updateUser(id, updateUserDto);
-        return UserDto.fromEntity(userEntity);
+    public UserDto updateUser(@PathVariable("id") String id, @Valid @RequestBody UpdateUserDto updateUserDto, Authentication authentication) {
+        UserEntity userEntity = userService.findById(id);
+        if (!isUserOrAdmin(authentication, userEntity)) {
+            throw new SecurityException("You can only update your own user information");
+        }
+        return UserDto.fromEntity(userService.updateUser(id, updateUserDto));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable("id") String id) {
+    public void deleteUser(@PathVariable("id") String id, Authentication authentication) {
+        UserEntity userEntity = userService.findById(id);
+        if (!isUserOrAdmin(authentication, userEntity)) {
+            throw new SecurityException("You can only update your own user information");
+        }
         userService.deleteUser(id);
+    }
+
+    private boolean isUserOrAdmin(Authentication authentication, UserEntity userEntity) {
+        String authUserEmail = authentication.getName();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ADMIN"));
+        return isAdmin || authUserEmail.equals(userEntity.getEmail());
     }
 }
