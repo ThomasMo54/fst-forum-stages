@@ -4,7 +4,6 @@ import fr.fst.forumstages.backend.company.dto.CompanyDto;
 import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
 import fr.fst.forumstages.backend.company.dto.UpdateCompanyDto;
 import org.springframework.stereotype.Service;
-
 import java.util.NoSuchElementException;
 
 @Service
@@ -24,7 +23,8 @@ public class CompanyService {
                 createCompanyDto.streetAddress(),
                 createCompanyDto.city(),
                 createCompanyDto.postalCode(),
-                createCompanyDto.country()
+                createCompanyDto.country(),
+                null
         );
         CompanyEntity companyEntity = CompanyEntity.fromDto(companyDto);
         return companyRepository.save(companyEntity);

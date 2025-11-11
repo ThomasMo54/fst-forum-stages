@@ -1,10 +1,13 @@
 package fr.fst.forumstages.backend.company.dto;
 
 import fr.fst.forumstages.backend.company.CompanyEntity;
+import fr.fst.forumstages.backend.offer.dto.OfferWithoutCompanyDto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Length;
+
+import java.util.LinkedList;
+import java.util.List;
 
 public record CompanyDto(
     @NotBlank()
@@ -26,7 +29,9 @@ public record CompanyDto(
     String postalCode,
 
     @Length(max = 50)
-    String country
+    String country,
+
+    List<OfferWithoutCompanyDto> offers
 ) {
 
     public static CompanyDto fromEntity(CompanyEntity companyEntity) {
@@ -37,7 +42,8 @@ public record CompanyDto(
             companyEntity.getStreetAddress(),
             companyEntity.getCity(),
             companyEntity.getPostalCode(),
-            companyEntity.getCountry()
+            companyEntity.getCountry(),
+            companyEntity.getPublishedOffers() != null ? companyEntity.getPublishedOffers().stream().map(OfferWithoutCompanyDto::fromEntity).toList() : new LinkedList<>()
         );
     }
 }
