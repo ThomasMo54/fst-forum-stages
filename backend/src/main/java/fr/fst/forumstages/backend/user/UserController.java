@@ -6,6 +6,7 @@ import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
 import fr.fst.forumstages.backend.user.dto.UserDto;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,14 +26,15 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin")
     @ResponseStatus(HttpStatus.CREATED)
     public UserDto createAdminUser(@Valid @RequestBody CreateAdminUserDto createAdminUserDto) {
         UserEntity userEntity = userService.createAdminUser(createAdminUserDto);
         return UserDto.fromEntity(userEntity);
     }
 
-    @PostMapping
+    @PostMapping("/company")
     @ResponseStatus(HttpStatus.CREATED)
     public UserDto createCompanyUser(@Valid @RequestBody CreateCompanyDto createCompanyDto) {
         UserEntity userEntity = userService.createCompanyUser(createCompanyDto);
