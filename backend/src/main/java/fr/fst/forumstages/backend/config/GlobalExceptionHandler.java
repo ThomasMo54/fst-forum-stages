@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateKeyException.class)
     @ResponseBody
     public ResponseEntity<ErrorResponseDto> duplicateKeyException(DuplicateKeyException ex) {
-        return handleException(HttpStatus.CONFLICT, ex.getMessage());
+        return handleException(HttpStatus.CONFLICT, "Resource already exists.");
     }
 
     private ResponseEntity<ErrorResponseDto> handleException(HttpStatus status, String message) {

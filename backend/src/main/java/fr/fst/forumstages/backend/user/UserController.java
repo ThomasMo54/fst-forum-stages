@@ -34,6 +34,7 @@ public class UserController {
         return UserDto.fromEntity(userEntity);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/company")
     @ResponseStatus(HttpStatus.CREATED)
     public UserDto createCompanyUser(@Valid @RequestBody CreateCompanyDto createCompanyDto) {
