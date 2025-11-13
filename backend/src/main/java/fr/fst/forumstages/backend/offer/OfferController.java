@@ -6,6 +6,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/offers")
 public class OfferController {
@@ -22,9 +24,15 @@ public class OfferController {
         return OfferDto.fromEntity(offerEntity);
     }
 
-    @GetMapping
-    public OfferDto findOfferById(String id) {
-        OfferEntity offerEntity = offerService.findOfferById(id);
+    @GetMapping("{/offerId}")
+    public OfferDto findOfferById(@PathVariable String offerId) {
+        OfferEntity offerEntity = offerService.findOfferById(offerId);
         return OfferDto.fromEntity(offerEntity);
+    }
+
+    @GetMapping
+    public List<OfferDto> findAllOffers() {
+        List<OfferEntity> offers = offerService.getAllOffers();
+        return offers.stream().map(OfferDto::fromEntity).toList();
     }
 }

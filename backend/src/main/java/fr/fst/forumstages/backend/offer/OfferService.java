@@ -6,6 +6,7 @@ import fr.fst.forumstages.backend.offer.dto.CreateOfferDto;
 import fr.fst.forumstages.backend.offer.dto.OfferDto;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -46,5 +47,9 @@ public class OfferService {
     public OfferEntity findOfferById(String id) {
         return offerRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException(("Offer with id " + id + " not found")));
+    }
+
+    public List<OfferEntity> getAllOffers() {
+        return offerRepository.findAll();
     }
 }

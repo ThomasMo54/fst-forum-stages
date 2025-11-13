@@ -3,7 +3,10 @@ package fr.fst.forumstages.backend.company;
 import fr.fst.forumstages.backend.company.dto.CompanyDto;
 import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
 import fr.fst.forumstages.backend.company.dto.UpdateCompanyDto;
+import fr.fst.forumstages.backend.offer.OfferEntity;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -61,5 +64,11 @@ public class CompanyService {
     public void deleteCompany(String id) {
         CompanyEntity existingCompany = findCompanyById(id);
         companyRepository.delete(existingCompany);
+    }
+
+    public List<OfferEntity> getCompanyOffers(String companyId) {
+        CompanyEntity company = findCompanyById(companyId);
+
+        return company.getPublishedOffers();
     }
 }
