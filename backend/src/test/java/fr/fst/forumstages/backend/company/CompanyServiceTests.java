@@ -31,6 +31,8 @@ public class CompanyServiceTests {
     @Test
     public void testCreateCompany_success() {
         CreateCompanyDto createCompanyDto = new CreateCompanyDto(
+                "a@b.fr",
+            "12345678",
             "Test Company",
             "a@b.fr",
             null,

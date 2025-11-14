@@ -61,7 +61,7 @@ public class AuthController {
         String refreshTokenString = refreshDto.refreshToken();
         RefreshTokenEntity refreshToken = refreshTokenService.findByToken(refreshTokenString)
                 .orElseThrow(() -> new NoSuchElementException("Refresh token not found"));
-        refreshTokenService.verifyExpiration(refreshToken);
+        refreshToken = refreshTokenService.verifyExpiration(refreshToken);
         UserEntity user = refreshToken.getUser();
         String newAccessToken = jwtService.generateToken(user);
         refreshTokenService.deleteByUserEmail(user.getEmail());

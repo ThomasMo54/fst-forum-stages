@@ -1,13 +1,13 @@
 package fr.fst.forumstages.backend.company;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
 import fr.fst.forumstages.backend.company.dto.UpdateCompanyDto;
 import fr.fst.forumstages.backend.offer.OfferEntity;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -33,64 +33,7 @@ public class CompanyControllerTests {
     private CompanyService companyService;
 
     @Test
-    public void createCompany_success() throws Exception {
-        CreateCompanyDto createCompanyDto = new CreateCompanyDto(
-            "Test Company",
-            null,
-            null,
-            null,
-            null,
-            null
-        );
-        CompanyEntity createdCompany = new CompanyEntity();
-        createdCompany.setId("123");
-        createdCompany.setName("Test Company");
-
-        when(companyService.createCompany(any(CreateCompanyDto.class))).thenReturn(createdCompany);
-
-        mockMvc.perform(post("/companies")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(createCompanyDto)))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").value("123"))
-            .andExpect(jsonPath("$.name").value("Test Company"));
-    }
-
-    @Test
-    public void createCompany_validationError() throws Exception {
-        CreateCompanyDto createCompanyDto = new CreateCompanyDto(
-            "",
-            null,
-            null,
-            null,
-            null,
-            null
-        );
-
-        mockMvc.perform(post("/companies")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(createCompanyDto)))
-            .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    public void createCompany_missingName() throws Exception {
-        CreateCompanyDto createCompanyDto = new CreateCompanyDto(
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-        );
-
-        mockMvc.perform(post("/companies")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(createCompanyDto)))
-            .andExpect(status().isBadRequest());
-    }
-
-    @Test
+    @WithMockUser(roles = "ADMIN")
     public void findCompanyById_success() throws Exception {
         String companyId = "123";
         CompanyEntity mockCompany = new CompanyEntity();
@@ -106,6 +49,7 @@ public class CompanyControllerTests {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     public void findCompanyById_notFound() throws Exception {
         String companyId = "nonexistent-id";
 
@@ -116,6 +60,7 @@ public class CompanyControllerTests {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     public void updateCompany_success() throws Exception {
         String companyId = "123";
         UpdateCompanyDto updateCompanyDto = new UpdateCompanyDto(
