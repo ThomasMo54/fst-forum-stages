@@ -24,7 +24,7 @@ public class OfferController {
         return OfferDto.fromEntity(offerEntity);
     }
 
-    @GetMapping("{/offerId}")
+    @GetMapping("/{offerId}")
     public OfferDto findOfferById(@PathVariable String offerId) {
         OfferEntity offerEntity = offerService.findOfferById(offerId);
         return OfferDto.fromEntity(offerEntity);
