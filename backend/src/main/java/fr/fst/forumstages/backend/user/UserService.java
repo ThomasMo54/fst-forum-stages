@@ -1,7 +1,9 @@
 package fr.fst.forumstages.backend.user;
 
 import fr.fst.forumstages.backend.company.CompanyEntity;
+import fr.fst.forumstages.backend.company.CompanyRepository;
 import fr.fst.forumstages.backend.company.CompanyService;
+import fr.fst.forumstages.backend.company.dto.CompanyDto;
 import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
@@ -14,17 +16,17 @@ import java.util.NoSuchElementException;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final CompanyService companyService;
+    private final CompanyRepository companyRepository;
 
     private final PasswordEncoder passwordEncoder;
 
     public UserService(
             UserRepository userRepository,
-            CompanyService companyService,
+            CompanyRepository companyRepository,
             PasswordEncoder passwordEncoder
     ) {
         this.userRepository = userRepository;
-        this.companyService = companyService;
+        this.companyRepository = companyRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -35,7 +37,16 @@ public class UserService {
 
     public UserEntity createCompanyUser(CreateCompanyDto createCompanyDto) {
         UserEntity userEntity = createUser(createCompanyDto.email(), createCompanyDto.password(), UserRole.COMPANY);
-        CompanyEntity companyEntity = companyService.createCompany(createCompanyDto);
+        CompanyDto companyDto = new CompanyDto(
+                null,
+                createCompanyDto.name(),
+                createCompanyDto.contactEmail(),
+                createCompanyDto.streetAddress(),
+                createCompanyDto.city(),
+                createCompanyDto.postalCode(),
+                createCompanyDto.country()
+        );
+        CompanyEntity companyEntity = companyRepository.save(CompanyEntity.fromDto(companyDto));
         userEntity.setCompany(companyEntity);
         return userRepository.save(userEntity);
     }
@@ -75,7 +86,7 @@ public class UserService {
         UserEntity existingUser = findById(id);
         userRepository.delete(existingUser);
         if (existingUser.getCompany() != null) {
-            companyService.deleteCompany(existingUser.getCompany().getId());
+            companyRepository.delete(existingUser.getCompany());
         }
         // TODO: Add StudentEntity deletion if applicable
     }

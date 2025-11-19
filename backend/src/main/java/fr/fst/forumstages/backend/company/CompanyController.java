@@ -1,10 +1,13 @@
 package fr.fst.forumstages.backend.company;
 
+import fr.fst.forumstages.backend.company.annotation.IsAdminOrCompanyOwner;
 import fr.fst.forumstages.backend.company.dto.CompanyDto;
 import fr.fst.forumstages.backend.company.dto.UpdateCompanyDto;
 import fr.fst.forumstages.backend.offer.OfferEntity;
 import fr.fst.forumstages.backend.offer.dto.OfferDto;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +28,7 @@ public class CompanyController {
         return CompanyDto.fromEntity(companyEntity);
     }
 
+    @IsAdminOrCompanyOwner
     @PutMapping("/{id}")
     public CompanyDto updateCompany(@PathVariable("id") String id, @Valid @RequestBody UpdateCompanyDto updateCompanyDto) {
         CompanyEntity companyEntity = companyService.updateCompany(id, updateCompanyDto);

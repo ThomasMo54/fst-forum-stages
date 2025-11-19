@@ -1,6 +1,7 @@
 package fr.fst.forumstages.backend.user;
 
 import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
+import fr.fst.forumstages.backend.user.annotation.IsAdminOrUserOwner;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
 import fr.fst.forumstages.backend.user.dto.UserDto;
@@ -43,28 +44,15 @@ public class UserController {
         return UserDto.fromEntity(userEntity);
     }
 
+    @IsAdminOrUserOwner
     @PutMapping("/{id}")
-    public UserDto updateUser(@PathVariable("id") String id, @Valid @RequestBody UpdateUserDto updateUserDto, Authentication authentication) {
-        UserEntity userEntity = userService.findById(id);
-        if (!isUserOrAdmin(authentication, userEntity)) {
-            throw new SecurityException("You can only update your own user information");
-        }
+    public UserDto updateUser(@PathVariable("id") String id, @Valid @RequestBody UpdateUserDto updateUserDto) {
         return UserDto.fromEntity(userService.updateUser(id, updateUserDto));
     }
 
+    @IsAdminOrUserOwner
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable("id") String id, Authentication authentication) {
-        UserEntity userEntity = userService.findById(id);
-        if (!isUserOrAdmin(authentication, userEntity)) {
-            throw new SecurityException("You can only update your own user information");
-        }
+    public void deleteUser(@PathVariable("id") String id) {
         userService.deleteUser(id);
-    }
-
-    private boolean isUserOrAdmin(Authentication authentication, UserEntity userEntity) {
-        String authUserEmail = authentication.getName();
-        boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ADMIN"));
-        return isAdmin || authUserEmail.equals(userEntity.getEmail());
     }
 }

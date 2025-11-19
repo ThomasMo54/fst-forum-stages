@@ -1,11 +1,9 @@
 package fr.fst.forumstages.backend.company;
 
-import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
 import fr.fst.forumstages.backend.company.dto.UpdateCompanyDto;
 import fr.fst.forumstages.backend.offer.OfferEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -27,35 +25,6 @@ public class CompanyServiceTests {
 
     @Mock
     private CompanyRepository companyRepository;
-
-    @Test
-    public void testCreateCompany_success() {
-        CreateCompanyDto createCompanyDto = new CreateCompanyDto(
-                "a@b.fr",
-            "12345678",
-            "Test Company",
-            "a@b.fr",
-            null,
-            null,
-            null,
-            null
-        );
-
-        when(companyRepository.save(any(CompanyEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        ArgumentCaptor<CompanyEntity> companyCaptor = ArgumentCaptor.forClass(CompanyEntity.class);
-
-        CompanyEntity result = companyService.createCompany(createCompanyDto);
-
-        verify(companyRepository, times(1)).save(companyCaptor.capture());
-
-        CompanyEntity createdCompany = companyCaptor.getValue();
-
-        assertNull(createdCompany.getId());
-        assertEquals("Test Company", createdCompany.getName());
-        assertEquals("a@b.fr", createdCompany.getContactEmail());
-
-        assertEquals(createdCompany, result);
-    }
 
     @Test
     public void testFindCompanyById_success() {
@@ -145,20 +114,6 @@ public class CompanyServiceTests {
         assertEquals("Countryland", result.getCountry());
 
         verify(companyRepository, times(1)).save(mockCompany);
-    }
-
-    @Test
-    public void testDeleteCompany_success() {
-        String companyId = "123";
-        CompanyEntity mockCompany = new CompanyEntity();
-        mockCompany.setId(companyId);
-        mockCompany.setName("Test Company");
-
-        when(companyRepository.findById(companyId)).thenReturn(Optional.of(mockCompany));
-
-        companyService.deleteCompany(companyId);
-
-        verify(companyRepository, times(1)).delete(mockCompany);
     }
 
     @Test

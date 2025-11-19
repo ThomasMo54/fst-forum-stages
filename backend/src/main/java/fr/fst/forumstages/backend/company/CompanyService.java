@@ -1,7 +1,5 @@
 package fr.fst.forumstages.backend.company;
 
-import fr.fst.forumstages.backend.company.dto.CompanyDto;
-import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
 import fr.fst.forumstages.backend.company.dto.UpdateCompanyDto;
 import fr.fst.forumstages.backend.offer.OfferEntity;
 import org.springframework.stereotype.Service;
@@ -16,20 +14,6 @@ public class CompanyService {
 
     public CompanyService(CompanyRepository companyRepository) {
         this.companyRepository = companyRepository;
-    }
-
-    public CompanyEntity createCompany(CreateCompanyDto createCompanyDto) {
-        CompanyDto companyDto = new CompanyDto(
-                null,
-                createCompanyDto.name(),
-                createCompanyDto.contactEmail(),
-                createCompanyDto.streetAddress(),
-                createCompanyDto.city(),
-                createCompanyDto.postalCode(),
-                createCompanyDto.country()
-        );
-        CompanyEntity companyEntity = CompanyEntity.fromDto(companyDto);
-        return companyRepository.save(companyEntity);
     }
 
     public CompanyEntity findCompanyById(String id) {

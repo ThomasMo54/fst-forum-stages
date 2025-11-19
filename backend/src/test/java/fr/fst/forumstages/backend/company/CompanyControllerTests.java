@@ -2,6 +2,7 @@ package fr.fst.forumstages.backend.company;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.fst.forumstages.backend.company.dto.UpdateCompanyDto;
+import fr.fst.forumstages.backend.user.UserSecurity;
 import fr.fst.forumstages.backend.offer.OfferEntity;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,9 @@ import java.util.Collections;
 import java.util.NoSuchElementException;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -31,6 +34,9 @@ public class CompanyControllerTests {
 
     @MockitoBean
     private CompanyService companyService;
+
+    @MockitoBean(name = "companySecurity")
+    private CompanySecurity companySecurity;
 
     @Test
     @WithMockUser(roles = "ADMIN")
@@ -60,8 +66,16 @@ public class CompanyControllerTests {
     }
 
     @Test
+    public void findCompanyById_unauthenticated_fail() throws Exception {
+        String companyId = "123";
+
+        mockMvc.perform(get("/companies/{id}", companyId))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     @WithMockUser(roles = "ADMIN")
-    public void updateCompany_success() throws Exception {
+    public void updateCompany_admin_success() throws Exception {
         String companyId = "123";
         UpdateCompanyDto updateCompanyDto = new UpdateCompanyDto(
             "Updated Company",
@@ -78,11 +92,58 @@ public class CompanyControllerTests {
         when(companyService.updateCompany(any(String.class), any(UpdateCompanyDto.class))).thenReturn(updatedCompany);
 
         mockMvc.perform(put("/companies/{id}", companyId)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(updateCompanyDto)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(companyId))
-            .andExpect(jsonPath("$.name").value("Updated Company"));
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateCompanyDto))
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(companyId))
+                .andExpect(jsonPath("$.name").value("Updated Company"));
+    }
+
+    @Test
+    @WithMockUser(roles = "COMPANY", username = "a@b.fr")
+    public void updateCompany_owner_success() throws Exception {
+        String companyId = "123";
+        UpdateCompanyDto updateCompanyDto = new UpdateCompanyDto(
+                "Updated Company",
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        CompanyEntity updatedCompany = new CompanyEntity();
+        updatedCompany.setId(companyId);
+        updatedCompany.setName("Updated Company");
+
+        when(companySecurity.isOwner(any(), eq(companyId))).thenReturn(true);
+        when(companyService.updateCompany(any(String.class), any(UpdateCompanyDto.class))).thenReturn(updatedCompany);
+
+        mockMvc.perform(put("/companies/{id}", companyId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateCompanyDto))
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(companyId))
+                .andExpect(jsonPath("$.name").value("Updated Company"));
+    }
+
+    @Test
+    public void updateCompany_unauthenticated_fail() throws Exception {
+        String companyId = "123";
+        UpdateCompanyDto updateCompanyDto = new UpdateCompanyDto(
+                "Updated Company",
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        mockMvc.perform(put("/companies/{id}", companyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateCompanyDto))
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
