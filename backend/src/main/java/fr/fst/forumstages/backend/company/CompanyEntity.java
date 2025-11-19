@@ -29,14 +29,7 @@ public class CompanyEntity {
     private String country;
 
     @DBRef
-    private List<OfferEntity> publishedOffers;
-
-    public void addOffer(OfferEntity offerEntity){
-        if(publishedOffers == null){
-            publishedOffers = new LinkedList<>();
-        }
-        this.publishedOffers.add(offerEntity);
-    }
+    private List<OfferEntity> publishedOffers = new LinkedList<>();
 
     public static CompanyEntity fromDto(CompanyDto companyDto) {
         CompanyEntity companyEntity = new CompanyEntity();

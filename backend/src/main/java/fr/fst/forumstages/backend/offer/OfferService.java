@@ -38,7 +38,7 @@ public class OfferService {
 
         OfferEntity finalOffer = offerRepository.save(offerEntity);
 
-        companyEntity.addOffer(finalOffer);
+        companyEntity.getPublishedOffers().add(finalOffer);
         companyRepository.save(companyEntity);
 
         return finalOffer;
