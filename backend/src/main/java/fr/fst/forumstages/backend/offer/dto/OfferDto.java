@@ -1,6 +1,5 @@
 package fr.fst.forumstages.backend.offer.dto;
 
-import fr.fst.forumstages.backend.company.dto.CompanyWithoutOffersDto;
 import fr.fst.forumstages.backend.offer.OfferEntity;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.validator.constraints.Length;
@@ -16,14 +15,14 @@ public record OfferDto(
         String description,
 
         @NotBlank
-        CompanyWithoutOffersDto company
+        String companyId
 ) {
     public static OfferDto fromEntity(OfferEntity offerEntity){
         return new OfferDto(
                 offerEntity.getId(),
                 offerEntity.getTitle(),
                 offerEntity.getDescription(),
-                CompanyWithoutOffersDto.fromEntity(offerEntity.getCompany())
+                offerEntity.getCompany().getId()
         );
     }
 }

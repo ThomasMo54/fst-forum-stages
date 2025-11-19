@@ -55,7 +55,7 @@ public class OfferControllerTests {
                 .andExpect(jsonPath("$.id").value("456"))
                 .andExpect(jsonPath("$.title").value("Test Title"))
                 .andExpect(jsonPath("$.description").value("Test Description"))
-                .andExpect(jsonPath("$.company.id").value("123"));
+                .andExpect(jsonPath("$.companyId").value("123"));
     }
 
     @Test

@@ -26,8 +26,7 @@ public class CompanyService {
                 createCompanyDto.streetAddress(),
                 createCompanyDto.city(),
                 createCompanyDto.postalCode(),
-                createCompanyDto.country(),
-                null
+                createCompanyDto.country()
         );
         CompanyEntity companyEntity = CompanyEntity.fromDto(companyDto);
         return companyRepository.save(companyEntity);

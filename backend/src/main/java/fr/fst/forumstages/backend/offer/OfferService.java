@@ -30,7 +30,7 @@ public class OfferService {
                 null,
                 createOfferDto.title(),
                 createOfferDto.description(),
-                null
+                createOfferDto.companyId()
         );
 
         OfferEntity offerEntity = OfferEntity.fromDto(offerDto);
