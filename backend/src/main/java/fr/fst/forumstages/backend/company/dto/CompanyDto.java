@@ -3,7 +3,6 @@ package fr.fst.forumstages.backend.company.dto;
 import fr.fst.forumstages.backend.company.CompanyEntity;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Length;
 
 public record CompanyDto(
