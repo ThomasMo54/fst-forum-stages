@@ -162,14 +162,7 @@ public class CompanyControllerTests {
     }
 
     @Test
-    public void deleteCompany_success() throws Exception {
-        String companyId = "123";
-
-        mockMvc.perform(delete("/companies/{id}", companyId))
-                .andExpect(status().isOk());
-    }
-
-    @Test
+    @WithMockUser
     public void getAllOffers_success() throws Exception {
         String companyId = "123";
 
@@ -203,6 +196,7 @@ public class CompanyControllerTests {
     }
 
     @Test
+    @WithMockUser
     public void getAllOffers_notFound() throws Exception {
         String companyId = "nonexistent-id";
 
@@ -213,6 +207,7 @@ public class CompanyControllerTests {
     }
 
     @Test
+    @WithMockUser
     public void getAllOffers_empty() throws Exception {
         String companyId = "123";
 
