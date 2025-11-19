@@ -2,7 +2,6 @@ package fr.fst.forumstages.backend.user;
 
 import fr.fst.forumstages.backend.company.CompanyEntity;
 import fr.fst.forumstages.backend.company.CompanyRepository;
-import fr.fst.forumstages.backend.company.CompanyService;
 import fr.fst.forumstages.backend.company.dto.CompanyDto;
 import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;

@@ -7,7 +7,9 @@ import fr.fst.forumstages.backend.offer.OfferEntity;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -131,6 +133,16 @@ public class CompanyControllerTests {
     @Test
     public void updateCompany_unauthenticated_fail() throws Exception {
         String companyId = "123";
+        mockMvc.perform(put("/companies/{id}", companyId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(roles = "COMPANY", username = "c@d.fr")
+    public void updateCompany_notOwner_forbidden() throws Exception {
+        String companyId = "123";
         UpdateCompanyDto updateCompanyDto = new UpdateCompanyDto(
                 "Updated Company",
                 null,
@@ -139,11 +151,14 @@ public class CompanyControllerTests {
                 null,
                 null
         );
+
+        when(companySecurity.isOwner(any(), eq(companyId))).thenReturn(false);
+
         mockMvc.perform(put("/companies/{id}", companyId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateCompanyDto))
-                        .with(csrf()))
-                .andExpect(status().isUnauthorized());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateCompanyDto))
+                .with(csrf()))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -206,5 +221,10 @@ public class CompanyControllerTests {
         mockMvc.perform(get("/companies/{id}/offers", companyId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @TestConfiguration
+    @EnableMethodSecurity
+    static class MethodSecurityConfig {
     }
 }

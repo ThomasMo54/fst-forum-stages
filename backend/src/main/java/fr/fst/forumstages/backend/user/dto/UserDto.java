@@ -6,6 +6,9 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 public record UserDto(
+    @NotBlank
+    String id,
+
     @NotBlank @Email
     String email,
 
@@ -15,6 +18,7 @@ public record UserDto(
 
     public static UserDto fromEntity(UserEntity userEntity) {
         return new UserDto(
+                userEntity.getId(),
                 userEntity.getEmail(),
                 userEntity.getRole()
         );

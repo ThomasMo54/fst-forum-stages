@@ -27,7 +27,7 @@ public class CompanyServiceTests {
     private CompanyRepository companyRepository;
 
     @Test
-    public void testFindCompanyById_success() {
+    public void findCompanyById_success() {
         String companyId = "123";
         CompanyEntity mockCompany = new CompanyEntity();
         mockCompany.setId(companyId);
@@ -41,7 +41,7 @@ public class CompanyServiceTests {
     }
 
     @Test
-    public void testFindCompanyById_notFound() {
+    public void findCompanyById_notFound() {
         String companyId = "nonexistent-id";
 
         when(companyRepository.findById(companyId)).thenReturn(Optional.empty());
@@ -50,7 +50,7 @@ public class CompanyServiceTests {
     }
 
     @Test
-    public void testUpdateCompany_success() {
+    public void updateCompany_success() {
         String companyId = "123";
         CompanyEntity mockCompany = new CompanyEntity();
         mockCompany.setId(companyId);
@@ -81,7 +81,7 @@ public class CompanyServiceTests {
     }
 
     @Test
-    public void testUpdateCompany_partialUpdate_success() {
+    public void updateCompany_partialUpdate_success() {
         String companyId = "123";
         CompanyEntity mockCompany = new CompanyEntity();
         mockCompany.setId(companyId);
