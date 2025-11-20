@@ -1,13 +1,16 @@
 package fr.fst.forumstages.backend.company;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
 import fr.fst.forumstages.backend.company.dto.UpdateCompanyDto;
+import fr.fst.forumstages.backend.user.UserSecurity;
 import fr.fst.forumstages.backend.offer.OfferEntity;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -16,7 +19,9 @@ import java.util.Collections;
 import java.util.NoSuchElementException;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -32,65 +37,11 @@ public class CompanyControllerTests {
     @MockitoBean
     private CompanyService companyService;
 
-    @Test
-    public void createCompany_success() throws Exception {
-        CreateCompanyDto createCompanyDto = new CreateCompanyDto(
-            "Test Company",
-            null,
-            null,
-            null,
-            null,
-            null
-        );
-        CompanyEntity createdCompany = new CompanyEntity();
-        createdCompany.setId("123");
-        createdCompany.setName("Test Company");
-
-        when(companyService.createCompany(any(CreateCompanyDto.class))).thenReturn(createdCompany);
-
-        mockMvc.perform(post("/companies")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(createCompanyDto)))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").value("123"))
-            .andExpect(jsonPath("$.name").value("Test Company"));
-    }
+    @MockitoBean(name = "companySecurity")
+    private CompanySecurity companySecurity;
 
     @Test
-    public void createCompany_validationError() throws Exception {
-        CreateCompanyDto createCompanyDto = new CreateCompanyDto(
-            "",
-            null,
-            null,
-            null,
-            null,
-            null
-        );
-
-        mockMvc.perform(post("/companies")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(createCompanyDto)))
-            .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    public void createCompany_missingName() throws Exception {
-        CreateCompanyDto createCompanyDto = new CreateCompanyDto(
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-        );
-
-        mockMvc.perform(post("/companies")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(createCompanyDto)))
-            .andExpect(status().isBadRequest());
-    }
-
-    @Test
+    @WithMockUser(roles = "ADMIN")
     public void findCompanyById_success() throws Exception {
         String companyId = "123";
         CompanyEntity mockCompany = new CompanyEntity();
@@ -106,6 +57,7 @@ public class CompanyControllerTests {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     public void findCompanyById_notFound() throws Exception {
         String companyId = "nonexistent-id";
 
@@ -116,7 +68,16 @@ public class CompanyControllerTests {
     }
 
     @Test
-    public void updateCompany_success() throws Exception {
+    public void findCompanyById_unauthenticated_fail() throws Exception {
+        String companyId = "123";
+
+        mockMvc.perform(get("/companies/{id}", companyId))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    public void updateCompany_admin_success() throws Exception {
         String companyId = "123";
         UpdateCompanyDto updateCompanyDto = new UpdateCompanyDto(
             "Updated Company",
@@ -133,22 +94,75 @@ public class CompanyControllerTests {
         when(companyService.updateCompany(any(String.class), any(UpdateCompanyDto.class))).thenReturn(updatedCompany);
 
         mockMvc.perform(put("/companies/{id}", companyId)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(updateCompanyDto)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(companyId))
-            .andExpect(jsonPath("$.name").value("Updated Company"));
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateCompanyDto))
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(companyId))
+                .andExpect(jsonPath("$.name").value("Updated Company"));
     }
 
     @Test
-    public void deleteCompany_success() throws Exception {
+    @WithMockUser(roles = "COMPANY", username = "a@b.fr")
+    public void updateCompany_owner_success() throws Exception {
         String companyId = "123";
+        UpdateCompanyDto updateCompanyDto = new UpdateCompanyDto(
+                "Updated Company",
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        CompanyEntity updatedCompany = new CompanyEntity();
+        updatedCompany.setId(companyId);
+        updatedCompany.setName("Updated Company");
 
-        mockMvc.perform(delete("/companies/{id}", companyId))
-                .andExpect(status().isOk());
+        when(companySecurity.isOwner(any(), eq(companyId))).thenReturn(true);
+        when(companyService.updateCompany(any(String.class), any(UpdateCompanyDto.class))).thenReturn(updatedCompany);
+
+        mockMvc.perform(put("/companies/{id}", companyId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateCompanyDto))
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(companyId))
+                .andExpect(jsonPath("$.name").value("Updated Company"));
     }
 
     @Test
+    public void updateCompany_unauthenticated_fail() throws Exception {
+        String companyId = "123";
+        mockMvc.perform(put("/companies/{id}", companyId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(roles = "COMPANY", username = "c@d.fr")
+    public void updateCompany_notOwner_forbidden() throws Exception {
+        String companyId = "123";
+        UpdateCompanyDto updateCompanyDto = new UpdateCompanyDto(
+                "Updated Company",
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        when(companySecurity.isOwner(any(), eq(companyId))).thenReturn(false);
+
+        mockMvc.perform(put("/companies/{id}", companyId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateCompanyDto))
+                .with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser
     public void getAllOffers_success() throws Exception {
         String companyId = "123";
 
@@ -182,6 +196,7 @@ public class CompanyControllerTests {
     }
 
     @Test
+    @WithMockUser
     public void getAllOffers_notFound() throws Exception {
         String companyId = "nonexistent-id";
 
@@ -192,6 +207,7 @@ public class CompanyControllerTests {
     }
 
     @Test
+    @WithMockUser
     public void getAllOffers_empty() throws Exception {
         String companyId = "123";
 
@@ -200,5 +216,10 @@ public class CompanyControllerTests {
         mockMvc.perform(get("/companies/{id}/offers", companyId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @TestConfiguration
+    @EnableMethodSecurity
+    static class MethodSecurityConfig {
     }
 }

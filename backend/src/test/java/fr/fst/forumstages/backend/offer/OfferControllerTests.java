@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -30,6 +31,7 @@ public class OfferControllerTests {
     private OfferService offerService;
 
     @Test
+    @WithMockUser
     public void createOffer_success() throws Exception {
         CreateOfferDto createOfferDto = new CreateOfferDto(
                 "Test Title",
@@ -59,6 +61,7 @@ public class OfferControllerTests {
     }
 
     @Test
+    @WithMockUser
     public void createOffer_validationError() throws Exception {
         CreateOfferDto createOfferDto = new CreateOfferDto(
                 "",
@@ -73,6 +76,7 @@ public class OfferControllerTests {
     }
 
     @Test
+    @WithMockUser
     public void createOffer_missingTitle() throws Exception {
         CreateOfferDto createOfferDto = new CreateOfferDto(
                 null,
@@ -87,6 +91,7 @@ public class OfferControllerTests {
     }
 
     @Test
+    @WithMockUser
     public void createOffer_missingDescription() throws Exception {
         CreateOfferDto createOfferDto = new CreateOfferDto(
                 "",
@@ -101,6 +106,7 @@ public class OfferControllerTests {
     }
 
     @Test
+    @WithMockUser
     public void findOfferById_success() throws Exception {
         String offerId = "123";
 
@@ -123,6 +129,7 @@ public class OfferControllerTests {
     }
 
     @Test
+    @WithMockUser
     public void findOfferById_notFound() throws Exception {
         String offerId = "nonexistent-id";
 
