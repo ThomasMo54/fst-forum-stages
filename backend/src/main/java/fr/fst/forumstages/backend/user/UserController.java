@@ -5,6 +5,10 @@ import fr.fst.forumstages.backend.user.annotation.IsAdminOrUserOwner;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
 import fr.fst.forumstages.backend.user.dto.UserDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/users")
+@Tag(name = "Utilisateurs", description = "Endpoints pour la gestion des utilisateurs")
 public class UserController {
 
     private final UserService userService;
@@ -27,6 +32,12 @@ public class UserController {
         this.userService = userService;
     }
 
+    @Operation(summary = "Créer un utilisateur administrateur", description = "Permet de créer un nouvel utilisateur avec le rôle d'administrateur.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Utilisateur administrateur créé avec succès"),
+            @ApiResponse(responseCode = "400", description = "Données invalides fournies"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - permissions insuffisantes")
+    })
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin")
     @ResponseStatus(HttpStatus.CREATED)
@@ -35,6 +46,12 @@ public class UserController {
         return UserDto.fromEntity(userEntity);
     }
 
+    @Operation(summary = "Créer un utilisateur entreprise", description = "Permet de créer un nouvel utilisateur avec le rôle d'entreprise.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Utilisateur entreprise créé avec succès"),
+            @ApiResponse(responseCode = "400", description = "Données invalides fournies"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - permissions insuffisantes")
+    })
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/company")
     @ResponseStatus(HttpStatus.CREATED)
@@ -43,12 +60,25 @@ public class UserController {
         return UserDto.fromEntity(userEntity);
     }
 
+    @Operation(summary = "Mettre à jour un utilisateur", description = "Permet de mettre à jour les informations d'un utilisateur existant.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Utilisateur mis à jour avec succès"),
+            @ApiResponse(responseCode = "400", description = "Données invalides fournies"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - permissions insuffisantes"),
+            @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé")
+    })
     @IsAdminOrUserOwner
     @PutMapping("/{id}")
     public UserDto updateUser(@PathVariable("id") String id, @Valid @RequestBody UpdateUserDto updateUserDto) {
         return UserDto.fromEntity(userService.updateUser(id, updateUserDto));
     }
 
+    @Operation(summary = "Supprimer un utilisateur", description = "Permet de supprimer un utilisateur existant.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Utilisateur supprimé avec succès"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - permissions insuffisantes"),
+            @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé")
+    })
     @IsAdminOrUserOwner
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable("id") String id) {
