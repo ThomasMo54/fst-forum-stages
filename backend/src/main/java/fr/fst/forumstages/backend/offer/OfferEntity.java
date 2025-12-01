@@ -30,6 +30,8 @@ public class OfferEntity {
 
     private Date internshipStartDate;
 
+    private Date internshipDuration;
+
     private Date limitApplicationDate;
 
     private String studyLevel; //i.e. Bac +5
@@ -44,6 +46,15 @@ public class OfferEntity {
         offerEntity.id = offerDto.id();
         offerEntity.title = offerDto.title();
         offerEntity.description = offerDto.description();
+        offerEntity.address = offerDto.address();
+        offerEntity.tags = offerDto.tags();
+        offerEntity.salary = offerDto.salary();
+        offerEntity.creationDate = new Date();
+        offerEntity.internshipStartDate = offerDto.internshipStartDate();
+        offerEntity.internshipDuration = offerDto.internshipDuration();
+        offerEntity.limitApplicationDate = offerDto.limitApplicationDate();
+        offerEntity.studyLevel = offerDto.studyLevel();
+        offerEntity.remoteWorkPolicy = offerDto.remoteWorkPolicy();
 
         return offerEntity;
     }
