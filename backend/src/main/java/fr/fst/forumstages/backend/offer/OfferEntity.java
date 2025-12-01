@@ -20,8 +20,6 @@ public class OfferEntity {
 
     private String description;
 
-    private String address;
-
     private List<String> tags;
 
     private String salary;
@@ -46,7 +44,6 @@ public class OfferEntity {
         offerEntity.id = offerDto.id();
         offerEntity.title = offerDto.title();
         offerEntity.description = offerDto.description();
-        offerEntity.address = offerDto.address();
         offerEntity.tags = offerDto.tags();
         offerEntity.salary = offerDto.salary();
         offerEntity.creationDate = new Date();

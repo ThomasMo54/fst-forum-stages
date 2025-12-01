@@ -17,9 +17,6 @@ public record OfferDto(
         @NotBlank
         String description,
 
-        @NotBlank
-        String address,
-
         List<String> tags,
 
         String salary,
@@ -45,7 +42,6 @@ public record OfferDto(
                 offerEntity.getId(),
                 offerEntity.getTitle(),
                 offerEntity.getDescription(),
-                offerEntity.getAddress(),
                 offerEntity.getTags(),
                 offerEntity.getSalary(),
                 offerEntity.getCreationDate(),

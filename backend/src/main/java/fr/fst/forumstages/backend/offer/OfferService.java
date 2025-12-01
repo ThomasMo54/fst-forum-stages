@@ -30,7 +30,6 @@ public class OfferService {
                 null,
                 createOfferDto.title(),
                 createOfferDto.description(),
-                createOfferDto.address(),
                 (createOfferDto.tags() != null) ? createOfferDto.tags() : null,
                 (createOfferDto.salary() != null) ? createOfferDto.salary() : null,
                 null,

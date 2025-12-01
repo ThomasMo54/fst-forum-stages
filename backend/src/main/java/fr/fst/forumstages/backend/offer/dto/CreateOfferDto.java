@@ -14,9 +14,6 @@ public record CreateOfferDto(
         @NotBlank(message = "Description must not be blank")
         String description,
 
-        @NotBlank(message = "Address must not be blank")
-        String address,
-
         List<String> tags,
 
         String salary,

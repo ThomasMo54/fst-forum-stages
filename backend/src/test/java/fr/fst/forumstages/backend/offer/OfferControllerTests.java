@@ -41,7 +41,6 @@ public class OfferControllerTests {
         CreateOfferDto createOfferDto = new CreateOfferDto(
                 "Test Title",
                 "Test Description",
-                "Test address",
                 null,
                 null,
                 null,
@@ -80,7 +79,6 @@ public class OfferControllerTests {
         CreateOfferDto createOfferDto = new CreateOfferDto(
                 "",
                 "",
-                "",
                 null,
                 null,
                 null,
@@ -103,7 +101,6 @@ public class OfferControllerTests {
     public void createOffer_missingTitle() throws Exception {
         CreateOfferDto createOfferDto = new CreateOfferDto(
                 null,
-                "",
                 "",
                 null,
                 null,
@@ -128,37 +125,12 @@ public class OfferControllerTests {
         CreateOfferDto createOfferDto = new CreateOfferDto(
                 "",
                 null,
-                "",
                 null,
                 null,
                 null,
                 null,
                 null,
                  null,
-                null,
-                null
-        );
-
-        mockMvc.perform(post("/offers")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createOfferDto)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    public void createOffer_missingAddress() throws Exception {
-        CreateOfferDto createOfferDto = new CreateOfferDto(
-                "",
-                "",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
                 null,
                 null
         );

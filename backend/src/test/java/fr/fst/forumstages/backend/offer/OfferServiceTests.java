@@ -34,7 +34,6 @@ public class OfferServiceTests {
         CreateOfferDto createOfferDto = new CreateOfferDto(
                 "Test Offer",
                 "Test Description",
-                "Test address",
                 null,
                 null,
                 null,
