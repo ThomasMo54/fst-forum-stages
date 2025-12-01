@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 import '../../../styles/global.css';
 import './LoginPage.css';
@@ -8,11 +10,13 @@ import Footer from '../../../components/footer/Footer';
 import Button from '../../../components/button/Button';
 
 const LoginPage: React.FC = () => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -21,12 +25,11 @@ const LoginPage: React.FC = () => {
       return;
     }
 
-    console.log('Login attempt:', { email, password });
-
-    if (password.length < 4) {
-      setError('Email ou mot de passe incorrect.');
-    } else {
-      alert("Connexion simulée réussie !");
+    try {
+      await login(email, password);
+      navigate('/')
+    } catch (err) {
+      setError('Échec de la connexion. Vérifiez vos identifiants et réessayez.');
     }
   };
 
