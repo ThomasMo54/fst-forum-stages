@@ -16,7 +16,7 @@ import fr.fst.forumstages.backend.application.dto.CreateApplicationDto;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/offers")
+@RequestMapping("/applications")
 public class ApplicationController {
     private final ApplicationService applicationService;
 
