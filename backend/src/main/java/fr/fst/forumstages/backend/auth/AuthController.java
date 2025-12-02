@@ -4,6 +4,10 @@ import fr.fst.forumstages.backend.auth.dto.AuthResponseDto;
 import fr.fst.forumstages.backend.auth.dto.LoginDto;
 import fr.fst.forumstages.backend.auth.dto.RefreshDto;
 import fr.fst.forumstages.backend.user.UserEntity;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +25,7 @@ import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/auth")
+@Tag(name = "Authentification", description = "Endpoints pour l'authentification des utilisateurs")
 public class AuthController {
 
     private final JwtService jwtService;
@@ -37,6 +42,11 @@ public class AuthController {
         this.authenticationManager = authenticationManager;
     }
 
+    @Operation(summary = "Login", description = "Authentifie un utilisateur et retourne un token JWT ainsi qu'un token de rafraîchissement.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Authentification réussie"),
+            @ApiResponse(responseCode = "401", description = "Échec de l'authentification (identifiants invalides)")
+    })
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody LoginDto loginDto) {
@@ -55,6 +65,11 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
+    @Operation(summary = "Refresh Token", description = "Rafraîchit le token JWT en utilisant un token de rafraîchissement valide.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Token rafraîchi avec succès"),
+            @ApiResponse(responseCode = "404", description = "Token de rafraîchissement invalide")
+    })
     @PostMapping("/refresh")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<AuthResponseDto> refresh(@Valid @RequestBody RefreshDto refreshDto) {
