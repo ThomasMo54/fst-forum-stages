@@ -49,4 +49,9 @@ public class StudentService {
         return updatedStudent.toDto();
     }
 
+    public StudentDto findByUserId(String userId) {
+        StudentEntity student = studentRepository.findByUserId(userId)
+                .orElseThrow(() -> new StudentNotFoundException("Étudiant non trouvé avec l'IDUser: " + userId));
+        return student.toDto();
+    }
 }

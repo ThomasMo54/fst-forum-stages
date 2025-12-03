@@ -2,12 +2,17 @@ package fr.fst.forumstages.backend.student;
 
 import fr.fst.forumstages.backend.student.dto.StudentDto;
 import fr.fst.forumstages.backend.student.dto.StudentRequestDto;
+import fr.fst.forumstages.backend.student.enums.AccountStatus;
+import fr.fst.forumstages.backend.student.exception.StudentNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -45,5 +50,56 @@ class StudentServiceTest {
 
         assertThat(result).isNotNull();
         verify(studentRepository, times(1)).save(any(StudentEntity.class));
+    }
+
+    @Test
+    void findByUserId_Success() {
+        String userId = "user-123";
+        List<String> skills = Arrays.asList("Java", "Spring Boot", "MongoDB");
+
+        StudentEntity studentEntity = new StudentEntity();
+        studentEntity.setId("student-456");
+        studentEntity.setFirstName("Marie");
+        studentEntity.setLastName("Dupont");
+        studentEntity.setEmail("marie.dupont@example.com");
+        studentEntity.setStudentNumber("STU789012");
+        studentEntity.setPhone("+33698765432");
+        studentEntity.setEducationLevel("Master");
+        studentEntity.setFieldOfStudy("Informatique");
+        studentEntity.setSpecialization("Data Science");
+        studentEntity.setYearOfStudy(2);
+        studentEntity.setSkills(skills);
+        studentEntity.setStatus(AccountStatus.VALIDATED);
+        studentEntity.setRegistrationDate(LocalDateTime.now());
+        studentEntity.setUserId(userId);
+
+        when(studentRepository.findByUserId(userId)).thenReturn(Optional.of(studentEntity));
+
+        StudentDto result = studentService.findByUserId(userId);
+
+        assertThat(result).isNotNull();
+        assertThat(result.id()).isEqualTo("student-456");
+        assertThat(result.firstName()).isEqualTo("Marie");
+        assertThat(result.lastName()).isEqualTo("Dupont");
+        assertThat(result.email()).isEqualTo("marie.dupont@example.com");
+        assertThat(result.studentNumber()).isEqualTo("STU789012");
+        assertThat(result.userId()).isEqualTo(userId);
+        assertThat(result.skills()).isEqualTo(skills);
+        assertThat(result.status()).isEqualTo(AccountStatus.VALIDATED);
+
+        verify(studentRepository, times(1)).findByUserId(userId);
+    }
+
+    @Test
+    void findByUserId_NotFound() {
+        String userId = "nonexistent-user-id";
+
+        when(studentRepository.findByUserId(userId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> studentService.findByUserId(userId))
+                .isInstanceOf(StudentNotFoundException.class)
+                .hasMessageContaining("Étudiant non trouvé avec l'IDUser: " + userId);
+
+        verify(studentRepository, times(1)).findByUserId(userId);
     }
 }

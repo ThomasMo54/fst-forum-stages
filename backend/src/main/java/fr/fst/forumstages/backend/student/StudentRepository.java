@@ -19,4 +19,6 @@ public interface StudentRepository extends MongoRepository<StudentEntity, String
      * Vérifie si un numéro étudiant existe déjà
      */
     boolean existsByStudentNumber(String studentNumber);
+
+    Optional<StudentEntity> findByUserId(String userId);
 }

@@ -28,4 +28,11 @@ public class StudentController {
 
         return studentService.updateStudent(id, requestDto);
     }
+
+    @GetMapping("/by-user/{userId}")
+    public StudentDto getStudentByUserId(@PathVariable String userId) {
+        log.info("Récupération de l'étudiant pour l'utilisateur {}", userId);
+        return studentService.findByUserId(userId);
+    }
+
 }
