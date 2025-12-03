@@ -49,8 +49,6 @@ public class StudentEntity {
 
     private String userId; // Référence vers l'utilisateur (User)
 
-    // TODO : Liste des candidatures
-
     /**
      * Crée une entité Student à partir d'un DTO de requête
      */

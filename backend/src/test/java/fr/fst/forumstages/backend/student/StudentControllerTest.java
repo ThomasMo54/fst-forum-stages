@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -35,43 +36,38 @@ class StudentControllerTest {
 
     @Test
     @WithMockUser
-    void addStudent_Success() throws Exception {
-        StudentRequestDto request = new StudentRequestDto(
-                "Jean", "Dupont", "jean.dupont@example.com", "STU123456",
-                "+33612345678", "Master", "Informatique", "Dev Web", 2,
-                Arrays.asList("Java", "Spring")
-        );
-
-        StudentDto response = new StudentDto(
-                "123", "Jean", "Dupont", "jean.dupont@example.com", "STU123456",
-                "+33612345678", "Master", "Informatique", "Dev Web", 2,
-                Arrays.asList("Java", "Spring"), null, AccountStatus.PENDING,
-                LocalDateTime.now(), null
-        );
-
-        when(studentService.addStudent(any(StudentRequestDto.class))).thenReturn(response);
-
-        mockMvc.perform(post("/students")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.email").value("jean.dupont@example.com"));
-    }
-
-    @Test
-    @WithMockUser
     void updateStudent_Success() throws Exception {
+        List<String> skills = Arrays.asList("Java", "Spring Boot");
+
         StudentRequestDto request = new StudentRequestDto(
-                "Jean", "Dupont", "jean.dupont@example.com", "STU123456",
-                "+33612345678", "Master", "Informatique", "Dev Web", 2, null
+                "Jean",
+                "Dupont",
+                "jean.dupont@example.com",
+                "STU123456",
+                "+33612345678",
+                "Master",
+                "Informatique",
+                "Dev Web",
+                2,
+                skills
         );
 
         StudentDto response = new StudentDto(
-                "123", "Jean", "Dupont", "jean.dupont@example.com", "STU123456",
-                "+33612345678", "Master", "Informatique", "Dev Web", 2, null,
-                null, AccountStatus.PENDING, LocalDateTime.now(), null
+                "123",
+                "Jean",
+                "Dupont",
+                "jean.dupont@example.com",
+                "STU123456",
+                "+33612345678",
+                "Master",
+                "Informatique",
+                "Dev Web",
+                2,
+                skills,
+                null,
+                AccountStatus.PENDING,
+                LocalDateTime.now(),
+                "user-123"
         );
 
         when(studentService.updateStudent(any(String.class), any(StudentRequestDto.class)))
@@ -82,7 +78,14 @@ class StudentControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.id").value("123"));
+                .andExpect(jsonPath("$.id").value("123"))
+                .andExpect(jsonPath("$.firstName").value("Jean"))
+                .andExpect(jsonPath("$.lastName").value("Dupont"))
+                .andExpect(jsonPath("$.email").value("jean.dupont@example.com"))
+                .andExpect(jsonPath("$.studentNumber").value("STU123456"))
+                .andExpect(jsonPath("$.educationLevel").value("Master"))
+                .andExpect(jsonPath("$.fieldOfStudy").value("Informatique"))
+                .andExpect(jsonPath("$.specialization").value("Dev Web"))
+                .andExpect(jsonPath("$.yearOfStudy").value(2));
     }
 }

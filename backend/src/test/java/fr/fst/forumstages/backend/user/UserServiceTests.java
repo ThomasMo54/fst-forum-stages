@@ -3,6 +3,9 @@ package fr.fst.forumstages.backend.user;
 import fr.fst.forumstages.backend.company.CompanyEntity;
 import fr.fst.forumstages.backend.company.CompanyRepository;
 import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
+import fr.fst.forumstages.backend.student.StudentEntity;
+import fr.fst.forumstages.backend.student.StudentRepository;
+import fr.fst.forumstages.backend.student.dto.CreateStudentUserDto;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
 import org.junit.jupiter.api.Test;
@@ -13,11 +16,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
@@ -37,6 +43,9 @@ public class UserServiceTests {
     private UserRepository userRepository;
     @Mock
     private CompanyRepository companyRepository;
+
+    @Mock
+    private StudentRepository studentRepository;
 
     @Test
     public void createAdminUser_success() {
@@ -229,4 +238,137 @@ public class UserServiceTests {
         verify(userRepository, times(1)).delete(mockUser);
         verify(companyRepository, times(1)).delete(mockCompany);
     }
+
+    @Test
+    public void createStudentUser_success() {
+        String password = "12345678";
+        String encodedPassword = "encodedPassword";
+        List<String> skills = Arrays.asList("Java", "Spring Boot", "MongoDB");
+
+        CreateStudentUserDto createStudentUserDto = new CreateStudentUserDto(
+                "student@university.fr",
+                password,
+                "Jean",
+                "Dupont",
+                "STU123456",
+                "+33612345678",
+                "Master",
+                "Informatique",
+                "Développement Web",
+                2,
+                skills
+        );
+
+        when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
+        when(studentRepository.save(any(StudentEntity.class))).thenAnswer(invocation -> {
+            StudentEntity student = invocation.getArgument(0);
+            student.setId("student-123");
+            return student;
+        });
+        when(userRepository.save(any(UserEntity.class))).thenAnswer(invocation -> {
+            UserEntity user = invocation.getArgument(0);
+            user.setId("user-123");
+            return user;
+        });
+
+        ArgumentCaptor<StudentEntity> studentCaptor = ArgumentCaptor.forClass(StudentEntity.class);
+        ArgumentCaptor<UserEntity> userCaptor = ArgumentCaptor.forClass(UserEntity.class);
+
+        UserEntity result = userService.createStudentUser(createStudentUserDto);
+
+        // Vérifier que le student est sauvegardé
+        verify(studentRepository, times(1)).save(studentCaptor.capture());
+
+        // Vérifier que l'user est sauvegardé UNE SEULE fois (pas 2)
+        verify(userRepository, times(1)).save(userCaptor.capture());
+
+        StudentEntity createdStudent = studentCaptor.getValue();
+        assertEquals("Jean", createdStudent.getFirstName());
+        assertEquals("Dupont", createdStudent.getLastName());
+        assertEquals("student@university.fr", createdStudent.getEmail());
+        assertEquals("STU123456", createdStudent.getStudentNumber());
+        assertEquals("+33612345678", createdStudent.getPhone());
+        assertEquals("Master", createdStudent.getEducationLevel());
+        assertEquals("Informatique", createdStudent.getFieldOfStudy());
+        assertEquals("Développement Web", createdStudent.getSpecialization());
+        assertEquals(2, createdStudent.getYearOfStudy());
+        assertEquals(skills, createdStudent.getSkills());
+
+        UserEntity capturedUser = userCaptor.getValue();
+
+        assertEquals("student@university.fr", capturedUser.getEmail());
+        assertEquals(encodedPassword, capturedUser.getPassword());
+        assertEquals(UserRole.STUDENT, capturedUser.getRole());
+        assertNotNull(capturedUser.getStudent());
+        assertEquals(createdStudent, capturedUser.getStudent());
+
+        assertEquals(capturedUser, result);
+    }
+
+    @Test
+    public void createStudentUser_withoutOptionalFields_success() {
+        String password = "12345678";
+        String encodedPassword = "encodedPassword";
+
+        CreateStudentUserDto createStudentUserDto = new CreateStudentUserDto(
+                "student@university.fr",
+                password,
+                "Marie",
+                "Martin",
+                "STU789012",
+                null, // phone optionnel
+                "Licence",
+                "Mathématiques",
+                null, // specialization optionnelle
+                1,
+                null // skills optionnelles
+        );
+
+        when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
+        when(studentRepository.save(any(StudentEntity.class))).thenAnswer(invocation -> {
+            StudentEntity student = invocation.getArgument(0);
+            student.setId("student-456");
+            return student;
+        });
+        when(userRepository.save(any(UserEntity.class))).thenAnswer(invocation -> {
+            UserEntity user = invocation.getArgument(0);
+            user.setId("user-456");
+            return user;
+        });
+
+        ArgumentCaptor<StudentEntity> studentCaptor = ArgumentCaptor.forClass(StudentEntity.class);
+
+        UserEntity result = userService.createStudentUser(createStudentUserDto);
+
+        verify(studentRepository, times(1)).save(studentCaptor.capture());
+        verify(userRepository, times(1)).save(any(UserEntity.class));
+
+        StudentEntity createdStudent = studentCaptor.getValue();
+        assertEquals("Marie", createdStudent.getFirstName());
+        assertEquals("Martin", createdStudent.getLastName());
+        assertNull(createdStudent.getPhone());
+        assertNull(createdStudent.getSpecialization());
+        assertNull(createdStudent.getSkills());
+
+        assertNotNull(result.getStudent());
+    }
+
+    @Test
+    public void deleteUser_student_success() {
+        String userId = "123";
+        UserEntity mockUser = new UserEntity();
+        mockUser.setId(userId);
+
+        StudentEntity mockStudent = new StudentEntity();
+        mockStudent.setId("student-123");
+        mockUser.setStudent(mockStudent);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+
+        userService.deleteUser(userId);
+
+        verify(userRepository, times(1)).delete(mockUser);
+        verify(studentRepository, times(1)).delete(mockStudent);
+    }
+
 }

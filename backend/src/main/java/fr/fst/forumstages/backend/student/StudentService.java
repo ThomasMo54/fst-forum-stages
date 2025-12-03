@@ -15,32 +15,6 @@ public class StudentService {
 
     private final StudentRepository studentRepository;
 
-    /**
-     * Ajoute un nouvel étudiant
-     */
-    @Transactional
-    public StudentDto addStudent(StudentRequestDto requestDto) {
-        log.info("Ajout d'un nouvel étudiant: {}", requestDto.email());
-
-        // Vérification de l'unicité de l'email
-        if (studentRepository.existsByEmail(requestDto.email())) {
-            throw new DuplicateStudentException("Un étudiant avec cet email existe déjà: " + requestDto.email());
-        }
-
-        // Vérification de l'unicité du numéro étudiant
-        if (studentRepository.existsByStudentNumber(requestDto.studentNumber())) {
-            throw new DuplicateStudentException("Ce numéro étudiant est déjà utilisé: " + requestDto.studentNumber());
-        }
-
-        // Création de l'entité
-        StudentEntity student = StudentEntity.fromRequestDto(requestDto);
-
-        // Sauvegarde
-        StudentEntity savedStudent = studentRepository.save(student);
-        log.info("Étudiant créé avec succès. ID: {}", savedStudent.getId());
-
-        return savedStudent.toDto();
-    }
 
     /**
      * Modifie un étudiant existant

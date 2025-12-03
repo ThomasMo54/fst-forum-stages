@@ -1,6 +1,7 @@
 package fr.fst.forumstages.backend.user;
 
 import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
+import fr.fst.forumstages.backend.student.dto.CreateStudentUserDto;
 import fr.fst.forumstages.backend.user.annotation.IsAdminOrUserOwner;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
@@ -57,6 +58,13 @@ public class UserController {
     @ResponseStatus(HttpStatus.CREATED)
     public UserDto createCompanyUser(@Valid @RequestBody CreateCompanyDto createCompanyDto) {
         UserEntity userEntity = userService.createCompanyUser(createCompanyDto);
+        return UserDto.fromEntity(userEntity);
+    }
+
+    @PostMapping("/student")
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserDto createStudentUser(@Valid @RequestBody CreateStudentUserDto createStudentUserDto) {
+        UserEntity userEntity = userService.createStudentUser(createStudentUserDto);
         return UserDto.fromEntity(userEntity);
     }
 

@@ -4,10 +4,14 @@ import fr.fst.forumstages.backend.company.CompanyEntity;
 import fr.fst.forumstages.backend.company.CompanyRepository;
 import fr.fst.forumstages.backend.company.dto.CompanyDto;
 import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
+import fr.fst.forumstages.backend.student.StudentEntity;
+import fr.fst.forumstages.backend.student.StudentRepository;
+import fr.fst.forumstages.backend.student.dto.CreateStudentUserDto;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
 
@@ -16,16 +20,18 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
-
+    private final StudentRepository studentRepository;
     private final PasswordEncoder passwordEncoder;
 
     public UserService(
             UserRepository userRepository,
             CompanyRepository companyRepository,
+            StudentRepository studentRepository,
             PasswordEncoder passwordEncoder
     ) {
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
+        this.studentRepository = studentRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -50,7 +56,29 @@ public class UserService {
         return userRepository.save(userEntity);
     }
 
-    // TODO: Add createStudentUser method
+    @Transactional
+    public UserEntity createStudentUser(CreateStudentUserDto createStudentDto) {
+        // Créer l'utilisateur
+        UserEntity userEntity = createUser(createStudentDto.email(), createStudentDto.password(), UserRole.STUDENT);
+
+        // Créer le profil étudiant
+        StudentEntity studentEntity = new StudentEntity();
+        studentEntity.setFirstName(createStudentDto.firstName());
+        studentEntity.setLastName(createStudentDto.lastName());
+        studentEntity.setEmail(createStudentDto.email());
+        studentEntity.setStudentNumber(createStudentDto.studentNumber());
+        studentEntity.setPhone(createStudentDto.phone());
+        studentEntity.setEducationLevel(createStudentDto.educationLevel());
+        studentEntity.setFieldOfStudy(createStudentDto.fieldOfStudy());
+        studentEntity.setSpecialization(createStudentDto.specialization());
+        studentEntity.setYearOfStudy(createStudentDto.yearOfStudy());
+        studentEntity.setSkills(createStudentDto.skills());
+
+        studentRepository.save(studentEntity);
+        userEntity.setStudent(studentEntity);
+
+        return userRepository.save(userEntity);
+    }
 
     private UserEntity createUser(String email, String password, UserRole role) {
         UserEntity userEntity = new UserEntity();
@@ -87,6 +115,8 @@ public class UserService {
         if (existingUser.getCompany() != null) {
             companyRepository.delete(existingUser.getCompany());
         }
-        // TODO: Add StudentEntity deletion if applicable
+        if (existingUser.getStudent() != null) {
+            studentRepository.delete(existingUser.getStudent());
+        }
     }
 }
