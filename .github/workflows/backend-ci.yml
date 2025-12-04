@@ -36,6 +36,8 @@ jobs:
           cache-dependency-path: backend/pom.xml
       - name: Run tests
         run: ./mvnw test
+        env:
+          JWT_SECRET_KEY: "9bbbecc09b7ccf9f47cf5f5628405b6e05d42597d8c94b5222a215f85a8dee2d"
 
   build-and-push-backend:
     needs: test-backend
