@@ -14,7 +14,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: fst-forum-stages-backend
+  IMAGE_NAME: ${{ github.repository }}-backend
 
 jobs:
   test-backend:
