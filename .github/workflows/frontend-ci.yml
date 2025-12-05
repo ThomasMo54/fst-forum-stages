@@ -37,7 +37,7 @@ jobs:
       - name: Check build
         run: npm run build
         env:
-          VITE_API_BASE_URL: "http://localhost:8080"
+          VITE_API_URL: "http://fstforumstages.ovh:8080/api"
 
   build-and-push-frontend:
     needs: test-frontend
@@ -70,4 +70,4 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}:${{ github.sha }}
           build-args: |
-            VITE_API_BASE_URL=http://localhost:8080
+            VITE_API_URL=http://fstforumstages.ovh:8080/api
