@@ -58,7 +58,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/auth/login", "/auth/refresh").permitAll()
-                        .requestMatchers("/users/students").permitAll()
+                        .requestMatchers("/users/students", "/users/company").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oAuth2 -> oAuth2.jwt(jwt ->

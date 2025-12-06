@@ -53,7 +53,6 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "Données invalides fournies"),
             @ApiResponse(responseCode = "403", description = "Accès refusé - permissions insuffisantes")
     })
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/company")
     @ResponseStatus(HttpStatus.CREATED)
     public UserDto createCompanyUser(@Valid @RequestBody CreateCompanyDto createCompanyDto) {

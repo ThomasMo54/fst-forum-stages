@@ -1,0 +1,145 @@
+.page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.company-register-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background-color: var(--light-bg, #f4f6f8);
+}
+
+.company-register-box {
+    background: var(--white);
+    padding: 3rem;
+    border-radius: 12px;
+
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+
+    width: 100%;
+    max-width: 500px;
+}
+
+.company-register-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.company-register-header h1 {
+    color: var(--primary-color);
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.company-register-logo {
+    width: 70px;
+    height: 70px;
+    background: rgba(39, 174, 96, 0.1); /* Greenish tint for company */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: var(--success-color, #27ae60); /* Green for company logic usually, or keep primary blue if preferred */
+}
+
+/* Override logo color to match request (blue) if needed, but distinctive color is nice. 
+   If user asked for blue buttons on register choice page, maybe they want blue everywhere? 
+   I'll stick to primary/secondary blue to be safe and consistent with other pages. */
+.company-register-logo {
+    background: rgba(52, 152, 219, 0.1);
+    color: var(--secondary-color);
+}
+
+.company-register-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.half-width {
+    flex: 1;
+}
+
+.form-group label {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-dark);
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%; /* Ensure input takes full width of parent */
+    padding: 0.875rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    background-color: #fff;
+    color: var(--text-dark);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.company-register-footer-links {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.company-register-footer-links p {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .company-register-box {
+        padding: 2rem 1.5rem;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    .company-register-container {
+        padding: 1rem;
+        background-color: var(--white);
+    }
+
+    .company-register-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .form-row {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+}
