@@ -1,0 +1,90 @@
+.register-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f0f2f5; /* Light grey background */
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.register-container {
+  background-color: #ffffff;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+}
+
+.register-container h1 {
+  margin-bottom: 20px;
+  color: #333333;
+  font-size: 2em;
+}
+
+.register-container p {
+  margin-bottom: 30px;
+  color: #666666;
+  font-size: 1.1em;
+}
+
+.register-options {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.register-button {
+  display: block;
+  padding: 15px 25px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 1.2em;
+  font-weight: bold;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  color: #ffffff;
+  background-color: #007bff; /* Blue for all buttons */
+}
+
+.register-button:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+.login-link {
+  color: #666666;
+  font-size: 1em;
+}
+
+.login-link a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.login-link a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .register-container {
+    padding: 30px;
+    margin: 0 15px;
+  }
+
+  .register-container h1 {
+    font-size: 1.8em;
+  }
+
+  .register-container p {
+    font-size: 1em;
+  }
+
+  .register-button {
+    font-size: 1.1em;
+    padding: 12px 20px;
+  }
+}
