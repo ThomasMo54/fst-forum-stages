@@ -105,7 +105,7 @@ const LoginPage: React.FC = () => {
             <p>Vous n'avez pas de compte ?</p>
             <Button
               variant="link"
-              to="/auth/register"
+              to="/register"
             >
               Créer un compte
             </Button>

@@ -1,23 +1,42 @@
 import './RegisterPage.css';
+import Button from '../../../components/button/Button';
+import Header from '../../../components/header/Header';
+import Footer from '../../../components/footer/Footer';
 
 function RegisterPage() {
   return (
-    <div className="register-page">
-      <div className="register-container">
-        <h1>Créer un compte</h1>
-        <p>Veuillez choisir le type de compte que vous souhaitez créer :</p>
-        <div className="register-options">
-          <a href="/register/student" className="register-button student">
-            🎓 Compte Étudiant
-          </a>
-          <a href="/register/company" className="register-button company">
-            🏢 Compte Entreprise
-          </a>
+    <div className="page-wrapper">
+      <Header />
+      <main className="register-container">
+        <div className="register-box">
+          <div className="register-header">
+            <div className="register-logo">👤</div>
+            <h1>Créer un compte</h1>
+          </div>
+          
+          <p className="register-instruction">Veuillez choisir le type de compte que vous souhaitez créer :</p>
+          
+          <div className="register-options">
+            <Button to="/register/student" variant="primary" className="full-width">
+              🎓 Compte Étudiant
+            </Button>
+            <Button to="/register/company" variant="primary" className="full-width">
+              🏢 Compte Entreprise
+            </Button>
+          </div>
+
+          <div className="register-footer-links">
+            <p>Vous avez déjà un compte ?</p>
+            <Button
+              variant="link"
+              to="/login"
+            >
+              Connectez-vous
+            </Button>
+          </div>
         </div>
-        <p className="login-link">
-          Vous avez déjà un compte ? <a href="/login">Connectez-vous</a>
-        </p>
-      </div>
+      </main>
+      <Footer />
     </div>
   );
 }
