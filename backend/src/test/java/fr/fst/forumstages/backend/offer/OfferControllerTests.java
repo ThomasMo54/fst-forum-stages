@@ -2,6 +2,7 @@ package fr.fst.forumstages.backend.offer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.fst.forumstages.backend.company.CompanyEntity;
+import fr.fst.forumstages.backend.company.CompanySecurity;
 import fr.fst.forumstages.backend.offer.dto.CreateOfferDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

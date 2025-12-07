@@ -18,18 +18,25 @@ public record CreateOfferDto(
         @NotBlank(message = "Description must not be blank")
         String description,
 
+        @Schema(description = "La liste des étiquettes de l'offre")
         List<String> tags,
 
+        @Schema(description = "Le salaire de l'offre")
         String salary,
 
+        @Schema(description = "La date du début du stage")
         Date internshipStartDate,
 
+        @Schema(description = "La durée du stage")
         Date internshipDuration,
 
+        @Schema(description = "La date limite de candidature")
         Date limitApplicationDate,
 
+        @Schema(description = "Le niveau d'étude minimale nécéssaire (exemple : L3 ou M2...")
         String studyLevel,
 
+        @Schema(description = "La politique de télétravail (exemple : un jour par semaine")
         String remoteWorkPolicy,
 
         @Schema(description = "L'identifiant de l'entreprise proposant l'offre")
