@@ -15,6 +15,7 @@ import java.util.NoSuchElementException;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -52,7 +53,8 @@ public class OfferControllerTests {
 
         mockMvc.perform(post("/offers")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createOfferDto)))
+                .content(objectMapper.writeValueAsString(createOfferDto))
+                .with(csrf()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value("456"))
                 .andExpect(jsonPath("$.title").value("Test Title"))
@@ -71,7 +73,8 @@ public class OfferControllerTests {
 
         mockMvc.perform(post("/offers")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createOfferDto)))
+                .content(objectMapper.writeValueAsString(createOfferDto))
+                .with(csrf()))
                 .andExpect(status().isBadRequest());
     }
 
@@ -86,7 +89,8 @@ public class OfferControllerTests {
 
         mockMvc.perform(post("/offers")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createOfferDto)))
+                .content(objectMapper.writeValueAsString(createOfferDto))
+                .with(csrf()))
                 .andExpect(status().isBadRequest());
     }
 
@@ -101,7 +105,8 @@ public class OfferControllerTests {
 
         mockMvc.perform(post("/offers")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createOfferDto)))
+                        .content(objectMapper.writeValueAsString(createOfferDto))
+                        .with(csrf()))
                 .andExpect(status().isBadRequest());
     }
 
