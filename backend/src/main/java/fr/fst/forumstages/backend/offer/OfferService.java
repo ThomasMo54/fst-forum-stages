@@ -30,6 +30,14 @@ public class OfferService {
                 null,
                 createOfferDto.title(),
                 createOfferDto.description(),
+                (createOfferDto.tags() != null) ? createOfferDto.tags() : null,
+                (createOfferDto.salary() != null) ? createOfferDto.salary() : null,
+                null,
+                (createOfferDto.internshipStartDate() != null) ? createOfferDto.internshipStartDate() : null,
+                (createOfferDto.internshipDuration() != null) ? createOfferDto.internshipDuration() : null,
+                (createOfferDto.limitApplicationDate() != null) ? createOfferDto.limitApplicationDate() : null,
+                (createOfferDto.studyLevel() != null) ? createOfferDto.studyLevel() : null,
+                (createOfferDto.remoteWorkPolicy() != null) ? createOfferDto.remoteWorkPolicy() : null,
                 createOfferDto.companyId()
         );
 

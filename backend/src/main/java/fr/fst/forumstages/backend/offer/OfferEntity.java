@@ -20,8 +20,6 @@ public class OfferEntity {
 
     private String description;
 
-    private String address;
-
     private List<String> tags;
 
     private String salary;
@@ -29,6 +27,8 @@ public class OfferEntity {
     private Date creationDate;
 
     private Date internshipStartDate;
+
+    private Date internshipDuration;
 
     private Date limitApplicationDate;
 
@@ -44,6 +44,14 @@ public class OfferEntity {
         offerEntity.id = offerDto.id();
         offerEntity.title = offerDto.title();
         offerEntity.description = offerDto.description();
+        offerEntity.tags = offerDto.tags();
+        offerEntity.salary = offerDto.salary();
+        offerEntity.creationDate = new Date();
+        offerEntity.internshipStartDate = offerDto.internshipStartDate();
+        offerEntity.internshipDuration = offerDto.internshipDuration();
+        offerEntity.limitApplicationDate = offerDto.limitApplicationDate();
+        offerEntity.studyLevel = offerDto.studyLevel();
+        offerEntity.remoteWorkPolicy = offerDto.remoteWorkPolicy();
 
         return offerEntity;
     }
