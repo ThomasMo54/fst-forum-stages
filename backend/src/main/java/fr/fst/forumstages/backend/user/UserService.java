@@ -7,12 +7,14 @@ import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
 import fr.fst.forumstages.backend.student.StudentEntity;
 import fr.fst.forumstages.backend.student.StudentRepository;
 import fr.fst.forumstages.backend.student.dto.CreateStudentUserDto;
+import fr.fst.forumstages.backend.email.EmailService;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
 
 @Service
@@ -91,7 +93,31 @@ public class UserService {
         userEntity.setEmail(email);
         userEntity.setPassword(passwordEncoder.encode(password));
         userEntity.setRole(role);
+        userEntity.setVerificationCode(generateVerificationCode());
+        userEntity.setVerificationCodeExpiry(LocalDateTime.now().plusSeconds(EmailService.EXPIRY_DURATION_MS / 1000));
         return userEntity;
+    }
+
+    private String generateVerificationCode() {
+        return String.format("%06d", (int) (Math.random() * 1000000));
+    }
+
+    public boolean verifyUser(String email, String code) {
+        UserEntity userEntity = findByEmail(email);
+        if (userEntity.isVerified()) {
+            throw new IllegalStateException("User is already verified");
+        }
+        if (userEntity.getVerificationCodeExpiry().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Verification code has expired");
+        }
+        if (!userEntity.getVerificationCode().equals(code)) {
+            throw new IllegalArgumentException("Invalid verification code");
+        }
+        userEntity.setVerified(true);
+        userEntity.setVerificationCode(null);
+        userEntity.setVerificationCodeExpiry(null);
+        userRepository.save(userEntity);
+        return true;
     }
 
     public UserEntity findById(String id) {
