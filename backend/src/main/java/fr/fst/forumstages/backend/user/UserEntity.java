@@ -50,4 +50,9 @@ public class UserEntity implements UserDetails {
     public String getUsername() {
         return email;
     }
+
+    @Override
+    public boolean isEnabled() {
+        return isVerified;
+    }
 }

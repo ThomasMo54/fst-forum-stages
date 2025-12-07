@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -45,7 +46,8 @@ public class AuthController {
     @Operation(summary = "Login", description = "Authentifie un utilisateur et retourne un token JWT ainsi qu'un token de rafraîchissement.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Authentification réussie"),
-            @ApiResponse(responseCode = "401", description = "Échec de l'authentification (identifiants invalides)")
+            @ApiResponse(responseCode = "401", description = "Échec de l'authentification (identifiants invalides)"),
+            @ApiResponse(responseCode = "403", description = "Compte utilisateur désactivé ou non vérifié")
     })
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
@@ -59,6 +61,8 @@ public class AuthController {
                 RefreshTokenEntity refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
                 return ResponseEntity.ok(new AuthResponseDto(token, refreshToken.getToken()));
             }
+        } catch (DisabledException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }

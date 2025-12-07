@@ -28,7 +28,11 @@ const LoginPage: React.FC = () => {
     try {
       await login(email, password);
       navigate('/')
-    } catch (err) {
+    } catch (err: any) {
+      if (err.response && err.response.status === 403) {
+        navigate("/register/verify", { state: { email } });
+        return;
+      }
       setError('Échec de la connexion. Vérifiez vos identifiants et réessayez.');
     }
   };

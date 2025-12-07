@@ -11,12 +11,22 @@ export interface CreateCompanyDto {
   country: string;
 }
 
+export interface VerifyUserDto {
+  email: string;
+  verificationCode: string;
+}
+
 const registerCompany = async (companyData: CreateCompanyDto): Promise<void> => {
   await api.post('/users/company', companyData);
 };
 
+const verifyUser = async (verifyData: VerifyUserDto): Promise<void> => {
+  await api.post(`/users/verify`, verifyData);
+}
+
 const UserService = {
-  registerCompany
+  registerCompany,
+  verifyUser,
 };
 
 export default UserService;

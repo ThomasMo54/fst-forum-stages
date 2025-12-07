@@ -10,6 +10,7 @@ import fr.fst.forumstages.backend.student.dto.CreateStudentUserDto;
 import fr.fst.forumstages.backend.email.EmailService;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,11 +39,17 @@ public class UserService {
     }
 
     public UserEntity createAdminUser(CreateAdminUserDto createAdminDto) {
+        if (userRepository.findByEmail(createAdminDto.email()).isPresent()) {
+            throw new DuplicateKeyException("Email already in use");
+        }
         UserEntity userEntity = createUser(createAdminDto.email(), createAdminDto.password(), UserRole.ADMIN);
         return userRepository.save(userEntity);
     }
 
     public UserEntity createCompanyUser(CreateCompanyDto createCompanyDto) {
+        if (userRepository.findByEmail(createCompanyDto.email()).isPresent()) {
+            throw new DuplicateKeyException("Email already in use");
+        }
         UserEntity userEntity = createUser(createCompanyDto.email(), createCompanyDto.password(), UserRole.COMPANY);
         CompanyDto companyDto = new CompanyDto(
                 null,

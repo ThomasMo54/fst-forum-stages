@@ -102,7 +102,7 @@ const CompanyRegisterPage: React.FC = () => {
     try {
       const { confirmPassword, ...companyDto } = formData;
       await UserService.registerCompany(companyDto);
-      navigate('/login'); 
+      navigate('/register/verify', { state: { email: formData.email } });
     } catch (err: any) {
       if (err.response && (err.response.status === 403 || err.response.status === 401)) {
          setError("Erreur: L'inscription nécessite des droits administrateur (403 Forbidden). Le backend actuel ne permet pas l'inscription publique.");
