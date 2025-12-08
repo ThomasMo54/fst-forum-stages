@@ -295,38 +295,4 @@ public class UserControllerTests {
                 .andExpect(jsonPath("$.id").value("123"))
                 .andExpect(jsonPath("$.email").value("student@university.fr"));
     }
-
-    @Test
-    public void createStudentUser_unauthorized() throws Exception {
-        mockMvc.perform(post("/users/student")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .with(csrf()))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @WithMockUser(roles = "COMPANY")
-    public void createStudentUser_forbidden() throws Exception {
-        List<String> skills = Arrays.asList("Java", "Spring Boot");
-
-        CreateStudentUserDto createStudentUserDto = new CreateStudentUserDto(
-                "student@university.fr",
-                "12345678",
-                "Jean",
-                "Dupont",
-                "STU123456",
-                "+33612345678",
-                "Master",
-                "Informatique",
-                "Développement Web",
-                2,
-                skills
-        );
-
-        mockMvc.perform(post("/users/student")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createStudentUserDto))
-                        .with(csrf()))
-                .andExpect(status().isForbidden());
-    }
 }

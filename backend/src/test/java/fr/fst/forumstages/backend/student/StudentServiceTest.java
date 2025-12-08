@@ -2,8 +2,7 @@ package fr.fst.forumstages.backend.student;
 
 import fr.fst.forumstages.backend.student.dto.StudentDto;
 import fr.fst.forumstages.backend.student.dto.StudentRequestDto;
-import fr.fst.forumstages.backend.student.enums.AccountStatus;
-import fr.fst.forumstages.backend.student.exception.StudentNotFoundException;
+import fr.fst.forumstages.backend.user.UserEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -13,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -55,6 +55,9 @@ class StudentServiceTest {
     @Test
     void findByUserId_Success() {
         String userId = "user-123";
+        UserEntity mockUser = new UserEntity();
+        mockUser.setId(userId);
+        mockUser.setEmail("marie.dupont@example.com");
         List<String> skills = Arrays.asList("Java", "Spring Boot", "MongoDB");
 
         StudentEntity studentEntity = new StudentEntity();
@@ -69,9 +72,8 @@ class StudentServiceTest {
         studentEntity.setSpecialization("Data Science");
         studentEntity.setYearOfStudy(2);
         studentEntity.setSkills(skills);
-        studentEntity.setStatus(AccountStatus.VALIDATED);
         studentEntity.setRegistrationDate(LocalDateTime.now());
-        studentEntity.setUserId(userId);
+        studentEntity.setUser(mockUser);
 
         when(studentRepository.findByUserId(userId)).thenReturn(Optional.of(studentEntity));
 
@@ -85,7 +87,6 @@ class StudentServiceTest {
         assertThat(result.studentNumber()).isEqualTo("STU789012");
         assertThat(result.userId()).isEqualTo(userId);
         assertThat(result.skills()).isEqualTo(skills);
-        assertThat(result.status()).isEqualTo(AccountStatus.VALIDATED);
 
         verify(studentRepository, times(1)).findByUserId(userId);
     }
@@ -97,8 +98,8 @@ class StudentServiceTest {
         when(studentRepository.findByUserId(userId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> studentService.findByUserId(userId))
-                .isInstanceOf(StudentNotFoundException.class)
-                .hasMessageContaining("Étudiant non trouvé avec l'IDUser: " + userId);
+                .isInstanceOf(NoSuchElementException.class)
+                .hasMessageContaining("Student not found with User ID: " + userId);
 
         verify(studentRepository, times(1)).findByUserId(userId);
     }

@@ -2,8 +2,6 @@ package fr.fst.forumstages.backend.config;
 
 import fr.fst.forumstages.backend.auth.exception.ExpiredRefreshTokenException;
 import fr.fst.forumstages.backend.error.dto.ErrorResponseDto;
-import fr.fst.forumstages.backend.student.exception.DuplicateStudentException;
-import fr.fst.forumstages.backend.student.exception.StudentNotFoundException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,29 +13,6 @@ import java.util.NoSuchElementException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
-
-    /**
-     * Gestion de StudentNotFoundException
-     */
-    @ExceptionHandler(StudentNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleStudentNotFoundException(
-            StudentNotFoundException ex) {
-        ApiResponse<Void> response = ApiResponse.error(ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-    }
-
-    /**
-     * Gestion de DuplicateStudentException
-     */
-    @ExceptionHandler(DuplicateStudentException.class)
-    public ResponseEntity<ApiResponse<Void>> handleDuplicateStudentException(
-            DuplicateStudentException ex) {
-
-        ApiResponse<Void> response = ApiResponse.error(ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
-    }
 
     @ExceptionHandler(NoSuchElementException.class)
     @ResponseBody

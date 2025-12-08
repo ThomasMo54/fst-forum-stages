@@ -2,10 +2,11 @@ package fr.fst.forumstages.backend.student;
 
 import fr.fst.forumstages.backend.student.dto.StudentDto;
 import fr.fst.forumstages.backend.student.dto.StudentRequestDto;
-import fr.fst.forumstages.backend.student.enums.AccountStatus;
+import fr.fst.forumstages.backend.user.UserEntity;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -43,11 +44,10 @@ public class StudentEntity {
 
     private String cvPath;
 
-    private AccountStatus status = AccountStatus.PENDING;
-
     private LocalDateTime registrationDate = LocalDateTime.now();
 
-    private String userId; // Référence vers l'utilisateur (User)
+    @DBRef
+    private UserEntity user;
 
     /**
      * Crée une entité Student à partir d'un DTO de requête
@@ -64,7 +64,6 @@ public class StudentEntity {
         student.specialization = dto.specialization();
         student.yearOfStudy = dto.yearOfStudy();
         student.skills = dto.skills() != null ? new ArrayList<>(dto.skills()) : new ArrayList<>();
-        student.status = AccountStatus.PENDING;
         student.registrationDate = LocalDateTime.now();
         return student;
     }
@@ -102,37 +101,8 @@ public class StudentEntity {
                 this.yearOfStudy,
                 this.skills,
                 this.cvPath,
-                this.status,
                 this.registrationDate,
-                this.userId
+                this.user != null ? this.user.getId() : null
         );
-    }
-
-    /**
-     * Valide le compte de l'étudiant
-     */
-    public void validateAccount() {
-        this.status = AccountStatus.VALIDATED;
-    }
-
-    /**
-     * Suspend le compte de l'étudiant
-     */
-    public void suspendAccount() {
-        this.status = AccountStatus.SUSPENDED;
-    }
-
-    /**
-     * Rejette le compte de l'étudiant
-     */
-    public void rejectAccount() {
-        this.status = AccountStatus.REJECTED;
-    }
-
-    /**
-     * Obtient le nom complet
-     */
-    public String getFullName() {
-        return firstName + " " + lastName;
     }
 }

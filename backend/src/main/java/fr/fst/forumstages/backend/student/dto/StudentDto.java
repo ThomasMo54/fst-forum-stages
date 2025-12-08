@@ -1,8 +1,5 @@
 package fr.fst.forumstages.backend.student.dto;
 
-import fr.fst.forumstages.backend.student.StudentEntity;
-import fr.fst.forumstages.backend.student.enums.AccountStatus;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,7 +19,6 @@ public record StudentDto(
         Integer yearOfStudy,
         List<String> skills,
         String cvPath,
-        AccountStatus status,
         LocalDateTime registrationDate,
         String userId
 ) {}

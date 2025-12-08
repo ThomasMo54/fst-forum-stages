@@ -61,6 +61,9 @@ public class UserService {
         // Créer l'utilisateur
         UserEntity userEntity = createUser(createStudentDto.email(), createStudentDto.password(), UserRole.STUDENT);
 
+        // Sauvegarder d'abord l'utilisateur pour obtenir son ID
+        userEntity = userRepository.save(userEntity);
+
         // Créer le profil étudiant
         StudentEntity studentEntity = new StudentEntity();
         studentEntity.setFirstName(createStudentDto.firstName());
@@ -74,10 +77,13 @@ public class UserService {
         studentEntity.setYearOfStudy(createStudentDto.yearOfStudy());
         studentEntity.setSkills(createStudentDto.skills());
 
-        studentRepository.save(studentEntity);
+        studentEntity.setUser(userEntity);
+
+        studentEntity = studentRepository.save(studentEntity);
+
         userEntity.setStudent(studentEntity);
 
-        return userRepository.save(userEntity);
+        return userEntity;
     }
 
     private UserEntity createUser(String email, String password, UserRole role) {

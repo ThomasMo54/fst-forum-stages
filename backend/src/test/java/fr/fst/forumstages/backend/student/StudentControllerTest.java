@@ -3,8 +3,6 @@ package fr.fst.forumstages.backend.student;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.fst.forumstages.backend.student.dto.StudentDto;
 import fr.fst.forumstages.backend.student.dto.StudentRequestDto;
-import fr.fst.forumstages.backend.student.enums.AccountStatus;
-import fr.fst.forumstages.backend.student.exception.StudentNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -16,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -66,7 +65,6 @@ class StudentControllerTest {
                 2,
                 skills,
                 null,
-                AccountStatus.PENDING,
                 LocalDateTime.now(),
                 "user-123"
         );
@@ -109,7 +107,6 @@ class StudentControllerTest {
                 3,
                 skills,
                 "/cv/sophie-martin.pdf",
-                AccountStatus.VALIDATED,
                 LocalDateTime.now(),
                 userId
         );
@@ -130,7 +127,6 @@ class StudentControllerTest {
                 .andExpect(jsonPath("$.specialization").value("Deep Learning"))
                 .andExpect(jsonPath("$.yearOfStudy").value(3))
                 .andExpect(jsonPath("$.userId").value(userId))
-                .andExpect(jsonPath("$.status").value("VALIDATED"))
                 .andExpect(jsonPath("$.skills").isArray())
                 .andExpect(jsonPath("$.skills[0]").value("Python"))
                 .andExpect(jsonPath("$.skills[1]").value("Machine Learning"))
@@ -143,7 +139,7 @@ class StudentControllerTest {
         String userId = "nonexistent-user";
 
         when(studentService.findByUserId(userId))
-                .thenThrow(new StudentNotFoundException("Étudiant non trouvé avec l'IDUser: " + userId));
+                .thenThrow(new NoSuchElementException("Student not found with User ID: " + userId));
 
         mockMvc.perform(get("/students/by-user/{userId}", userId)
                         .with(csrf()))
