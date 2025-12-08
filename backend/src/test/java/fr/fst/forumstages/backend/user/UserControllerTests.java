@@ -2,6 +2,7 @@ package fr.fst.forumstages.backend.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
+import fr.fst.forumstages.backend.student.dto.CreateStudentUserDto;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,9 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -256,5 +260,39 @@ public class UserControllerTests {
     @TestConfiguration
     @EnableMethodSecurity
     static class MethodSecurityConfig {
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    public void createStudentUser_success() throws Exception {
+        List<String> skills = Arrays.asList("Java", "Spring Boot");
+
+        CreateStudentUserDto createStudentUserDto = new CreateStudentUserDto(
+                "student@university.fr",
+                "12345678",
+                "Jean",
+                "Dupont",
+                "STU123456",
+                "+33612345678",
+                "Master",
+                "Informatique",
+                "Développement Web",
+                2,
+                skills
+        );
+
+        UserEntity createdUser = new UserEntity();
+        createdUser.setId("123");
+        createdUser.setEmail("student@university.fr");
+
+        when(userService.createStudentUser(any(CreateStudentUserDto.class))).thenReturn(createdUser);
+
+        mockMvc.perform(post("/users/student")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createStudentUserDto))
+                        .with(csrf()))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value("123"))
+                .andExpect(jsonPath("$.email").value("student@university.fr"));
     }
 }

@@ -1,6 +1,7 @@
 package fr.fst.forumstages.backend.user;
 
 import fr.fst.forumstages.backend.company.CompanyEntity;
+import fr.fst.forumstages.backend.student.StudentEntity;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -30,7 +31,8 @@ public class UserEntity implements UserDetails {
     @DBRef
     private CompanyEntity company;
 
-    // TODO: Add StudentEntity reference
+    @DBRef
+    private StudentEntity student;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
