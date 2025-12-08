@@ -2,7 +2,6 @@ import "./VerifyPage.css";
 import Button from "../../../components/button/Button.tsx";
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import api from "../../../services/api.ts";
 import { AxiosError } from "axios";
 import UserService, { type VerifyUserDto } from "../../../services/user.service.ts";
 
@@ -35,7 +34,6 @@ export function VerifyPage() {
         navigate('/login');
       } catch (err) {
         setError("Code de vérification invalide ou expiré.");
-        console.error('Verification failed', err);
       }
     }
   };
@@ -45,7 +43,7 @@ export function VerifyPage() {
     setError(null);
     if (email) {
       try {
-        await api.post('/users/refresh-verification', { email });
+        await UserService.refreshVerificationCode(email)
         setResendStatus({ error: null, success: 'Un nouveau code a été envoyé.' });
       } catch (err) {
         const error = err as AxiosError;
@@ -53,7 +51,6 @@ export function VerifyPage() {
           setResendStatus({ success: null, error: 'Trop de demandes. Veuillez réessayer plus tard.' });
         } else {
           setResendStatus({ success: null, error: 'Une erreur est survenue lors du renvoi du code.' });
-          console.error('Resend failed', err);
         }
       }
     }

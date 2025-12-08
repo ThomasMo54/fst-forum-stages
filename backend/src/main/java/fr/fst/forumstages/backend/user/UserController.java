@@ -76,6 +76,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.CREATED)
     public UserDto createStudentUser(@Valid @RequestBody CreateStudentUserDto createStudentUserDto) {
         UserEntity userEntity = userService.createStudentUser(createStudentUserDto);
+        emailService.sendVerificationEmail(userEntity.getEmail(), userEntity.getVerificationCode());
         return UserDto.fromEntity(userEntity);
     }
 
