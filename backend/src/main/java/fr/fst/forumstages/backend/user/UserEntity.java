@@ -11,6 +11,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -28,6 +29,12 @@ public class UserEntity implements UserDetails {
 
     private UserRole role;
 
+    private boolean isVerified = false;
+
+    private String verificationCode;
+
+    private LocalDateTime verificationCodeExpiry;
+
     @DBRef
     private CompanyEntity company;
 
@@ -42,5 +49,10 @@ public class UserEntity implements UserDetails {
     @Override
     public String getUsername() {
         return email;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return isVerified;
     }
 }

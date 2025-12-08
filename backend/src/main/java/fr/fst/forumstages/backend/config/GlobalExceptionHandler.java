@@ -2,6 +2,7 @@ package fr.fst.forumstages.backend.config;
 
 import fr.fst.forumstages.backend.auth.exception.ExpiredRefreshTokenException;
 import fr.fst.forumstages.backend.error.dto.ErrorResponseDto;
+import fr.fst.forumstages.backend.user.exception.TooManyRequestsException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +37,12 @@ public class GlobalExceptionHandler {
     @ResponseBody
     public ResponseEntity<ErrorResponseDto> expiredRefreshTokenException(ExpiredRefreshTokenException ex) {
         return handleException(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    @ExceptionHandler(TooManyRequestsException.class)
+    @ResponseBody
+    public ResponseEntity<ErrorResponseDto> tooManyRequestsException(TooManyRequestsException ex) {
+        return handleException(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage());
     }
 
     private ResponseEntity<ErrorResponseDto> handleException(HttpStatus status, String message) {

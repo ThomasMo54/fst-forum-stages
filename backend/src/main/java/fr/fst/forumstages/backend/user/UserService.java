@@ -6,13 +6,19 @@ import fr.fst.forumstages.backend.company.dto.CompanyDto;
 import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
 import fr.fst.forumstages.backend.student.StudentEntity;
 import fr.fst.forumstages.backend.student.StudentRepository;
-import fr.fst.forumstages.backend.student.dto.CreateStudentUserDto;
+import fr.fst.forumstages.backend.student.dto.CreateStudentDto;
+import fr.fst.forumstages.backend.email.EmailService;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
+import fr.fst.forumstages.backend.user.exception.TooManyRequestsException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 @Service
@@ -21,7 +27,10 @@ public class UserService {
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
     private final StudentRepository studentRepository;
+
     private final PasswordEncoder passwordEncoder;
+
+    private final Map<String, Long> verificationCodeRequestTimestamps = new HashMap<>();
 
     public UserService(
             UserRepository userRepository,
@@ -36,11 +45,17 @@ public class UserService {
     }
 
     public UserEntity createAdminUser(CreateAdminUserDto createAdminDto) {
+        if (userRepository.findByEmail(createAdminDto.email()).isPresent()) {
+            throw new DuplicateKeyException("Email already in use");
+        }
         UserEntity userEntity = createUser(createAdminDto.email(), createAdminDto.password(), UserRole.ADMIN);
         return userRepository.save(userEntity);
     }
 
     public UserEntity createCompanyUser(CreateCompanyDto createCompanyDto) {
+        if (userRepository.findByEmail(createCompanyDto.email()).isPresent()) {
+            throw new DuplicateKeyException("Email already in use");
+        }
         UserEntity userEntity = createUser(createCompanyDto.email(), createCompanyDto.password(), UserRole.COMPANY);
         CompanyDto companyDto = new CompanyDto(
                 null,
@@ -57,8 +72,10 @@ public class UserService {
     }
 
     @Transactional
-    public UserEntity createStudentUser(CreateStudentUserDto createStudentDto) {
-        // Créer l'utilisateur
+    public UserEntity createStudentUser(CreateStudentDto createStudentDto) {
+        if (userRepository.findByEmail(createStudentDto.email()).isPresent()) {
+            throw new DuplicateKeyException("Email already in use");
+        }
         UserEntity userEntity = createUser(createStudentDto.email(), createStudentDto.password(), UserRole.STUDENT);
 
         // Sauvegarder d'abord l'utilisateur pour obtenir son ID
@@ -91,7 +108,50 @@ public class UserService {
         userEntity.setEmail(email);
         userEntity.setPassword(passwordEncoder.encode(password));
         userEntity.setRole(role);
+        userEntity.setVerificationCode(generateVerificationCode());
+        userEntity.setVerificationCodeExpiry(LocalDateTime.now().plusSeconds(EmailService.EXPIRY_DURATION_MS / 1000));
         return userEntity;
+    }
+
+    private String generateVerificationCode() {
+        return String.format("%06d", (int) (Math.random() * 1000000));
+    }
+
+    public boolean verifyUser(String email, String code) {
+        UserEntity userEntity = findByEmail(email);
+        if (userEntity.isVerified()) {
+            throw new IllegalStateException("User is already verified");
+        }
+        if (userEntity.getVerificationCodeExpiry().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Verification code has expired");
+        }
+        if (!userEntity.getVerificationCode().equals(code)) {
+            throw new IllegalArgumentException("Invalid verification code");
+        }
+        userEntity.setVerified(true);
+        userEntity.setVerificationCode(null);
+        userEntity.setVerificationCodeExpiry(null);
+        userRepository.save(userEntity);
+        return true;
+    }
+
+    public String refreshVerificationCode(String email) {
+        UserEntity userEntity = findByEmail(email);
+        if (userEntity.isVerified()) {
+            throw new IllegalStateException("User is already verified");
+        }
+        if (verificationCodeRequestTimestamps.containsKey(email)) {
+            long lastRequestTime = verificationCodeRequestTimestamps.get(email);
+            if (System.currentTimeMillis() - lastRequestTime < 30000) { // 30 seconds cooldown
+                throw new TooManyRequestsException("Verification code was recently sent. Please wait before requesting a new one.");
+            }
+        }
+        String code = generateVerificationCode();
+        userEntity.setVerificationCode(code);
+        userEntity.setVerificationCodeExpiry(LocalDateTime.now().plusSeconds(EmailService.EXPIRY_DURATION_MS / 1000));
+        userRepository.save(userEntity);
+        verificationCodeRequestTimestamps.put(email, System.currentTimeMillis());
+        return code;
     }
 
     public UserEntity findById(String id) {

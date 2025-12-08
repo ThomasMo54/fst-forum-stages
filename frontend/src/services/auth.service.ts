@@ -25,7 +25,6 @@ const login = async (email: string, password: string): Promise<LoginResponse> =>
 const logout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('refreshToken');
-  window.location.href = '/';
 };
 
 const getCurrentUser = (): DecodedToken | null => {

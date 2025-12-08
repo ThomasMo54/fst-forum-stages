@@ -28,7 +28,11 @@ const LoginPage: React.FC = () => {
     try {
       await login(email, password);
       navigate('/')
-    } catch (err) {
+    } catch (err: any) {
+      if (err.response && err.response.status === 403) {
+        navigate("/register/verify", { state: { email } });
+        return;
+      }
       setError('Échec de la connexion. Vérifiez vos identifiants et réessayez.');
     }
   };
@@ -105,7 +109,7 @@ const LoginPage: React.FC = () => {
             <p>Vous n'avez pas de compte ?</p>
             <Button
               variant="link"
-              to="/auth/register"
+              to="/register"
             >
               Créer un compte
             </Button>

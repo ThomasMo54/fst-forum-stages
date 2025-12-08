@@ -2,9 +2,11 @@ package fr.fst.forumstages.backend.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
-import fr.fst.forumstages.backend.student.dto.CreateStudentUserDto;
+import fr.fst.forumstages.backend.email.EmailService;
+import fr.fst.forumstages.backend.student.dto.CreateStudentDto;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
+import fr.fst.forumstages.backend.user.exception.TooManyRequestsException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -14,6 +16,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.NoSuchElementException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -37,6 +41,8 @@ public class UserControllerTests {
 
     @MockitoBean
     private UserService userService;
+    @MockitoBean
+    private EmailService emailService;
 
     @MockitoBean(name = "userSecurity")
     private UserSecurity userSecurity;
@@ -122,23 +128,126 @@ public class UserControllerTests {
     }
 
     @Test
-    @WithMockUser(roles = "STUDENT")
-    public void createCompanyUser_forbidden() throws Exception {
-        CreateCompanyDto createCompanyDto = new CreateCompanyDto(
-                "a@b.fr",
+    @WithMockUser(roles = "ADMIN")
+    public void createStudentUser_success() throws Exception {
+        List<String> skills = Arrays.asList("Java", "Spring Boot");
+
+        CreateStudentDto createStudentUserDto = new CreateStudentDto(
+                "student@university.fr",
                 "12345678",
-                "Test Company",
-                "c@d.fr",
-                null,
-                null,
-                null,
-                null
+                "Jean",
+                "Dupont",
+                "STU123456",
+                "+33612345678",
+                "Master",
+                "Informatique",
+                "Développement Web",
+                2,
+                skills
         );
-        mockMvc.perform(post("/users/company")
+
+        UserEntity createdUser = new UserEntity();
+        createdUser.setId("123");
+        createdUser.setEmail("student@university.fr");
+
+        when(userService.createStudentUser(any(CreateStudentDto.class))).thenReturn(createdUser);
+
+        mockMvc.perform(post("/users/student")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createStudentUserDto))
+                        .with(csrf()))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value("123"))
+                .andExpect(jsonPath("$.email").value("student@university.fr"));
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    public void verifyUser_success() throws Exception {
+        String email = "a@b.fr";
+        String code = "123456";
+
+        when(userService.verifyUser(any(String.class), any(String.class))).thenReturn(true);
+
+        mockMvc.perform(post("/users/verify")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createCompanyDto))
+                .content("{\"email\":\"" + email + "\",\"verificationCode\":\"" + code + "\"}")
                 .with(csrf()))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    public void verifyUser_badRequest() throws Exception {
+        String email = "a@b.fr";
+        String code = "wrongcode";
+
+        when(userService.verifyUser(any(String.class), any(String.class))).thenThrow(new IllegalArgumentException("Invalid verification code"));
+
+        mockMvc.perform(post("/users/verify")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"" + email + "\",\"verificationCode\":\"" + code + "\"}")
+                .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    public void verifyUser_okIfAlreadyVerified() throws Exception {
+        String email = "a@b.fr";
+        String code = "123456";
+
+        when(userService.verifyUser(any(String.class), any(String.class))).thenThrow(new IllegalStateException("User is already verified"));
+
+        mockMvc.perform(post("/users/verify")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"" + email + "\",\"verificationCode\":\"" + code + "\"}")
+                .with(csrf()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    public void verifyUser_okIfUserNotFound() throws Exception {
+        String email = "a@b.fr";
+        String code = "123456";
+
+        when(userService.verifyUser(any(String.class), any(String.class))).thenThrow(new NoSuchElementException("User with email " + email + " not found"));
+
+        mockMvc.perform(post("/users/verify")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"" + email + "\",\"verificationCode\":\"" + code + "\"}")
+                .with(csrf()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    public void refreshVerificationCode_success() throws Exception {
+        String email = "a@b.fr";
+        String newCode = "654321";
+
+        when(userService.refreshVerificationCode(any(String.class))).thenReturn(newCode);
+
+        mockMvc.perform(post("/users/refresh-verification")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"" + email + "\"}")
+                .with(csrf()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    public void refreshVerificationCode_tooManyRequests() throws Exception {
+        String email = "a@b.fr";
+
+        when(userService.refreshVerificationCode(any(String.class))).thenThrow(new TooManyRequestsException("Verification code was recently sent. Please wait before requesting a new one."));
+
+        mockMvc.perform(post("/users/refresh-verification")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"" + email + "\"}")
+                .with(csrf()))
+                .andExpect(status().isTooManyRequests());
     }
 
     @Test
@@ -260,39 +369,5 @@ public class UserControllerTests {
     @TestConfiguration
     @EnableMethodSecurity
     static class MethodSecurityConfig {
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    public void createStudentUser_success() throws Exception {
-        List<String> skills = Arrays.asList("Java", "Spring Boot");
-
-        CreateStudentUserDto createStudentUserDto = new CreateStudentUserDto(
-                "student@university.fr",
-                "12345678",
-                "Jean",
-                "Dupont",
-                "STU123456",
-                "+33612345678",
-                "Master",
-                "Informatique",
-                "Développement Web",
-                2,
-                skills
-        );
-
-        UserEntity createdUser = new UserEntity();
-        createdUser.setId("123");
-        createdUser.setEmail("student@university.fr");
-
-        when(userService.createStudentUser(any(CreateStudentUserDto.class))).thenReturn(createdUser);
-
-        mockMvc.perform(post("/users/student")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createStudentUserDto))
-                        .with(csrf()))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value("123"))
-                .andExpect(jsonPath("$.email").value("student@university.fr"));
     }
 }
