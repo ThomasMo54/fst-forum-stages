@@ -2,17 +2,21 @@ import "./VerifyPage.css";
 import Button from "../../../components/button/Button.tsx";
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import UserService, { type VerifyUserDto } from '../../../services/user.service';
+import api from "../../../services/api.ts";
+import { AxiosError } from "axios";
+import UserService, { type VerifyUserDto } from "../../../services/user.service.ts";
 
 export function VerifyPage() {
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [resendStatus, setResendStatus] = useState<{ error: string | null; success: string | null }>({ error: null, success: null });
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email;
 
   useEffect(() => {
     if (!email) {
+      console.warn("No email found in location state, redirecting to /register");
       navigate('/register');
     }
   }, [email, navigate]);
@@ -20,6 +24,7 @@ export function VerifyPage() {
   const handleVerify = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
+    setResendStatus({ error: null, success: null });
     if (email) {
       const verifyData: VerifyUserDto = {
         email,
@@ -30,6 +35,26 @@ export function VerifyPage() {
         navigate('/login');
       } catch (err) {
         setError("Code de vérification invalide ou expiré.");
+        console.error('Verification failed', err);
+      }
+    }
+  };
+
+  const handleResend = async () => {
+    setResendStatus({ error: null, success: null });
+    setError(null);
+    if (email) {
+      try {
+        await api.post('/users/refresh-verification', { email });
+        setResendStatus({ error: null, success: 'Un nouveau code a été envoyé.' });
+      } catch (err) {
+        const error = err as AxiosError;
+        if (error.response && error.response.status === 429) {
+          setResendStatus({ success: null, error: 'Trop de demandes. Veuillez réessayer plus tard.' });
+        } else {
+          setResendStatus({ success: null, error: 'Une erreur est survenue lors du renvoi du code.' });
+          console.error('Resend failed', err);
+        }
       }
     }
   };
@@ -62,6 +87,13 @@ export function VerifyPage() {
             Vérifier
           </Button>
         </form>
+        <div style={{ marginTop: '1rem' }}>
+          <Button onClick={handleResend} type="button">
+            Renvoyer le code
+          </Button>
+          {resendStatus.success && <p style={{ color: 'green', marginTop: '0.5rem' }}>{resendStatus.success}</p>}
+          {resendStatus.error && <p className="error-message" style={{ marginTop: '0.5rem' }}>{resendStatus.error}</p>}
+        </div>
       </div>
     </div>
   );

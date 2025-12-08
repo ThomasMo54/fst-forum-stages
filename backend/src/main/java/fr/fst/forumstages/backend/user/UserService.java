@@ -10,12 +10,15 @@ import fr.fst.forumstages.backend.student.dto.CreateStudentUserDto;
 import fr.fst.forumstages.backend.email.EmailService;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
+import fr.fst.forumstages.backend.user.exception.TooManyRequestsException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 @Service
@@ -25,6 +28,8 @@ public class UserService {
     private final CompanyRepository companyRepository;
     private final StudentRepository studentRepository;
     private final PasswordEncoder passwordEncoder;
+
+    private final Map<String, Long> verificationCodeRequestTimestamps = new HashMap<>();
 
     public UserService(
             UserRepository userRepository,
@@ -125,6 +130,25 @@ public class UserService {
         userEntity.setVerificationCodeExpiry(null);
         userRepository.save(userEntity);
         return true;
+    }
+
+    public String refreshVerificationCode(String email) {
+        UserEntity userEntity = findByEmail(email);
+        if (userEntity.isVerified()) {
+            throw new IllegalStateException("User is already verified");
+        }
+        if (verificationCodeRequestTimestamps.containsKey(email)) {
+            long lastRequestTime = verificationCodeRequestTimestamps.get(email);
+            if (System.currentTimeMillis() - lastRequestTime < 30000) { // 30 seconds cooldown
+                throw new TooManyRequestsException("Verification code was recently sent. Please wait before requesting a new one.");
+            }
+        }
+        String code = generateVerificationCode();
+        userEntity.setVerificationCode(code);
+        userEntity.setVerificationCodeExpiry(LocalDateTime.now().plusSeconds(EmailService.EXPIRY_DURATION_MS / 1000));
+        userRepository.save(userEntity);
+        verificationCodeRequestTimestamps.put(email, System.currentTimeMillis());
+        return code;
     }
 
     public UserEntity findById(String id) {

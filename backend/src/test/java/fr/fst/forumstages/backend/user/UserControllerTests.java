@@ -6,6 +6,7 @@ import fr.fst.forumstages.backend.email.EmailService;
 import fr.fst.forumstages.backend.student.dto.CreateStudentUserDto;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
+import fr.fst.forumstages.backend.user.exception.TooManyRequestsException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -218,6 +219,35 @@ public class UserControllerTests {
                 .content("{\"email\":\"" + email + "\",\"verificationCode\":\"" + code + "\"}")
                 .with(csrf()))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    public void refreshVerificationCode_success() throws Exception {
+        String email = "a@b.fr";
+        String newCode = "654321";
+
+        when(userService.refreshVerificationCode(any(String.class))).thenReturn(newCode);
+
+        mockMvc.perform(post("/users/refresh-verification")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"" + email + "\"}")
+                .with(csrf()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    public void refreshVerificationCode_tooManyRequests() throws Exception {
+        String email = "a@b.fr";
+
+        when(userService.refreshVerificationCode(any(String.class))).thenThrow(new TooManyRequestsException("Verification code was recently sent. Please wait before requesting a new one."));
+
+        mockMvc.perform(post("/users/refresh-verification")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"" + email + "\"}")
+                .with(csrf()))
+                .andExpect(status().isTooManyRequests());
     }
 
     @Test

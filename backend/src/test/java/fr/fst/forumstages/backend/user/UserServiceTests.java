@@ -8,6 +8,7 @@ import fr.fst.forumstages.backend.student.StudentRepository;
 import fr.fst.forumstages.backend.student.dto.CreateStudentUserDto;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
+import fr.fst.forumstages.backend.user.exception.TooManyRequestsException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -246,6 +247,8 @@ public class UserServiceTests {
 
         assertDoesNotThrow(() -> userService.verifyUser(email, code));
         assertTrue(mockUser.isVerified());
+
+        verify(userRepository, times(1)).save(mockUser);
     }
 
     @Test
@@ -261,6 +264,8 @@ public class UserServiceTests {
 
         assertThrows(IllegalArgumentException.class, () -> userService.verifyUser(email, code));
         assertFalse(mockUser.isVerified());
+
+        verify(userRepository, times(0)).save(mockUser);
     }
 
     @Test
@@ -276,6 +281,69 @@ public class UserServiceTests {
 
         assertThrows(IllegalArgumentException.class, () -> userService.verifyUser(email, code));
         assertFalse(mockUser.isVerified());
+
+        verify(userRepository, times(0)).save(mockUser);
+    }
+
+    @Test
+    public void verifyUser_alreadyVerified() {
+        String email = "a@b.fr";
+        String code = "123456";
+        UserEntity mockUser = new UserEntity();
+        mockUser.setEmail(email);
+        mockUser.setVerified(true);
+        mockUser.setVerificationCode(code);
+        mockUser.setVerificationCodeExpiry(LocalDateTime.now().plusMinutes(15));
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(mockUser));
+
+        assertThrows(IllegalStateException.class, () -> userService.verifyUser(email, code));
+
+        verify(userRepository, times(0)).save(mockUser);
+    }
+
+    @Test
+    public void refreshVerificationCode_success() {
+        String email = "a@b.fr";
+        UserEntity mockUser = new UserEntity();
+        mockUser.setEmail(email);
+        mockUser.setVerified(false);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(mockUser));
+
+        assertDoesNotThrow(() -> userService.refreshVerificationCode(email));
+
+        verify(userRepository, times(1)).save(mockUser);
+    }
+
+    @Test
+    public void refreshVerificationCode_alreadyVerified() {
+        String email = "a@b.fr";
+        UserEntity mockUser = new UserEntity();
+        mockUser.setEmail(email);
+        mockUser.setVerified(true);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(mockUser));
+
+        assertThrows(IllegalStateException.class, () -> userService.refreshVerificationCode(email));
+
+        verify(userRepository, times(0)).save(mockUser);
+    }
+
+    @Test
+    public void refreshVerificationCode_tooManyRequests() {
+        String email = "a@b.fr";
+        UserEntity mockUser = new UserEntity();
+        mockUser.setEmail(email);
+        mockUser.setVerified(false);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(mockUser));
+
+        userService.refreshVerificationCode(email); // First request should succeed
+
+        assertThrows(TooManyRequestsException.class, () -> userService.refreshVerificationCode(email)); // Second request should fail
+
+        verify(userRepository, times(1)).save(mockUser);
     }
 
     @Test
@@ -345,6 +413,8 @@ public class UserServiceTests {
 
         assertEquals("c@d.fr", result.getEmail());
         assertEquals(encodedNewPassword, result.getPassword());
+
+        verify(userRepository, times(1)).save(mockUser);
     }
 
     @Test
@@ -370,6 +440,8 @@ public class UserServiceTests {
 
         assertEquals("a@b.fr", result.getEmail());
         assertEquals(encodedNewPassword, result.getPassword());
+
+        verify(userRepository, times(1)).save(mockUser);
     }
 
     @Test

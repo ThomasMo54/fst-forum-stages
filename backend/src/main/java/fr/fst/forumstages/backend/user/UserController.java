@@ -5,6 +5,7 @@ import fr.fst.forumstages.backend.email.EmailService;
 import fr.fst.forumstages.backend.student.dto.CreateStudentUserDto;
 import fr.fst.forumstages.backend.user.annotation.IsAdminOrUserOwner;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
+import fr.fst.forumstages.backend.user.dto.RefreshVerificationCodeDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
 import fr.fst.forumstages.backend.user.dto.UserDto;
 import fr.fst.forumstages.backend.user.dto.VerifyRequestDto;
@@ -17,11 +18,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -91,6 +94,21 @@ public class UserController {
         } catch (IllegalStateException | NoSuchElementException e) {
             return ResponseEntity.ok().build();
         }
+    }
+
+    @Operation(summary = "Rafraîchir le code de vérification", description = "Permet de générer un nouveau code de vérification pour un utilisateur.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Code de vérification rafraîchi avec succès (si utilisateur inexistant ou déjà vérifié, aucune action nécessaire)"),
+            @ApiResponse(responseCode = "400", description = "Requête de rafraîchissement invalide"),
+            @ApiResponse(responseCode = "429", description = "Trop de demandes de rafraîchissement, veuillez réessayer plus tard")
+    })
+    @PostMapping("/refresh-verification")
+    public ResponseEntity<?> refreshVerificationCode(@Valid @RequestBody RefreshVerificationCodeDto refreshVerificationCodeDto) {
+        try {
+            String code = userService.refreshVerificationCode(refreshVerificationCodeDto.email());
+            emailService.sendVerificationEmail(refreshVerificationCodeDto.email(), code);
+        } catch (IllegalStateException | NoSuchElementException ignored) {}
+        return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "Mettre à jour un utilisateur", description = "Permet de mettre à jour les informations d'un utilisateur existant.")
