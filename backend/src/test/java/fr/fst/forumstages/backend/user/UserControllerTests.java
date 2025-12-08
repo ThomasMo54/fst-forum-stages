@@ -3,7 +3,7 @@ package fr.fst.forumstages.backend.user;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
 import fr.fst.forumstages.backend.email.EmailService;
-import fr.fst.forumstages.backend.student.dto.CreateStudentUserDto;
+import fr.fst.forumstages.backend.student.dto.CreateStudentDto;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
 import fr.fst.forumstages.backend.user.exception.TooManyRequestsException;
@@ -132,7 +132,7 @@ public class UserControllerTests {
     public void createStudentUser_success() throws Exception {
         List<String> skills = Arrays.asList("Java", "Spring Boot");
 
-        CreateStudentUserDto createStudentUserDto = new CreateStudentUserDto(
+        CreateStudentDto createStudentUserDto = new CreateStudentDto(
                 "student@university.fr",
                 "12345678",
                 "Jean",
@@ -150,7 +150,7 @@ public class UserControllerTests {
         createdUser.setId("123");
         createdUser.setEmail("student@university.fr");
 
-        when(userService.createStudentUser(any(CreateStudentUserDto.class))).thenReturn(createdUser);
+        when(userService.createStudentUser(any(CreateStudentDto.class))).thenReturn(createdUser);
 
         mockMvc.perform(post("/users/student")
                         .contentType(MediaType.APPLICATION_JSON)

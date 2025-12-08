@@ -21,7 +21,7 @@ public class StudentService {
      * Modifie un étudiant existant
      */
     @Transactional
-    public StudentDto updateStudent(String id, StudentRequestDto requestDto) {
+    public StudentDto updateStudent(String id, UpdateStudentDto requestDto) {
         log.info("Updating student ID: {}", id);
 
         // Récupération de l'étudiant

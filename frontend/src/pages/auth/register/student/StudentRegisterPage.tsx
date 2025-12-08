@@ -32,7 +32,7 @@ const StudentRegisterPage: React.FC = () => {
   };
 
   const validateForm = (): boolean => {
-    const { lastName, firstName, email, password, confirmPassword, fieldOfStudy, educationLevel, yearOfStudy } = formData;
+    const { lastName, firstName, email, phone, password, confirmPassword, fieldOfStudy, educationLevel, yearOfStudy } = formData;
     if (!lastName.trim() || !firstName.trim()) {
       setError("Le nom et le prénom sont requis.");
       return false;
@@ -46,8 +46,8 @@ const StudentRegisterPage: React.FC = () => {
       setError("L'email n'est pas valide.");
       return false;
     }
-    const phoneRegex = /^(\+33|0)[1-9][0-9]{8}$/;
-    if (formData.phone && !phoneRegex.test(formData.phone)) {
+    const phoneRegex = /^(\+33|0)[1-9] ?([0-9][0-9] ?){4}$/;
+    if (!phoneRegex.test(phone)) {
       setError("Le numéro de téléphone n'est pas valide. (Format français attendu)");
       return false;
     }

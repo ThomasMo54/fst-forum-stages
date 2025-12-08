@@ -1,7 +1,7 @@
 package fr.fst.forumstages.backend.student;
 
 import fr.fst.forumstages.backend.student.dto.StudentDto;
-import fr.fst.forumstages.backend.student.dto.StudentRequestDto;
+import fr.fst.forumstages.backend.student.dto.UpdateStudentDto;
 import fr.fst.forumstages.backend.user.UserEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,7 +30,7 @@ class StudentServiceTests {
 
     @Test
     void updateStudent_Success() {
-        StudentRequestDto request = new StudentRequestDto(
+        UpdateStudentDto request = new UpdateStudentDto(
                 "Jean", "Martin", "jean.martin@example.com", "STU123456",
                 "+33612345678", "Master", "Informatique", "Dev Web", 3, null
         );

@@ -5,7 +5,7 @@ import fr.fst.forumstages.backend.company.CompanyRepository;
 import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
 import fr.fst.forumstages.backend.student.StudentEntity;
 import fr.fst.forumstages.backend.student.StudentRepository;
-import fr.fst.forumstages.backend.student.dto.CreateStudentUserDto;
+import fr.fst.forumstages.backend.student.dto.CreateStudentDto;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
 import fr.fst.forumstages.backend.user.exception.TooManyRequestsException;
@@ -126,7 +126,7 @@ public class UserServiceTests {
         String encodedPassword = "encodedPassword";
         List<String> skills = Arrays.asList("Java", "Spring Boot", "MongoDB");
 
-        CreateStudentUserDto createStudentUserDto = new CreateStudentUserDto(
+        CreateStudentDto createStudentUserDto = new CreateStudentDto(
                 "student@university.fr",
                 password,
                 "Jean",
@@ -191,7 +191,7 @@ public class UserServiceTests {
         String password = "12345678";
         String encodedPassword = "encodedPassword";
 
-        CreateStudentUserDto createStudentUserDto = new CreateStudentUserDto(
+        CreateStudentDto createStudentUserDto = new CreateStudentDto(
                 "student@university.fr",
                 password,
                 "Marie",

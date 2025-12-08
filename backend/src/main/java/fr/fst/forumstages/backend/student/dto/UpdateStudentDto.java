@@ -5,19 +5,10 @@ import jakarta.validation.constraints.*;
 import java.util.List;
 
 /**
- * DTO pour créer un utilisateur étudiant complet (User + Student)
+ * DTO de requête pour créer/modifier un étudiant
  */
-public record CreateStudentUserDto(
-        // Informations utilisateur
-        @NotBlank(message = "L'email est obligatoire")
-        @Email(message = "Format d'email invalide")
-        String email,
+public record UpdateStudentDto(
 
-        @NotBlank(message = "Le mot de passe est obligatoire")
-        @Size(min = 8, message = "Le mot de passe doit contenir au moins 8 caractères")
-        String password,
-
-        // Informations étudiant
         @NotBlank(message = "Le prénom est obligatoire")
         @Size(min = 2, max = 50, message = "Le prénom doit contenir entre 2 et 50 caractères")
         String firstName,
@@ -25,6 +16,10 @@ public record CreateStudentUserDto(
         @NotBlank(message = "Le nom est obligatoire")
         @Size(min = 2, max = 50, message = "Le nom doit contenir entre 2 et 50 caractères")
         String lastName,
+
+        @NotBlank(message = "L'email est obligatoire")
+        @Email(message = "Format d'email invalide")
+        String email,
 
         @NotBlank(message = "Le numéro étudiant est obligatoire")
         @Pattern(regexp = "^[A-Z0-9]{6,20}$", message = "Numéro étudiant invalide (6-20 caractères alphanumériques)")
@@ -47,5 +42,4 @@ public record CreateStudentUserDto(
         Integer yearOfStudy,
 
         List<String> skills
-) {
-}
+) {}

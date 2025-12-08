@@ -1,7 +1,7 @@
 package fr.fst.forumstages.backend.student;
 
 import fr.fst.forumstages.backend.student.dto.StudentDto;
-import fr.fst.forumstages.backend.student.dto.StudentRequestDto;
+import fr.fst.forumstages.backend.student.dto.UpdateStudentDto;
 import fr.fst.forumstages.backend.user.UserEntity;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
@@ -52,7 +52,7 @@ public class StudentEntity {
     /**
      * Crée une entité Student à partir d'un DTO de requête
      */
-    public static StudentEntity fromRequestDto(StudentRequestDto dto) {
+    public static StudentEntity fromDto(StudentDto dto) {
         StudentEntity student = new StudentEntity();
         student.firstName = dto.firstName();
         student.lastName = dto.lastName();
@@ -71,7 +71,7 @@ public class StudentEntity {
     /**
      * Met à jour l'entité avec les données du DTO
      */
-    public void updateFromRequestDto(StudentRequestDto dto) {
+    public void updateFromRequestDto(UpdateStudentDto dto) {
         this.firstName = dto.firstName();
         this.lastName = dto.lastName();
         this.email = dto.email();

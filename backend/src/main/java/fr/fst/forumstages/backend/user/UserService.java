@@ -6,7 +6,7 @@ import fr.fst.forumstages.backend.company.dto.CompanyDto;
 import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
 import fr.fst.forumstages.backend.student.StudentEntity;
 import fr.fst.forumstages.backend.student.StudentRepository;
-import fr.fst.forumstages.backend.student.dto.CreateStudentUserDto;
+import fr.fst.forumstages.backend.student.dto.CreateStudentDto;
 import fr.fst.forumstages.backend.email.EmailService;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
@@ -27,6 +27,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
     private final StudentRepository studentRepository;
+
     private final PasswordEncoder passwordEncoder;
 
     private final Map<String, Long> verificationCodeRequestTimestamps = new HashMap<>();
@@ -71,8 +72,10 @@ public class UserService {
     }
 
     @Transactional
-    public UserEntity createStudentUser(CreateStudentUserDto createStudentDto) {
-        // Créer l'utilisateur
+    public UserEntity createStudentUser(CreateStudentDto createStudentDto) {
+        if (userRepository.findByEmail(createStudentDto.email()).isPresent()) {
+            throw new DuplicateKeyException("Email already in use");
+        }
         UserEntity userEntity = createUser(createStudentDto.email(), createStudentDto.password(), UserRole.STUDENT);
 
         // Sauvegarder d'abord l'utilisateur pour obtenir son ID

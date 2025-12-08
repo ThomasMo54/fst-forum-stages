@@ -2,7 +2,7 @@ package fr.fst.forumstages.backend.student;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.fst.forumstages.backend.student.dto.StudentDto;
-import fr.fst.forumstages.backend.student.dto.StudentRequestDto;
+import fr.fst.forumstages.backend.student.dto.UpdateStudentDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -39,7 +39,7 @@ class StudentControllerTests {
     void updateStudent_Success() throws Exception {
         List<String> skills = Arrays.asList("Java", "Spring Boot");
 
-        StudentRequestDto request = new StudentRequestDto(
+        UpdateStudentDto request = new UpdateStudentDto(
                 "Jean",
                 "Dupont",
                 "jean.dupont@example.com",
@@ -69,7 +69,7 @@ class StudentControllerTests {
                 "user-123"
         );
 
-        when(studentService.updateStudent(any(String.class), any(StudentRequestDto.class)))
+        when(studentService.updateStudent(any(String.class), any(UpdateStudentDto.class)))
                 .thenReturn(response);
 
         mockMvc.perform(put("/students/123")
