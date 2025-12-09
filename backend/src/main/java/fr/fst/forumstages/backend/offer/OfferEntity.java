@@ -7,6 +7,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDate;
+import java.util.List;
+
 @Data
 @Document(collection = "offers")
 public class OfferEntity {
@@ -17,6 +20,22 @@ public class OfferEntity {
 
     private String description;
 
+    private List<String> tags;
+
+    private String salary;
+
+    private LocalDate creationDate;
+
+    private LocalDate internshipStartDate;
+
+    private String internshipDuration;
+
+    private LocalDate limitApplicationDate;
+
+    private String studyLevel; //i.e. Bac +5
+
+    private String remoteWorkPolicy;
+
     @DBRef
     private CompanyEntity company;
 
@@ -25,6 +44,14 @@ public class OfferEntity {
         offerEntity.id = offerDto.id();
         offerEntity.title = offerDto.title();
         offerEntity.description = offerDto.description();
+        offerEntity.tags = offerDto.tags();
+        offerEntity.salary = offerDto.salary();
+        offerEntity.creationDate = LocalDate.now();
+        offerEntity.internshipStartDate = offerDto.internshipStartDate();
+        offerEntity.internshipDuration = offerDto.internshipDuration();
+        offerEntity.limitApplicationDate = offerDto.limitApplicationDate();
+        offerEntity.studyLevel = offerDto.studyLevel();
+        offerEntity.remoteWorkPolicy = offerDto.remoteWorkPolicy();
 
         return offerEntity;
     }

@@ -2,6 +2,7 @@ package fr.fst.forumstages.backend.offer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.fst.forumstages.backend.company.CompanyEntity;
+import fr.fst.forumstages.backend.company.CompanySecurity;
 import fr.fst.forumstages.backend.offer.dto.CreateOfferDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,12 +32,22 @@ public class OfferControllerTests {
     @MockitoBean
     private OfferService offerService;
 
+    @MockitoBean(name = "companySecurity")
+    private CompanySecurity companySecurity;
+
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     public void createOffer_success() throws Exception {
         CreateOfferDto createOfferDto = new CreateOfferDto(
                 "Test Title",
                 "Test Description",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 "123"
         );
 
@@ -52,9 +63,9 @@ public class OfferControllerTests {
         when(offerService.createOffer(any(CreateOfferDto.class))).thenReturn(createdOffer);
 
         mockMvc.perform(post("/offers")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createOfferDto))
-                .with(csrf()))
+                .content(objectMapper.writeValueAsString(createOfferDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value("456"))
                 .andExpect(jsonPath("$.title").value("Test Title"))
@@ -63,50 +74,71 @@ public class OfferControllerTests {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     public void createOffer_validationError() throws Exception {
         CreateOfferDto createOfferDto = new CreateOfferDto(
                 "",
                 "",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 null
         );
 
         mockMvc.perform(post("/offers")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createOfferDto))
-                .with(csrf()))
+                .content(objectMapper.writeValueAsString(createOfferDto)))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     public void createOffer_missingTitle() throws Exception {
         CreateOfferDto createOfferDto = new CreateOfferDto(
                 null,
                 "",
-                null
-        );
-
-        mockMvc.perform(post("/offers")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createOfferDto))
-                .with(csrf()))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    @WithMockUser
-    public void createOffer_missingDescription() throws Exception {
-        CreateOfferDto createOfferDto = new CreateOfferDto(
-                "",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 null,
                 null
         );
 
         mockMvc.perform(post("/offers")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createOfferDto))
-                        .with(csrf()))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createOfferDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    public void createOffer_missingDescription() throws Exception {
+        CreateOfferDto createOfferDto = new CreateOfferDto(
+                "",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                 null,
+                null,
+                null
+        );
+
+        mockMvc.perform(post("/offers")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createOfferDto)))
                 .andExpect(status().isBadRequest());
     }
 

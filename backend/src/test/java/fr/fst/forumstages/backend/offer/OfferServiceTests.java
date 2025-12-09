@@ -34,6 +34,13 @@ public class OfferServiceTests {
         CreateOfferDto createOfferDto = new CreateOfferDto(
                 "Test Offer",
                 "Test Description",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 null
         );
 
