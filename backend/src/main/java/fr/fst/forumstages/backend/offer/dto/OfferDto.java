@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.validator.constraints.Length;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 @Schema(description = "Données d'une offre.")
@@ -30,16 +30,16 @@ public record OfferDto(
 
         @Schema(description = "La date de création de l'offre")
         @NotBlank
-        Date creationDate,
+        LocalDate creationDate,
 
         @Schema(description = "La date du début du stage")
-        Date internshipStartDate,
+        LocalDate internshipStartDate,
 
         @Schema(description = "La durée du stage")
-        Date internshipDuration,
+        String internshipDuration,
 
         @Schema(description = "La date limite de candidature")
-        Date limitApplicationDate,
+        LocalDate limitApplicationDate,
 
         @Schema(description = "Le niveau d'étude minimale nécéssaire (exemple : L3 ou M2...")
         String studyLevel,

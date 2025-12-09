@@ -7,7 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -24,13 +24,13 @@ public class OfferEntity {
 
     private String salary;
 
-    private Date creationDate;
+    private LocalDate creationDate;
 
-    private Date internshipStartDate;
+    private LocalDate internshipStartDate;
 
-    private Date internshipDuration;
+    private String internshipDuration;
 
-    private Date limitApplicationDate;
+    private LocalDate limitApplicationDate;
 
     private String studyLevel; //i.e. Bac +5
 
@@ -46,7 +46,7 @@ public class OfferEntity {
         offerEntity.description = offerDto.description();
         offerEntity.tags = offerDto.tags();
         offerEntity.salary = offerDto.salary();
-        offerEntity.creationDate = new Date();
+        offerEntity.creationDate = LocalDate.now();
         offerEntity.internshipStartDate = offerDto.internshipStartDate();
         offerEntity.internshipDuration = offerDto.internshipDuration();
         offerEntity.limitApplicationDate = offerDto.limitApplicationDate();
