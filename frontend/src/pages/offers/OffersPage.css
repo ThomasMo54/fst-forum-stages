@@ -1,0 +1,331 @@
+.offers-main {
+    padding: 2rem 0 3rem;
+    background: var(--light-bg);
+}
+
+.offers-hero {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+    align-items: center;
+    background: var(--white);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.75rem;
+    color: var(--secondary-color);
+    font-weight: 700;
+}
+
+.lead {
+    color: var(--text-light);
+    margin: 0.5rem 0 1rem;
+    max-width: 640px;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.hero-actions .ghost-btn {
+    background: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--border-color);
+}
+
+.hero-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    min-width: 260px;
+}
+
+.metric-card {
+    background: var(--light-bg);
+    padding: 1rem;
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+}
+
+.metric-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.metric-label {
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.offers-section {
+    margin-top: 2.5rem;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.section-header h2 {
+    margin-top: 0.35rem;
+    color: var(--primary-color);
+}
+
+.filters {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.filters input {
+    padding: 0.75rem 0.85rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    min-width: 250px;
+}
+
+.filters input:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+}
+
+.offers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1rem;
+}
+
+.offer-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: var(--shadow);
+    border: 1px solid #eef1f4;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.offer-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.offer-card h3 {
+    margin: 0.2rem 0;
+    color: var(--primary-color);
+}
+
+.badge {
+    background: rgba(52, 152, 219, 0.08);
+    color: var(--secondary-color);
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    border: 1px solid rgba(52, 152, 219, 0.15);
+}
+
+.offer-description {
+    color: var(--text-dark);
+}
+
+.offer-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+}
+
+.offer-meta.secondary {
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.meta-item {
+    background: var(--light-bg);
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid #edf0f4;
+}
+
+.meta-item span {
+    display: block;
+    color: var(--text-light);
+    font-size: 0.85rem;
+}
+
+.meta-item strong {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--primary-color);
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tag {
+    background: rgba(39, 174, 96, 0.08);
+    color: #1f8a4d;
+    border: 1px solid rgba(39, 174, 96, 0.2);
+    padding: 0.35rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+}
+
+.offers-form-section {
+    margin-top: 3rem;
+    background: var(--white);
+    padding: 1.75rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    border: 1px solid #eef1f4;
+}
+
+.offer-form fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.offer-form .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+}
+
+.offer-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 1rem;
+}
+
+.offer-form label {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.offer-form input,
+.offer-form textarea,
+.offer-form select {
+    padding: 0.85rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-size: 0.95rem;
+}
+
+.offer-form input:focus,
+.offer-form textarea:focus,
+.offer-form select:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.offer-form textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.offer-form small {
+    color: var(--text-light);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.form-disabled {
+    opacity: 0.65;
+}
+
+.form-hint {
+    color: var(--text-light);
+    margin-top: 0.25rem;
+}
+
+.success-message {
+    background: #e8f7ee;
+    color: #1f8a4d;
+    padding: 0.85rem 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #1f8a4d;
+    margin-bottom: 1rem;
+}
+
+.inline-error {
+    margin-bottom: 1rem;
+}
+
+.empty-state {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    border: 1px solid #eef1f4;
+    box-shadow: var(--shadow);
+}
+
+.skeleton {
+    position: relative;
+    overflow: hidden;
+}
+
+.skeleton-line {
+    height: 12px;
+    background: #eef1f4;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.skeleton-line.short {
+    width: 60%;
+}
+
+@media (max-width: 768px) {
+    .offers-hero {
+        flex-direction: column;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .filters {
+        width: 100%;
+    }
+
+    .filters input {
+        width: 100%;
+    }
+
+    .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

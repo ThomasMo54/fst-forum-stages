@@ -7,6 +7,8 @@ import CompanyRegisterPage from "./pages/auth/register/company/CompanyRegisterPa
 import { AuthProvider } from "./context/AuthContext.tsx";
 import PublicRoute from "./components/route/PublicRoute.tsx";
 import { VerifyPage } from "./pages/auth/verify/VerifyPage.tsx";
+import OffersPage from "./pages/offers/OffersPage.tsx";
+import PrivateRoute from "./components/route/PrivateRoute.tsx";
 
 function App() {
   return (
@@ -14,6 +16,9 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route element={<PrivateRoute />}>
+            <Route path="/offers" element={<OffersPage />} />
+          </Route>
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
