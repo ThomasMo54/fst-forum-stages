@@ -6,7 +6,9 @@ import StudentRegisterPage from "./pages/auth/register/student/StudentRegisterPa
 import CompanyRegisterPage from "./pages/auth/register/company/CompanyRegisterPage.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import PublicRoute from "./components/route/PublicRoute.tsx";
+import CompanyRoute from "./components/route/CompanyRoute.tsx";
 import { VerifyPage } from "./pages/auth/verify/VerifyPage.tsx";
+import CreateOfferPage from "./pages/company/offer/CreateOfferPage.tsx";
 import OffersPage from "./pages/offers/OffersPage.tsx";
 import PrivateRoute from "./components/route/PrivateRoute.tsx";
 
@@ -25,6 +27,9 @@ function App() {
             <Route path="/register/student" element={<StudentRegisterPage />} />
             <Route path="/register/company" element={<CompanyRegisterPage />} />
             <Route path="/register/verify" element={<VerifyPage />} />
+          </Route>
+          <Route element={<CompanyRoute />}>
+            <Route path="/company/create-offer" element={<CreateOfferPage />} />
           </Route>
         </Routes>
       </AuthProvider>
