@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.fst.forumstages.backend.application.dto.CreateApplicationDto;
 import fr.fst.forumstages.backend.company.CompanyEntity;
+import fr.fst.forumstages.backend.student.StudentEntity;
 import fr.fst.forumstages.backend.offer.OfferEntity;
 import fr.fst.forumstages.backend.offer.dto.CreateOfferDto;
 import org.junit.jupiter.api.Test;
@@ -76,7 +77,26 @@ public class ApplicationControllerTests {
 
         when(applicationService.getApplicationsForOffer(offerId)).thenReturn(List::of(mockApplication));
 
-        mockMvc.perform(get("/applications/{id}", offerId))
+        mockMvc.perform(get("/applications/offer/{id}", offerId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(applicationId));
+    }
+
+    @Test
+    @WithMockUser
+    public void findApplicationForStudent_success() throws Exception {
+        String studentId = "456";
+        var mockStudent = new StudentEntity();
+        mockStudent.setId(studentId);
+
+        String applicationId = "123";
+        var mockApplication = new ApplicationEntity();
+        mockApplication.setId(applicationId);
+        mockApplication.setStudent(mockStudent);
+
+        when(applicationService.getApplicationsForStudent(studentId)).thenReturn(List::of(mockApplication));
+
+        mockMvc.perform(get("/applications/student/{id}", studentId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(applicationId));
     }

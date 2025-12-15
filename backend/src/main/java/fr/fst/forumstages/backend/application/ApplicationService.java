@@ -46,4 +46,8 @@ public class ApplicationService {
     public List<ApplicationEntity> getApplicationsForOffer(String offerId) {
         return applicationRepository.findByOfferId(offerId);
     }
+
+    public List<ApplicationEntity> getApplicationsForStudent(String studentId) {
+        return applicationRepository.findByStudentId(studentId);
+    }
 }

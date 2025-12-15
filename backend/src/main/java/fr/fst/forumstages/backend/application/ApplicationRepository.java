@@ -8,4 +8,7 @@ import org.springframework.data.mongodb.repository.Query;
 public interface ApplicationRepository extends MongoRepository<ApplicationEntity, String> {
     @Query("{ 'offerId' : ?0 }")
     List<ApplicationEntity> findByOfferId(String offerId);
+
+    @Query("{ 'studentId' : ?0 }")
+    List<ApplicationEntity> findByStudentId(String offerId);
 }

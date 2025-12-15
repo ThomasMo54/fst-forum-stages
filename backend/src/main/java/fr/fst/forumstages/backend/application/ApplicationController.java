@@ -32,9 +32,15 @@ public class ApplicationController {
         return ApplicationDto.fromEntity(applicationEntity);
     }
 
-    @GetMapping("/{offerId}")
+    @GetMapping("/offer/{offerId}")
     public List<ApplicationDto> getAllApplicationsForOffer(@PathVariable String offerId) {
         var applications = applicationService.getApplicationsForOffer(offerId);
+        return applications.stream().map(ApplicationDto::fromEntity).toList();
+    }
+
+    @GetMapping("/student/{studentId}")
+    public List<ApplicationDto> getAllApplicationsForStudent(@PathVariable String studentId) {
+        var applications = applicationService.getApplicationsForOffer(studentId);
         return applications.stream().map(ApplicationDto::fromEntity).toList();
     }
 }
