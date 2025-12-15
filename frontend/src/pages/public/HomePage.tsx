@@ -20,12 +20,12 @@ interface StatItemProps {
 }
 
 const DashboardCard: React.FC<DashboardCardProps> = ({
- icon,
- title,
- description,
- buttonText,
- linkTo,
- iconColorVar
+  icon,
+  title,
+  description,
+  buttonText,
+  linkTo,
+  iconColorVar
 }) => {
   return (
     <div className="dashboard-card">
@@ -67,43 +67,60 @@ const HomePage: React.FC = () => {
       <main className="main-content">
         <div className="container">
 
+          {/* ===== Welcome ===== */}
           <section className="welcome-section">
             <h2>Bienvenue sur le portail des stages</h2>
-            <p className="subtitle">Université de Lorraine : Connectez talents et opportunités</p>
-            <div style={{ marginTop: '2rem', display: 'flex', gap: '10px', justifyContent: 'center' }}>
-              <Button href="#portals" variant="primary">
-                Voir les espaces
+            <p className="subtitle">
+              Université de Lorraine : Connectez talents et opportunités
+            </p>
+
+            <div
+              style={{
+                marginTop: '2rem',
+                display: 'flex',
+                gap: '10px',
+                justifyContent: 'center',
+                flexWrap: 'wrap'
+              }}
+            >
+              <Button to="/offers" variant="primary">
+                Consulter les offres de stage
               </Button>
-              <Button href="#stats" variant="secondary">
-                Chiffres clés
+
+              <Button href="#portals" variant="secondary">
+                Voir les espaces
               </Button>
             </div>
           </section>
 
+          {/* ===== Portals ===== */}
           <section id="portals" className="page-header">
             <h2>Choisissez votre espace</h2>
             <p>Accédez aux services dédiés selon votre profil</p>
           </section>
 
           <section className="dashboard-grid">
+            {/* Étudiants */}
             <DashboardCard
               icon="🎓"
               title="Espace Étudiants"
               description="Consultez les offres de stage, gérez vos candidatures et validez votre convention."
-              buttonText="Je suis étudiant"
-              linkTo="/auth/login?role=student"
+              buttonText="Voir les offres de stage"
+              linkTo="/offers"
               iconColorVar="--secondary-color"
             />
 
+            {/* Entreprises */}
             <DashboardCard
               icon="🏢"
               title="Espace Entreprises"
               description="Déposez vos offres, recherchez des profils et gérez les processus de recrutement."
-              buttonText="Je suis une entreprise"
-              linkTo="/auth/login?role=company"
+              buttonText="Publier une offre"
+              linkTo="/offers#new-offer"
               iconColorVar="--success-color"
             />
 
+            {/* Admin */}
             <DashboardCard
               icon="⚙️"
               title="Administration"
@@ -114,21 +131,29 @@ const HomePage: React.FC = () => {
             />
           </section>
 
+          {/* ===== Stats ===== */}
           <section id="stats" className="quick-stats">
             <h3>La plateforme en chiffres</h3>
             <div className="stats-grid">
               <StatItem number="500+" label="Offres disponibles" />
-              <StatItem number="120" label="Entreprises" />
+              <StatItem number="120" label="Entreprises partenaires" />
               <StatItem number="100%" label="Sécurisé & Validé" />
             </div>
           </section>
 
+          {/* ===== Info ===== */}
           <section className="info-section" style={{ marginTop: '3rem' }}>
             <h3>Pourquoi utiliser cette plateforme ?</h3>
             <ul className="info-list">
               <li>Centralisation de toutes les offres de stage de l'université</li>
               <li>Validation stricte des entreprises par l'administration</li>
             </ul>
+
+            <div style={{ marginTop: '1.5rem' }}>
+              <Button to="/offers" variant="secondary">
+                Accéder aux offres disponibles
+              </Button>
+            </div>
           </section>
 
         </div>

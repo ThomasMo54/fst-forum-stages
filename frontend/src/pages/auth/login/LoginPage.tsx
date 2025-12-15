@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import '../../../styles/global.css';
 import './LoginPage.css';
@@ -12,9 +12,11 @@ import Button from '../../../components/button/Button';
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const redirectTo = (location.state as { from?: string } | undefined)?.from || '/';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +29,7 @@ const LoginPage: React.FC = () => {
 
     try {
       await login(email, password);
-      navigate('/')
+      navigate(redirectTo, { replace: true })
     } catch (err: any) {
       if (err.response && err.response.status === 403) {
         navigate("/register/verify", { state: { email } });
