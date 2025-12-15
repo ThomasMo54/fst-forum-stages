@@ -33,6 +33,7 @@ const Header: React.FC = () => {
                 <button onClick={handleLogout} className="logout-btn">
                   Déconnexion
                 </button>
+                <Link to={user.roles.includes(user_roles.COMPANY) ? "/company/modify-infos" : "/student/modify-infos"} className="nav-link active">Modifier vos informations</Link>
               </div>
             ) : (
               <Link to="/login" className="nav-link btn-login">

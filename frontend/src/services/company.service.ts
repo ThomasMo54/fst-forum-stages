@@ -10,13 +10,28 @@ export interface CompanyDto {
     country: string;
 }
 
+export interface UpdateCompanyDto {
+    name: string;
+    contactEmail: string | null;
+    streetAddress: string | null;
+    city: string | null;
+    postalCode: string | null;
+    country: string | null;
+}
+
 const getCompanyById = async (companyId: string): Promise<CompanyDto> => {
     const response = await api.get<CompanyDto>(`/companies/${companyId}`);
     return response.data;
 };
 
+const updateCompany = async (companyId: string, updateCompanyDto: UpdateCompanyDto): Promise<CompanyDto> => {
+    const response = await api.put<CompanyDto>(`/companies/${companyId}`, updateCompanyDto);
+    return response.data;
+}
+
 const CompanyService = {
     getCompanyById,
+    updateCompany
 };
 
 export default CompanyService;
