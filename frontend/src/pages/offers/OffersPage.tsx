@@ -4,8 +4,8 @@ import './OffersPage.css';
 import Header from '../../components/header/Header';
 import Footer from '../../components/footer/Footer';
 import Button from '../../components/button/Button';
-import OfferService, { type CreateOfferDto, type OfferDto } from '../../services/offer.service';
-import { useAuth } from '../../context/AuthContext';
+import OfferService, { type OfferDto } from '../../services/offer.service';
+import CompanyService from '../../services/company.service';
 
 const formatDate = (date?: string | null) => {
   if (!date) return 'Non renseignée';
@@ -13,42 +13,13 @@ const formatDate = (date?: string | null) => {
   return parsed.toLocaleDateString('fr-FR');
 };
 
-const getStoredCompanyId = () => {
-  if (typeof window === 'undefined') return '';
-  return localStorage.getItem('companyId') || '';
-};
-
-const buildInitialFormState = (): CreateOfferDto => ({
-  title: '',
-  description: '',
-  companyId: getStoredCompanyId(),
-  tags: [],
-  salary: '',
-  internshipStartDate: '',
-  internshipDuration: '',
-  limitApplicationDate: '',
-  studyLevel: '',
-  remoteWorkPolicy: '',
-});
-
 const OffersPage: React.FC = () => {
-  const { user } = useAuth();
-
   const [offers, setOffers] = useState<OfferDto[]>([]);
+  const [companyNames, setCompanyNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [listError, setListError] = useState<string>('');
 
-  const [formData, setFormData] = useState<CreateOfferDto>(buildInitialFormState);
-  const [tagsInput, setTagsInput] = useState<string>('');
-  const [formError, setFormError] = useState<string>('');
-  const [formSuccess, setFormSuccess] = useState<string>('');
-  const [creating, setCreating] = useState<boolean>(false);
-
   const [searchTerm, setSearchTerm] = useState<string>('');
-
-  const canPublishOffer = user?.roles?.some((role) =>
-    role?.toLowerCase().includes('company') || role?.toLowerCase().includes('admin')
-  );
 
   useEffect(() => {
     void fetchOffers();
@@ -60,6 +31,18 @@ const OffersPage: React.FC = () => {
     try {
       const data = await OfferService.getAllOffers();
       setOffers(data);
+      const companyIds = [...new Set(data.map(offer => offer.companyId))];
+      const names: Record<string, string> = {};
+      await Promise.all(companyIds.map(async id => {
+        try {
+          const company = await CompanyService.getCompanyById(id);
+          names[id] = company.name;
+        } catch (e) {
+          console.error(`Could not fetch company name for ID ${id}`, e);
+          names[id] = `Entreprise #${id}`;
+        }
+      }));
+      setCompanyNames(names);
     } catch (err) {
       setListError("Impossible de récupérer les offres pour le moment.");
     } finally {
@@ -73,95 +56,18 @@ const OffersPage: React.FC = () => {
     return offers.filter((offer) => {
       const hasTextMatch =
         offer.title.toLowerCase().includes(term) ||
-        offer.description.toLowerCase().includes(term);
+        offer.description.toLowerCase().includes(term) ||
+        (companyNames[offer.companyId] || '').toLowerCase().includes(term);
       const hasTagMatch = (offer.tags ?? []).some((tag) =>
         tag.toLowerCase().includes(term)
       );
       return hasTextMatch || hasTagMatch;
     });
-  }, [offers, searchTerm]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => {
-      const updated = { ...prev, [name]: value };
-      if (name === 'companyId') {
-        localStorage.setItem('companyId', value);
-      }
-      return updated;
-    });
-    if (formError) setFormError('');
-    if (formSuccess) setFormSuccess('');
-  };
-
-  const resetForm = () => {
-    setFormData((prev) => ({
-      ...buildInitialFormState(),
-      companyId: prev.companyId,
-    }));
-    setTagsInput('');
-  };
-
-  const handleCreateOffer = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError('');
-    setFormSuccess('');
-
-    if (!formData.title.trim() || !formData.description.trim() || !formData.companyId.trim()) {
-      setFormError('Le titre, la description et le numéro de société sont obligatoires.');
-      return;
-    }
-
-    const payload: CreateOfferDto = {
-      title: formData.title.trim(),
-      description: formData.description.trim(),
-      companyId: formData.companyId.trim(),
-    };
-
-    const normalizedTags = tagsInput
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter(Boolean);
-
-    if (normalizedTags.length) {
-      payload.tags = normalizedTags;
-    }
-    if (formData.salary?.trim()) {
-      payload.salary = formData.salary.trim();
-    }
-    if (formData.internshipStartDate) {
-      payload.internshipStartDate = formData.internshipStartDate;
-    }
-    if (formData.internshipDuration?.trim()) {
-      payload.internshipDuration = formData.internshipDuration.trim();
-    }
-    if (formData.limitApplicationDate) {
-      payload.limitApplicationDate = formData.limitApplicationDate;
-    }
-    if (formData.studyLevel?.trim()) {
-      payload.studyLevel = formData.studyLevel.trim();
-    }
-    if (formData.remoteWorkPolicy?.trim()) {
-      payload.remoteWorkPolicy = formData.remoteWorkPolicy.trim();
-    }
-
-    setCreating(true);
-    try {
-      const createdOffer = await OfferService.createOffer(payload);
-      setOffers((prev) => [createdOffer, ...prev]);
-      setFormSuccess('Offre publiée avec succès.');
-      resetForm();
-    } catch (err: any) {
-      const message = err?.response?.data?.message || "Impossible de créer l'offre. Vérifiez les informations saisies.";
-      setFormError(typeof message === 'string' ? message : "Impossible de créer l'offre.");
-    } finally {
-      setCreating(false);
-    }
-  };
+  }, [offers, searchTerm, companyNames]);
 
   return (
     <div className="page-wrapper">
-      <Header />
+      <Header/>
 
       <main className="offers-main">
         <div className="container">
@@ -170,14 +76,8 @@ const OffersPage: React.FC = () => {
               <p className="eyebrow">Offres de stage</p>
               <h1>Explorez et publiez des opportunités</h1>
               <p className="lead">
-                Retrouvez les offres validées par l&apos;équipe FST et publiez vos besoins en quelques clics.
+                Retrouvez les offres validées par l&apos;équipe FST.
               </p>
-              <div className="hero-actions">
-                <Button to="#new-offer" variant="primary">Publier une offre</Button>
-                <Button variant="secondary" onClick={() => void fetchOffers()} className="ghost-btn">
-                  Rafraîchir la liste
-                </Button>
-              </div>
             </div>
 
             <div className="hero-metrics">
@@ -203,7 +103,7 @@ const OffersPage: React.FC = () => {
               <div className="filters">
                 <input
                   type="text"
-                  placeholder="Rechercher une offre ou un tag..."
+                  placeholder="Rechercher une offre, une entreprise ou un tag..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -223,9 +123,9 @@ const OffersPage: React.FC = () => {
               <div className="offers-grid">
                 {[1, 2, 3].map((item) => (
                   <div key={item} className="offer-card skeleton">
-                    <div className="skeleton-line short" />
-                    <div className="skeleton-line" />
-                    <div className="skeleton-line" />
+                    <div className="skeleton-line short"/>
+                    <div className="skeleton-line"/>
+                    <div className="skeleton-line"/>
                   </div>
                 ))}
               </div>
@@ -242,10 +142,9 @@ const OffersPage: React.FC = () => {
                   <div key={offer.id} className="offer-card">
                     <div className="offer-card-header">
                       <div>
-                        <p className="eyebrow">ID {offer.id}</p>
                         <h3>{offer.title}</h3>
                       </div>
-                      <span className="badge">Entreprise #{offer.companyId}</span>
+                      <span className="badge">{companyNames[offer.companyId] || `Entreprise #${offer.companyId}`}</span>
                     </div>
 
                     <p className="offer-description">
@@ -298,190 +197,10 @@ const OffersPage: React.FC = () => {
               </div>
             )}
           </section>
-
-          <section id="new-offer" className="offers-form-section">
-            <div className="section-header">
-              <div>
-                <p className="eyebrow">Espace entreprise</p>
-                <h2>Publier une nouvelle offre</h2>
-                {!canPublishOffer && (
-                  <p className="form-hint">
-                    Seuls les comptes &quot;Entreprise&quot; ou administrateurs peuvent publier une offre.
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {formError && (
-              <div className="error-message">
-                {formError}
-              </div>
-            )}
-
-            {formSuccess && (
-              <div className="success-message">
-                {formSuccess}
-              </div>
-            )}
-
-            <form className={`offer-form ${!canPublishOffer ? 'form-disabled' : ''}`} onSubmit={handleCreateOffer}>
-              <fieldset disabled={!canPublishOffer || creating}>
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label htmlFor="title">Titre *</label>
-                    <input
-                      type="text"
-                      id="title"
-                      name="title"
-                      placeholder="Titre de l'offre"
-                      value={formData.title}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="companyId">Identifiant entreprise *</label>
-                    <input
-                      type="text"
-                      id="companyId"
-                      name="companyId"
-                      placeholder="ID de l'entreprise"
-                      value={formData.companyId}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="description">Description *</label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    placeholder="Décrivez la mission, les attentes et les technologies..."
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    rows={4}
-                    required
-                  />
-                </div>
-
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label htmlFor="tags">Tags</label>
-                    <input
-                      type="text"
-                      id="tags"
-                      name="tags"
-                      placeholder="tech, data, marketing..."
-                      value={tagsInput}
-                      onChange={(e) => setTagsInput(e.target.value)}
-                    />
-                    <small>Séparez les tags par des virgules.</small>
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="salary">Salaire</label>
-                    <input
-                      type="text"
-                      id="salary"
-                      name="salary"
-                      placeholder="Ex: 900€ / mois"
-                      value={formData.salary || ''}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label htmlFor="internshipStartDate">Date de début</label>
-                    <input
-                      type="date"
-                      id="internshipStartDate"
-                      name="internshipStartDate"
-                      value={formData.internshipStartDate || ''}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="internshipDuration">Durée</label>
-                    <input
-                      type="text"
-                      id="internshipDuration"
-                      name="internshipDuration"
-                      placeholder="Ex: 6 mois"
-                      value={formData.internshipDuration || ''}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="limitApplicationDate">Date limite</label>
-                    <input
-                      type="date"
-                      id="limitApplicationDate"
-                      name="limitApplicationDate"
-                      value={formData.limitApplicationDate || ''}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label htmlFor="studyLevel">Niveau requis</label>
-                    <select
-                      id="studyLevel"
-                      name="studyLevel"
-                      value={formData.studyLevel || ''}
-                      onChange={handleInputChange}
-                    >
-                      <option value="">Sélectionnez un niveau</option>
-                      <option value="BUT">BUT</option>
-                      <option value="Licence">Licence</option>
-                      <option value="Master">Master</option>
-                      <option value="Doctorat">Doctorat</option>
-                      <option value="Autre">Autre</option>
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="remoteWorkPolicy">Télétravail</label>
-                    <input
-                      type="text"
-                      id="remoteWorkPolicy"
-                      name="remoteWorkPolicy"
-                      placeholder="Ex: 2 jours/semaine"
-                      value={formData.remoteWorkPolicy || ''}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-actions">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={resetForm}
-                    disabled={creating}
-                    size="small"
-                  >
-                    Réinitialiser
-                  </Button>
-                  <Button type="submit" variant="primary" disabled={creating}>
-                    {creating ? 'Publication...' : 'Publier l\'offre'}
-                  </Button>
-                </div>
-              </fieldset>
-            </form>
-          </section>
         </div>
       </main>
 
-      <Footer />
+      <Footer/>
     </div>
   );
 };
