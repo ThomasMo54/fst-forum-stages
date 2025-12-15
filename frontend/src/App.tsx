@@ -12,6 +12,9 @@ import CreateOfferPage from "./pages/company/offer/CreateOfferPage.tsx";
 import MyOffersPage from "./pages/company/offer/MyOffersPage.tsx";
 import OffersPage from "./pages/offers/OffersPage.tsx";
 import PrivateRoute from "./components/route/PrivateRoute.tsx";
+import ModifyStudentInfosPage from "./pages/student/ModifyStudentInfos.tsx";
+import StudentRoute from "./components/route/StudentRoute.tsx";
+import ModifyCompanyInfosPage from "./pages/company/ModifyCompanyInfos.tsx";
 
 function App() {
   return (
@@ -32,6 +35,10 @@ function App() {
           <Route element={<CompanyRoute />}>
             <Route path="/company/create-offer" element={<CreateOfferPage />} />
             <Route path="/company/my-offers" element={<MyOffersPage />} />
+            <Route path="/company/modify-infos" element={<ModifyCompanyInfosPage />} />
+          </Route>
+          <Route element={<StudentRoute />}>
+            <Route path="/student/modify-infos" element={<ModifyStudentInfosPage />} />
           </Route>
         </Routes>
       </AuthProvider>
