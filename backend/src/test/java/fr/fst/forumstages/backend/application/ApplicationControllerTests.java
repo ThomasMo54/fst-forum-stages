@@ -5,7 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.fst.forumstages.backend.application.dto.CreateApplicationDto;
 import fr.fst.forumstages.backend.company.CompanyEntity;
 import fr.fst.forumstages.backend.student.StudentEntity;
+import fr.fst.forumstages.backend.student.StudentService;
+import fr.fst.forumstages.backend.student.dto.StudentDto;
 import fr.fst.forumstages.backend.offer.OfferEntity;
+import fr.fst.forumstages.backend.offer.OfferService;
 import fr.fst.forumstages.backend.offer.dto.CreateOfferDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +38,14 @@ public class ApplicationControllerTests {
     @MockitoBean
     private ApplicationService applicationService;
 
+    @MockitoBean
+    private OfferService offerService;
+
+    @MockitoBean
+    private StudentService studentService;
+
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     public void createApplication_success() throws Exception {
         var studentEntity = new StudentEntity();
         studentEntity.setId("456");
@@ -64,7 +73,7 @@ public class ApplicationControllerTests {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     public void findApplicationForOffer_success() throws Exception {
         String offerId = "456";
         var mockOffer = new OfferEntity();
@@ -76,6 +85,7 @@ public class ApplicationControllerTests {
         mockApplication.setOffer(mockOffer);
 
         when(applicationService.getApplicationsForOffer(offerId)).thenReturn(List.of(mockApplication));
+        when(offerService.findOfferById(offerId)).thenReturn(mockOffer);
 
         mockMvc.perform(get("/applications/offer/{id}", offerId))
                 .andExpect(status().isOk())
@@ -83,7 +93,7 @@ public class ApplicationControllerTests {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     public void findApplicationForStudent_success() throws Exception {
         String studentId = "456";
         var mockStudent = new StudentEntity();
@@ -95,6 +105,7 @@ public class ApplicationControllerTests {
         mockApplication.setStudent(mockStudent);
 
         when(applicationService.getApplicationsForStudent(studentId)).thenReturn(List.of(mockApplication));
+        when(studentService.findByUserId(studentId)).thenReturn(StudentDto.fromEntity(mockStudent));
 
         mockMvc.perform(get("/applications/student/{id}", studentId))
                 .andExpect(status().isOk())
