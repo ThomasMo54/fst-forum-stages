@@ -1,5 +1,18 @@
 import api from "./api.ts";
 
+export interface CreateOfferDto {
+  title: string;
+  description: string;
+  tags: string[];
+  salary: string;
+  internshipStartDate: string;
+  internshipDuration: string;
+  limitApplicationDate: string;
+  studyLevel: string;
+  remoteWorkPolicy: string;
+  companyId?: string;
+}
+
 export interface OfferDto {
   id: string;
   title: string;
@@ -13,19 +26,6 @@ export interface OfferDto {
   studyLevel?: string | null;
   remoteWorkPolicy?: string | null;
   companyId: string;
-}
-
-export interface CreateOfferDto {
-  title: string;
-  description: string;
-  tags: string[];
-  salary: string;
-  internshipStartDate: string;
-  internshipDuration: string;
-  limitApplicationDate: string;
-  studyLevel: string;
-  remoteWorkPolicy: string;
-  companyId?: string;
 }
 
 const createOffer = async (offerData: CreateOfferDto): Promise<void> => {
@@ -42,16 +42,21 @@ const getOfferById = async (offerId: string): Promise<OfferDto> => {
   return response.data;
 };
 
-const getCompanyOffers = async (companyId: string): Promise<OfferDto[]> => {
-  const response = await api.get(`/companies/${companyId}/offers`);
+const getOffersByCompany = async (companyId: string): Promise<OfferDto[]> => {
+  const response = await api.get<OfferDto[]>(`/companies/${companyId}/offers`);
   return response.data;
+};
+
+const deleteOffer = async (offerId: string): Promise<void> => {
+  await api.delete(`/offers/${offerId}`);
 };
 
 const OfferService = {
   createOffer,
   getAllOffers,
   getOfferById,
-  getCompanyOffers,
+  getOffersByCompany,
+  deleteOffer
 };
 
 export default OfferService;

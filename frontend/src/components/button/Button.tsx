@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './Button.css';
 
-type ButtonVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'link';
+type ButtonVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'link' | 'icon';
 type ButtonSize = 'normal' | 'small';
 
 interface ButtonProps {

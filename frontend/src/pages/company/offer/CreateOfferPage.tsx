@@ -48,8 +48,10 @@ const CreateOfferPage: React.FC = () => {
   const validate = (): boolean => {
     const newErrors: Partial<CreateOfferForm> = {};
     if (!formData.title) newErrors.title = "Le titre de l'offre est requis.";
-    if (formData.title.length > 200) newErrors.title = "Le titre ne doit pas dépasser 200 caractères.";
+    if (formData.title.length > 100) newErrors.title = "Le titre ne doit pas dépasser 100 caractères.";
     if (!formData.description) newErrors.description = "La description de l'offre est requise.";
+    if (!formData.internshipStartDate) newErrors.internshipStartDate = "La date de début du stage est requise.";
+    if (!formData.limitApplicationDate) newErrors.limitApplicationDate = "La date limite de candidature est requise.";
 
     const today = new Date().toISOString().split('T')[0];
     if (formData.internshipStartDate && formData.internshipStartDate < today) {
@@ -92,7 +94,7 @@ const CreateOfferPage: React.FC = () => {
 
     try {
       await OfferService.createOffer(offerData);
-      navigate('/');
+      navigate('/company/my-offers');
     } catch (error) {
       setCreationError("Une erreur est survenue lors de la publication de l'offre. Veuillez réessayer.");
     }
