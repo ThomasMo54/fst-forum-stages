@@ -10,6 +10,8 @@ export interface DecodedToken {
   sub: string;
   roles: string[];
   exp: number;
+  userId: string;
+  entityId: string;
 }
 
 const login = async (email: string, password: string): Promise<LoginResponse> => {

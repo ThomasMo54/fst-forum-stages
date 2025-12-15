@@ -1,4 +1,4 @@
-import api from './api';
+import api from "./api.ts";
 
 export interface OfferDto {
   id: string;
@@ -18,15 +18,19 @@ export interface OfferDto {
 export interface CreateOfferDto {
   title: string;
   description: string;
-  tags?: string[];
-  salary?: string;
-  internshipStartDate?: string;
-  internshipDuration?: string;
-  limitApplicationDate?: string;
-  studyLevel?: string;
-  remoteWorkPolicy?: string;
-  companyId: string;
+  tags: string[];
+  salary: string;
+  internshipStartDate: string;
+  internshipDuration: string;
+  limitApplicationDate: string;
+  studyLevel: string;
+  remoteWorkPolicy: string;
+  companyId?: string;
 }
+
+const createOffer = async (offerData: CreateOfferDto): Promise<void> => {
+  await api.post('/offers', offerData);
+};
 
 const getAllOffers = async (): Promise<OfferDto[]> => {
   const response = await api.get('/offers');
@@ -43,16 +47,11 @@ const getCompanyOffers = async (companyId: string): Promise<OfferDto[]> => {
   return response.data;
 };
 
-const createOffer = async (offerData: CreateOfferDto): Promise<OfferDto> => {
-  const response = await api.post('/offers', offerData);
-  return response.data;
-};
-
 const OfferService = {
+  createOffer,
   getAllOffers,
   getOfferById,
   getCompanyOffers,
-  createOffer,
 };
 
 export default OfferService;

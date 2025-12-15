@@ -58,3 +58,18 @@
     display: flex;
     justify-content: flex-end;
 }
+
+.input-error {
+    border-color: var(--danger-color);
+}
+
+.error-message {
+    color: var(--danger-color);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.creation-error {
+    text-align: center;
+    margin-bottom: 1rem;
+}

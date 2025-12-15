@@ -1,173 +1,235 @@
 import React, { useState } from 'react';
 import Header from "../../../components/header/Header";
 import Footer from "../../../components/footer/Footer";
-import Button from "../../../components/button/Button"; // Import the Button component
+import Button from "../../../components/button/Button";
 import './CreateOfferPage.css';
+import { useAuth } from "../../../context/AuthContext.tsx";
+import OfferService, { type CreateOfferDto } from "../../../services/offer.service.ts";
+import { useNavigate } from "react-router-dom";
 
 interface CreateOfferForm {
-    title: string;
-    description: string;
-    tags: string;
-    salary: string;
-    internshipStartDate: string;
-    internshipDuration: string;
-    limitApplicationDate: string;
-    studyLevel: string;
-    remoteWorkPolicy: string;
+  title: string;
+  description: string;
+  tags: string;
+  salary: string;
+  internshipStartDate: string;
+  internshipDuration: string;
+  limitApplicationDate: string;
+  studyLevel: string;
+  remoteWorkPolicy: string;
 }
 
 const CreateOfferPage: React.FC = () => {
-    const [formData, setFormData] = useState<CreateOfferForm>({
-        title: '',
-        description: '',
-        tags: '',
-        salary: '',
-        internshipStartDate: '',
-        internshipDuration: '',
-        limitApplicationDate: '',
-        studyLevel: '',
-        remoteWorkPolicy: ''
-    });
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState<CreateOfferForm>({
+    title: '',
+    description: '',
+    tags: '',
+    salary: '',
+    internshipStartDate: '',
+    internshipDuration: '',
+    limitApplicationDate: '',
+    studyLevel: '',
+    remoteWorkPolicy: ''
+  });
+  const [errors, setErrors] = useState<Partial<CreateOfferForm>>({});
+  const [creationError, setCreationError] = useState<string | null>(null);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const validate = (): boolean => {
+    const newErrors: Partial<CreateOfferForm> = {};
+    if (!formData.title) newErrors.title = "Le titre de l'offre est requis.";
+    if (formData.title.length > 200) newErrors.title = "Le titre ne doit pas dépasser 200 caractères.";
+    if (!formData.description) newErrors.description = "La description de l'offre est requise.";
+
+    const today = new Date().toISOString().split('T')[0];
+    if (formData.internshipStartDate && formData.internshipStartDate < today) {
+      newErrors.internshipStartDate = "La date de début du stage ne peut pas être dans le passé.";
+    }
+    if (formData.limitApplicationDate && formData.limitApplicationDate < today) {
+      newErrors.limitApplicationDate = "La date limite de candidature ne peut pas être dans le passé.";
+    }
+    if (formData.internshipStartDate && formData.limitApplicationDate && formData.limitApplicationDate > formData.internshipStartDate) {
+      newErrors.limitApplicationDate = "La date limite de candidature ne peut pas être après la date de début du stage.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) {
+      return;
+    }
+    const companyId = user?.entityId;
+    if (!companyId) {
+      setCreationError("Erreur : L'identifiant de l'entreprise n'a pas pu être récupéré.");
+      return;
+    }
+
+    const offerData: CreateOfferDto = {
+      title: formData.title,
+      description: formData.description,
+      tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : [],
+      salary: formData.salary,
+      internshipStartDate: formData.internshipStartDate,
+      internshipDuration: formData.internshipDuration,
+      limitApplicationDate: formData.limitApplicationDate,
+      studyLevel: formData.studyLevel,
+      remoteWorkPolicy: formData.remoteWorkPolicy,
+      companyId: companyId
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        // Pour l'instant, on log juste les données
-        console.log("Offre à créer :", formData);
-        alert("Offre prête à être envoyée (voir console)");
-    };
+    try {
+      await OfferService.createOffer(offerData);
+      navigate('/');
+    } catch (error) {
+      setCreationError("Une erreur est survenue lors de la publication de l'offre. Veuillez réessayer.");
+    }
+  };
 
-    return (
-        <>
-            <Header />
-            <div className="create-offer-container">
-                <h1 className="create-offer-title">Créer une offre de stage</h1>
-                
-                <form className="create-offer-form" onSubmit={handleSubmit}>
-                    
-                    <div className="form-group">
-                        <label htmlFor="title">Titre de l'offre *</label>
-                        <input
-                            type="text"
-                            id="title"
-                            name="title"
-                            value={formData.title}
-                            onChange={handleChange}
-                            required
-                            placeholder="Ex: Développeur Fullstack React/Java"
-                        />
-                    </div>
+  return (
+    <>
+      <Header />
+      <div className="create-offer-container">
+        <h1 className="create-offer-title">Créer une offre de stage</h1>
 
-                    <div className="form-group">
-                        <label htmlFor="description">Description *</label>
-                        <textarea
-                            id="description"
-                            name="description"
-                            value={formData.description}
-                            onChange={handleChange}
-                            required
-                            placeholder="Détaillez les missions, le profil recherché..."
-                        />
-                    </div>
+        <form className="create-offer-form" onSubmit={handleSubmit}>
 
-                    <div className="form-group">
-                        <label htmlFor="tags">Tags (séparés par des virgules)</label>
-                        <input
-                            type="text"
-                            id="tags"
-                            name="tags"
-                            value={formData.tags}
-                            onChange={handleChange}
-                            placeholder="Ex: Java, React, Spring Boot"
-                        />
-                    </div>
+          <div className="form-group">
+            <label htmlFor="title">Titre de l'offre *</label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              placeholder="Ex: Développeur Fullstack React/Java"
+              className={errors.title ? 'input-error' : ''}
+            />
+            {errors.title && <p className="error-message">{errors.title}</p>}
+          </div>
 
-                    <div className="form-group">
-                        <label htmlFor="salary">Gratification / Salaire</label>
-                        <input
-                            type="text"
-                            id="salary"
-                            name="salary"
-                            value={formData.salary}
-                            onChange={handleChange}
-                            placeholder="Ex: 600€/mois"
-                        />
-                    </div>
+          <div className="form-group">
+            <label htmlFor="description">Description *</label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Détaillez les missions, le profil recherché..."
+              className={errors.description ? 'input-error' : ''}
+            />
+            {errors.description && <p className="error-message">{errors.description}</p>}
+          </div>
 
-                    <div className="form-group">
-                        <label htmlFor="internshipStartDate">Date de début du stage</label>
-                        <input
-                            type="date"
-                            id="internshipStartDate"
-                            name="internshipStartDate"
-                            value={formData.internshipStartDate}
-                            onChange={handleChange}
-                        />
-                    </div>
+          <div className="form-group">
+            <label htmlFor="tags">Tags (séparés par des virgules)</label>
+            <input
+              type="text"
+              id="tags"
+              name="tags"
+              value={formData.tags}
+              onChange={handleChange}
+              placeholder="Ex: Java, React, Spring Boot"
+            />
+          </div>
 
-                    <div className="form-group">
-                        <label htmlFor="internshipDuration">Durée du stage</label>
-                        <input
-                            type="text"
-                            id="internshipDuration"
-                            name="internshipDuration"
-                            value={formData.internshipDuration}
-                            onChange={handleChange}
-                            placeholder="Ex: 6 mois"
-                        />
-                    </div>
+          <div className="form-group">
+            <label htmlFor="salary">Gratification / Salaire</label>
+            <input
+              type="text"
+              id="salary"
+              name="salary"
+              value={formData.salary}
+              onChange={handleChange}
+              placeholder="Ex: 600€/mois"
+            />
+          </div>
 
-                    <div className="form-group">
-                        <label htmlFor="limitApplicationDate">Date limite de candidature</label>
-                        <input
-                            type="date"
-                            id="limitApplicationDate"
-                            name="limitApplicationDate"
-                            value={formData.limitApplicationDate}
-                            onChange={handleChange}
-                        />
-                    </div>
+          <div className="form-group">
+            <label htmlFor="internshipStartDate">Date de début du stage</label>
+            <input
+              type="date"
+              id="internshipStartDate"
+              name="internshipStartDate"
+              value={formData.internshipStartDate}
+              onChange={handleChange}
+              className={errors.internshipStartDate ? 'input-error' : ''}
+            />
+            {errors.internshipStartDate && <p className="error-message">{errors.internshipStartDate}</p>}
+          </div>
 
-                    <div className="form-group">
-                        <label htmlFor="studyLevel">Niveau d'étude minimum</label>
-                        <input
-                            type="text"
-                            id="studyLevel"
-                            name="studyLevel"
-                            value={formData.studyLevel}
-                            onChange={handleChange}
-                            placeholder="Ex: Bac+3, Master 1..."
-                        />
-                    </div>
+          <div className="form-group">
+            <label htmlFor="internshipDuration">Durée du stage</label>
+            <input
+              type="text"
+              id="internshipDuration"
+              name="internshipDuration"
+              value={formData.internshipDuration}
+              onChange={handleChange}
+              placeholder="Ex: 6 mois"
+            />
+          </div>
 
-                    <div className="form-group">
-                        <label htmlFor="remoteWorkPolicy">Politique de télétravail</label>
-                        <input
-                            type="text"
-                            id="remoteWorkPolicy"
-                            name="remoteWorkPolicy"
-                            value={formData.remoteWorkPolicy}
-                            onChange={handleChange}
-                            placeholder="Ex: Hybride, 2 jours par semaine..."
-                        />
-                    </div>
+          <div className="form-group">
+            <label htmlFor="limitApplicationDate">Date limite de candidature</label>
+            <input
+              type="date"
+              id="limitApplicationDate"
+              name="limitApplicationDate"
+              value={formData.limitApplicationDate}
+              onChange={handleChange}
+              className={errors.limitApplicationDate ? 'input-error' : ''}
+            />
+            {errors.limitApplicationDate && <p className="error-message">{errors.limitApplicationDate}</p>}
+          </div>
 
-                    <div className="form-actions">
-                        <Button type="submit" variant="primary">Publier l'offre</Button>
-                    </div>
+          <div className="form-group">
+            <label htmlFor="studyLevel">Niveau d'étude minimum</label>
+            <input
+              type="text"
+              id="studyLevel"
+              name="studyLevel"
+              value={formData.studyLevel}
+              onChange={handleChange}
+              placeholder="Ex: Bac+3, Master 1..."
+            />
+          </div>
 
-                </form>
-            </div>
-            <Footer />
-        </>
-    );
+          <div className="form-group">
+            <label htmlFor="remoteWorkPolicy">Politique de télétravail</label>
+            <input
+              type="text"
+              id="remoteWorkPolicy"
+              name="remoteWorkPolicy"
+              value={formData.remoteWorkPolicy}
+              onChange={handleChange}
+              placeholder="Ex: Hybride, 2 jours par semaine..."
+            />
+          </div>
+
+          {creationError && <p className="error-message creation-error">{creationError}</p>}
+
+          <div className="form-actions">
+            <Button type="submit" variant="primary">Publier l'offre</Button>
+          </div>
+
+        </form>
+      </div>
+      <Footer />
+    </>
+  );
 };
 
 export default CreateOfferPage;
