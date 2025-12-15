@@ -1,5 +1,7 @@
 package fr.fst.forumstages.backend.auth;
 
+import fr.fst.forumstages.backend.user.UserEntity;
+import fr.fst.forumstages.backend.user.UserRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -13,6 +15,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -31,17 +34,31 @@ public class JwtService {
     }
 
     public String generateToken(UserDetails userDetails) {
-        List<String> roles = userDetails.getAuthorities()
-                .stream()
-                .map(GrantedAuthority::getAuthority)
-                .toList();
-        return Jwts.builder()
-                .subject(userDetails.getUsername())
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
-                .claim("roles", roles)
-                .signWith(getSigningKey())
-                .compact();
+        if (userDetails instanceof UserEntity user) {
+            List<String> roles = userDetails.getAuthorities()
+                    .stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .toList();
+            String entityId = "";
+            if (user.getRole() == UserRole.COMPANY && user.getCompany() != null) {
+                entityId = user.getCompany().getId();
+            } else if (user.getRole() == UserRole.STUDENT && user.getStudent() != null) {
+                entityId = user.getStudent().getId();
+            }
+            return Jwts.builder()
+                    .subject(userDetails.getUsername())
+                    .issuedAt(new Date(System.currentTimeMillis()))
+                    .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                    .claims(Map.of(
+                            "roles", roles,
+                            "userId", user.getId(),
+                            "entityId", entityId
+                    ))
+                    .signWith(getSigningKey())
+                    .compact();
+        } else {
+            throw new IllegalArgumentException("UserDetails must be an instance of UserEntity");
+        }
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {

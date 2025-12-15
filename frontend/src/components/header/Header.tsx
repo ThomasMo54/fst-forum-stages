@@ -2,9 +2,10 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './Header.css';
+import user_roles from "../../constants/user_roles.ts";
 
 const Header: React.FC = () => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const {isAuthenticated, user, logout} = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -18,6 +19,11 @@ const Header: React.FC = () => {
         <h1 className="logo">Forum des Stages</h1>
         <nav className="nav">
           <Link to="/" className="nav-link active">Accueil</Link>
+          {isAuthenticated && user?.roles.includes(user_roles.COMPANY) && (
+            <>
+              <Link to="/company/my-offers" className="nav-link">Vos Offres</Link>
+            </>
+          )}
           <div className="auth-section">
             {isAuthenticated && user ? (
               <div className="user-menu">
