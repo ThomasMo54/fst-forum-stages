@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 
 import fr.fst.forumstages.backend.application.dto.ApplicationDto;
 import fr.fst.forumstages.backend.application.dto.CreateApplicationDto;
+import fr.fst.forumstages.backend.offer.OfferRepository;
+import fr.fst.forumstages.backend.student.StudentRepository;
 
 @Service
 public class ApplicationService {

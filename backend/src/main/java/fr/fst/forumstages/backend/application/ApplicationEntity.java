@@ -5,7 +5,8 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import fr.fst.forumstages.backend.application.dto.ApplicationDto;
-import fr.fst.forumstages.backend.company.CompanyEntity;
+import fr.fst.forumstages.backend.offer.OfferEntity;
+import fr.fst.forumstages.backend.student.StudentEntity;
 import lombok.Data;
 
 @Data

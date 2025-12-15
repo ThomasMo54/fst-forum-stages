@@ -45,12 +45,12 @@ public class ApplicationControllerTests {
         offerEntity.setId("789");
 
         var createApplicationDto = new CreateApplicationDto(
-                "123", studentEntity.Id(), offerEntity.Id());
+                "123", studentEntity.getId(), offerEntity.getId());
 
         var createdApplication = new ApplicationEntity();
         createdApplication.setId("123");
         createdApplication.setOffer(offerEntity);
-        createdApplication.setCompany(companyEntity);
+        createdApplication.setStudent(studentEntity);
 
         when(applicationService.createApplication(any(CreateApplicationDto.class))).thenReturn(createdApplication);
 
@@ -75,7 +75,7 @@ public class ApplicationControllerTests {
         mockApplication.setId(applicationId);
         mockApplication.setOffer(mockOffer);
 
-        when(applicationService.getApplicationsForOffer(offerId)).thenReturn(List::of(mockApplication));
+        when(applicationService.getApplicationsForOffer(offerId)).thenReturn(List.of(mockApplication));
 
         mockMvc.perform(get("/applications/offer/{id}", offerId))
                 .andExpect(status().isOk())
@@ -94,7 +94,7 @@ public class ApplicationControllerTests {
         mockApplication.setId(applicationId);
         mockApplication.setStudent(mockStudent);
 
-        when(applicationService.getApplicationsForStudent(studentId)).thenReturn(List::of(mockApplication));
+        when(applicationService.getApplicationsForStudent(studentId)).thenReturn(List.of(mockApplication));
 
         mockMvc.perform(get("/applications/student/{id}", studentId))
                 .andExpect(status().isOk())
