@@ -40,7 +40,7 @@ public class ApplicationController {
 
     @GetMapping("/student/{studentId}")
     public List<ApplicationDto> getAllApplicationsForStudent(@PathVariable String studentId) {
-        var applications = applicationService.getApplicationsForOffer(studentId);
+        var applications = applicationService.getApplicationsForStudent(studentId);
         return applications.stream().map(ApplicationDto::fromEntity).toList();
     }
 }
