@@ -20,9 +20,9 @@ export interface OfferDto {
   tags?: string[] | null;
   salary?: string | null;
   creationDate: string;
-  internshipStartDate?: string | null;
-  internshipDuration?: string | null;
-  limitApplicationDate?: string | null;
+  internshipStartDate: string;
+  internshipDuration: string;
+  limitApplicationDate: string;
   studyLevel?: string | null;
   remoteWorkPolicy?: string | null;
   companyId: string;
