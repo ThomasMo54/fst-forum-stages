@@ -19,6 +19,5 @@ public record StudentDto(
         Integer yearOfStudy,
         List<String> skills,
         String cvPath,
-        LocalDateTime registrationDate,
-        String userId
+        LocalDateTime registrationDate
 ) {}

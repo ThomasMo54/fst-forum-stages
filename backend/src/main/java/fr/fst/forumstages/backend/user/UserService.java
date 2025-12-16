@@ -8,6 +8,7 @@ import fr.fst.forumstages.backend.student.StudentEntity;
 import fr.fst.forumstages.backend.student.StudentRepository;
 import fr.fst.forumstages.backend.student.dto.CreateStudentDto;
 import fr.fst.forumstages.backend.email.EmailService;
+import fr.fst.forumstages.backend.student.dto.StudentDto;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
 import fr.fst.forumstages.backend.user.exception.TooManyRequestsException;
@@ -77,29 +78,23 @@ public class UserService {
             throw new DuplicateKeyException("Email already in use");
         }
         UserEntity userEntity = createUser(createStudentDto.email(), createStudentDto.password(), UserRole.STUDENT);
-
-        // Sauvegarder d'abord l'utilisateur pour obtenir son ID
-        userEntity = userRepository.save(userEntity);
-
-        // Créer le profil étudiant
-        StudentEntity studentEntity = new StudentEntity();
-        studentEntity.setFirstName(createStudentDto.firstName());
-        studentEntity.setLastName(createStudentDto.lastName());
-        studentEntity.setEmail(createStudentDto.email());
-        studentEntity.setStudentNumber(createStudentDto.studentNumber());
-        studentEntity.setPhone(createStudentDto.phone());
-        studentEntity.setEducationLevel(createStudentDto.educationLevel());
-        studentEntity.setFieldOfStudy(createStudentDto.fieldOfStudy());
-        studentEntity.setSpecialization(createStudentDto.specialization());
-        studentEntity.setYearOfStudy(createStudentDto.yearOfStudy());
-        studentEntity.setSkills(createStudentDto.skills());
-
-        studentEntity.setUser(userEntity);
-
-        studentEntity = studentRepository.save(studentEntity);
-
+        StudentDto studentDto = new StudentDto(
+                null,
+                createStudentDto.firstName(),
+                createStudentDto.lastName(),
+                createStudentDto.email(),
+                createStudentDto.studentNumber(),
+                createStudentDto.phone(),
+                createStudentDto.educationLevel(),
+                createStudentDto.fieldOfStudy(),
+                createStudentDto.specialization(),
+                createStudentDto.yearOfStudy(),
+                createStudentDto.skills(),
+                null,
+                null
+        );
+        StudentEntity studentEntity = studentRepository.save(StudentEntity.fromDto(studentDto));
         userEntity.setStudent(studentEntity);
-
         return userEntity;
     }
 
