@@ -73,7 +73,6 @@ class StudentServiceTests {
         studentEntity.setYearOfStudy(2);
         studentEntity.setSkills(skills);
         studentEntity.setRegistrationDate(LocalDateTime.now());
-        studentEntity.setUser(mockUser);
 
         when(studentRepository.findByUserId(userId)).thenReturn(Optional.of(studentEntity));
 
@@ -85,7 +84,6 @@ class StudentServiceTests {
         assertThat(result.lastName()).isEqualTo("Dupont");
         assertThat(result.email()).isEqualTo("marie.dupont@example.com");
         assertThat(result.studentNumber()).isEqualTo("STU789012");
-        assertThat(result.userId()).isEqualTo(userId);
         assertThat(result.skills()).isEqualTo(skills);
 
         verify(studentRepository, times(1)).findByUserId(userId);

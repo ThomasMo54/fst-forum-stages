@@ -65,8 +65,7 @@ class StudentControllerTests {
                 2,
                 skills,
                 null,
-                LocalDateTime.now(),
-                "user-123"
+                LocalDateTime.now()
         );
 
         when(studentService.updateStudent(any(String.class), any(UpdateStudentDto.class)))
@@ -86,72 +85,5 @@ class StudentControllerTests {
                 .andExpect(jsonPath("$.fieldOfStudy").value("Informatique"))
                 .andExpect(jsonPath("$.specialization").value("Dev Web"))
                 .andExpect(jsonPath("$.yearOfStudy").value(2));
-    }
-
-    @Test
-    @WithMockUser
-    void getStudentByUserId_Success() throws Exception {
-        String userId = "user-123";
-        List<String> skills = Arrays.asList("Python", "Machine Learning", "TensorFlow");
-
-        StudentDto response = new StudentDto(
-                "student-456",
-                "Sophie",
-                "Martin",
-                "sophie.martin@example.com",
-                "STU987654",
-                "+33687654321",
-                "Doctorat",
-                "Intelligence Artificielle",
-                "Deep Learning",
-                3,
-                skills,
-                "/cv/sophie-martin.pdf",
-                LocalDateTime.now(),
-                userId
-        );
-
-        when(studentService.findByUserId(userId)).thenReturn(response);
-
-        mockMvc.perform(get("/students/by-user/{userId}", userId)
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("student-456"))
-                .andExpect(jsonPath("$.firstName").value("Sophie"))
-                .andExpect(jsonPath("$.lastName").value("Martin"))
-                .andExpect(jsonPath("$.email").value("sophie.martin@example.com"))
-                .andExpect(jsonPath("$.studentNumber").value("STU987654"))
-                .andExpect(jsonPath("$.phone").value("+33687654321"))
-                .andExpect(jsonPath("$.educationLevel").value("Doctorat"))
-                .andExpect(jsonPath("$.fieldOfStudy").value("Intelligence Artificielle"))
-                .andExpect(jsonPath("$.specialization").value("Deep Learning"))
-                .andExpect(jsonPath("$.yearOfStudy").value(3))
-                .andExpect(jsonPath("$.userId").value(userId))
-                .andExpect(jsonPath("$.skills").isArray())
-                .andExpect(jsonPath("$.skills[0]").value("Python"))
-                .andExpect(jsonPath("$.skills[1]").value("Machine Learning"))
-                .andExpect(jsonPath("$.skills[2]").value("TensorFlow"));
-    }
-
-    @Test
-    @WithMockUser
-    void getStudentByUserId_NotFound() throws Exception {
-        String userId = "nonexistent-user";
-
-        when(studentService.findByUserId(userId))
-                .thenThrow(new NoSuchElementException("Student not found with User ID: " + userId));
-
-        mockMvc.perform(get("/students/by-user/{userId}", userId)
-                        .with(csrf()))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void getStudentByUserId_Unauthorized() throws Exception {
-        String userId = "user-123";
-
-        mockMvc.perform(get("/students/by-user/{userId}", userId)
-                        .with(csrf()))
-                .andExpect(status().isUnauthorized());
     }
 }
