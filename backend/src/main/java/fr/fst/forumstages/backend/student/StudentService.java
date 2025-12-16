@@ -49,10 +49,4 @@ public class StudentService {
 
         return updatedStudent.toDto();
     }
-
-    public StudentDto findByUserId(String userId) {
-        StudentEntity student = studentRepository.findByUserId(userId)
-                .orElseThrow(() -> new NoSuchElementException("Student not found with User ID: " + userId));
-        return student.toDto();
-    }
 }
