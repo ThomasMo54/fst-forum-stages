@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class FileStorageService {
@@ -56,6 +57,7 @@ public class FileStorageService {
                         .method(Method.PUT)
                         .bucket(bucketName)
                         .object(objectName)
+                        .expiry(1, TimeUnit.HOURS)
                         .build()
         );
     }
@@ -66,6 +68,7 @@ public class FileStorageService {
                         .method(Method.GET)
                         .bucket(bucketName)
                         .object(objectName)
+                        .expiry(1, TimeUnit.HOURS)
                         .build()
         );
     }
