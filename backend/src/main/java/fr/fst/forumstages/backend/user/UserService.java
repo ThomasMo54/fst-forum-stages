@@ -95,7 +95,7 @@ public class UserService {
         );
         StudentEntity studentEntity = studentRepository.save(StudentEntity.fromDto(studentDto));
         userEntity.setStudent(studentEntity);
-        return userEntity;
+        return userRepository.save(userEntity);
     }
 
     private UserEntity createUser(String email, String password, UserRole role) {
