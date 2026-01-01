@@ -41,6 +41,7 @@ function App() {
           </Route>
           <Route element={<StudentRoute />}>
             <Route path="/student/modify-infos" element={<ModifyStudentInfosPage />} />
+
           </Route>
         </Routes>
       </AuthProvider>
