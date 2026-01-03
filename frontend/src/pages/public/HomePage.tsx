@@ -1,16 +1,18 @@
 import React from 'react';
-import '../../styles/global.css';
+import { useNavigate } from 'react-router-dom';
 import './HomePage.css';
 import Button from '../../components/button/Button';
 import Header from '../../components/header/Header';
 import Footer from '../../components/footer/Footer';
+import { useAuth } from '../../context/AuthContext';
+import roles from '../../constants/user_roles';
 
 interface DashboardCardProps {
   icon: string;
   title: string;
   description: string;
   buttonText: string;
-  linkTo: string;
+  onClick?: () => void;
   iconColorVar: string;
 }
 
@@ -24,7 +26,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   title,
   description,
   buttonText,
-  linkTo,
+  onClick,
   iconColorVar
 }) => {
   return (
@@ -40,7 +42,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
       <p>{description}</p>
 
       <Button
-        to={linkTo}
+        onClick={onClick}
         variant="primary"
         className="card-button-override"
       >
@@ -60,6 +62,48 @@ const StatItem: React.FC<StatItemProps> = ({ number, label }) => {
 };
 
 const HomePage: React.FC = () => {
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleStudentSpaceClick = () => {
+    if (!isAuthenticated) {
+      
+      navigate('/login', { state: { from: '/offers' } });
+    } else if (user?.roles.includes(roles.STUDENT)) {
+      
+      navigate('/offers');
+    } else {
+      
+      navigate('/login', { state: { from: '/offers' } });
+    }
+  };
+
+  const handleCompanySpaceClick = () => {
+    if (!isAuthenticated) {
+      
+      navigate('/login', { state: { from: '/company/my-offers' } });
+    } else if (user?.roles.includes(roles.COMPANY)) {
+      
+      navigate('/company/my-offers');
+    } else {
+      
+      navigate('/login', { state: { from: '/company/my-offers' } });
+    }
+  };
+
+  const handleAdminSpaceClick = () => {
+    if (!isAuthenticated) {
+      
+      navigate('/login', { state: { from: '/' } });
+    } else if (user?.roles.includes(roles.ADMIN)) {
+      
+      navigate('/');
+    } else {
+      
+      navigate('/login', { state: { from: '/' } });
+    }
+  };
+
   return (
     <div className="home-page">
       <Header />
@@ -106,7 +150,7 @@ const HomePage: React.FC = () => {
               title="Espace Étudiants"
               description="Consultez les offres de stage, gérez vos candidatures et validez votre convention."
               buttonText="Voir les offres de stage"
-              linkTo="/offers"
+              onClick={handleStudentSpaceClick}
               iconColorVar="--secondary-color"
             />
 
@@ -116,18 +160,18 @@ const HomePage: React.FC = () => {
               title="Espace Entreprises"
               description="Déposez vos offres, recherchez des profils et gérez les processus de recrutement."
               buttonText="Publier une offre"
-              linkTo="/offers#new-offer"
+              onClick={handleCompanySpaceClick}
               iconColorVar="--success-color"
             />
 
-            {/* Admin */}
+            {/* Administration */}
             <DashboardCard
               icon="⚙️"
-              title="Administration"
-              description="Espace réservé au personnel de l'université pour la gestion de la plateforme."
-              buttonText="Accès Admin"
-              linkTo="/auth/login?role=admin"
-              iconColorVar="--danger-color"
+              title="Espace Administration"
+              description="Gérez la plateforme, validez les entreprises et modérez les offres de stage."
+              buttonText="Accéder à l'administration"
+              onClick={handleAdminSpaceClick}
+              iconColorVar="--primary-color"
             />
           </section>
 
