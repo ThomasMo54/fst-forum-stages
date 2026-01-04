@@ -41,12 +41,16 @@ public class ApplicationServiceTests {
     @Test
     public void testCreateApplication_success() {
         var createApplicationDto = new CreateApplicationDto(
-                "123",
                 null,
                 null);
 
-        when(applicationRepository.save(any(ApplicationEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        StudentEntity studentEntity = new StudentEntity();
+
+        OfferEntity offerEntity = new OfferEntity();
+
+        when(applicationRepository.save(any(ApplicationEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(studentRepository.findById(any())).thenReturn(Optional.of(studentEntity));
+        when(offerRepository.findById(any())).thenReturn(Optional.of(offerEntity));
         ArgumentCaptor<ApplicationEntity> applicationCaptor = ArgumentCaptor.forClass(ApplicationEntity.class);
 
         ApplicationEntity result = applicationService.createApplication(createApplicationDto);
@@ -54,8 +58,6 @@ public class ApplicationServiceTests {
         verify(applicationRepository, times(1)).save(applicationCaptor.capture());
 
         ApplicationEntity createdApplication = applicationCaptor.getValue();
-
-        assertEquals("123", createdApplication.getId());
 
         assertEquals(createdApplication, result);
     }
@@ -66,15 +68,14 @@ public class ApplicationServiceTests {
         OfferEntity mockOffer = new OfferEntity();
         mockOffer.setId(offerId);
 
-        String appliactionId = "456";
+        String applicationId = "456";
         var mockApplication = new ApplicationEntity();
-        mockApplication.setId(appliactionId);
+        mockApplication.setId(applicationId);
         mockApplication.setOffer(mockOffer);
 
-        when(applicationRepository.findById(appliactionId)).thenReturn(Optional.of(mockApplication));
-        when(offerRepository.findById(offerId)).thenReturn(Optional.of(mockOffer));
+        when(applicationRepository.findByOfferId(offerId)).thenReturn(List.of(mockApplication));
 
-        List<ApplicationEntity> result = applicationRepository.findByOfferId(offerId);
+        List<ApplicationEntity> result = applicationService.getApplicationsForOffer(offerId);
 
         assertEquals(mockApplication, result.getFirst());
     }
@@ -85,15 +86,14 @@ public class ApplicationServiceTests {
         var mockStudent = new StudentEntity();
         mockStudent.setId(studentId);
 
-        String appliactionId = "456";
+        String applicationId = "456";
         var mockApplication = new ApplicationEntity();
-        mockApplication.setId(appliactionId);
+        mockApplication.setId(applicationId);
         mockApplication.setStudent(mockStudent);
 
-        when(applicationRepository.findById(appliactionId)).thenReturn(Optional.of(mockApplication));
-        when(studentRepository.findById(studentId)).thenReturn(Optional.of(mockStudent));
+        when(applicationRepository.findByStudentId(studentId)).thenReturn(List.of(mockApplication));
 
-        List<ApplicationEntity> result = applicationRepository.findByStudentId(studentId);
+        List<ApplicationEntity> result = applicationService.getApplicationsForStudent(studentId);
 
         assertEquals(mockApplication, result.getFirst());
     }

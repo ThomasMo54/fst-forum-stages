@@ -3,7 +3,8 @@ package fr.fst.forumstages.backend.application;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.springframework.data.domain.Example;
+import fr.fst.forumstages.backend.offer.OfferEntity;
+import fr.fst.forumstages.backend.student.StudentEntity;
 import org.springframework.stereotype.Service;
 
 import fr.fst.forumstages.backend.application.dto.ApplicationDto;
@@ -26,23 +27,20 @@ public class ApplicationService {
     }
 
     public ApplicationEntity createApplication(CreateApplicationDto createApplicationDto) {
-        var applicationDto = new ApplicationDto(null, null, null);
+        StudentEntity studentEntity = studentRepository.findById(createApplicationDto.studentId())
+                .orElseThrow(() -> new NoSuchElementException("student with id " + createApplicationDto.studentId() + " not found"));
 
+        OfferEntity offerEntity = offerRepository.findById(createApplicationDto.offerId())
+                .orElseThrow(()  -> new NoSuchElementException("offer with id " + createApplicationDto.offerId() + " not found"));
+
+        var applicationDto = new ApplicationDto(null, studentEntity.getId(), offerEntity.getId());
         var applicationEntity = ApplicationEntity.fromDto(applicationDto);
 
-        var offerId = createApplicationDto.offerId();
-        var offerEntity = offerRepository.findById(offerId)
-                .orElseThrow(() -> new NoSuchElementException("Offer with id " + offerId + "not found"));
+        applicationEntity.setStudent(studentEntity);
         applicationEntity.setOffer(offerEntity);
 
-        var studentId = createApplicationDto.studentId();
-        var studentEntity = studentRepository.findById(studentId)
-                .orElseThrow(() -> new NoSuchElementException("Student with id " + studentId + "not found"));
-        applicationEntity.setStudent(studentEntity);
 
-        var finalApplication = applicationRepository.save(applicationEntity);
-
-        return finalApplication;
+        return applicationRepository.save(applicationEntity);
     }
 
     public List<ApplicationEntity> getApplicationsForOffer(String offerId) {

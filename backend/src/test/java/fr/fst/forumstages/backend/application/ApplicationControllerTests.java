@@ -6,10 +6,8 @@ import fr.fst.forumstages.backend.application.dto.CreateApplicationDto;
 import fr.fst.forumstages.backend.company.CompanyEntity;
 import fr.fst.forumstages.backend.student.StudentEntity;
 import fr.fst.forumstages.backend.student.StudentService;
-import fr.fst.forumstages.backend.student.dto.StudentDto;
 import fr.fst.forumstages.backend.offer.OfferEntity;
 import fr.fst.forumstages.backend.offer.OfferService;
-import fr.fst.forumstages.backend.offer.dto.CreateOfferDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -19,10 +17,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -50,11 +48,15 @@ public class ApplicationControllerTests {
         var studentEntity = new StudentEntity();
         studentEntity.setId("456");
 
+        var companyEntity = new CompanyEntity();
+        companyEntity.setId("101");
+
         var offerEntity = new OfferEntity();
         offerEntity.setId("789");
+        offerEntity.setCompany(companyEntity);
 
         var createApplicationDto = new CreateApplicationDto(
-                "123", studentEntity.getId(), offerEntity.getId());
+                studentEntity.getId(), offerEntity.getId());
 
         var createdApplication = new ApplicationEntity();
         createdApplication.setId("123");
@@ -64,6 +66,7 @@ public class ApplicationControllerTests {
         when(applicationService.createApplication(any(CreateApplicationDto.class))).thenReturn(createdApplication);
 
         mockMvc.perform(post("/applications")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createApplicationDto)))
                 .andExpect(status().isCreated())
@@ -75,14 +78,24 @@ public class ApplicationControllerTests {
     @Test
     @WithMockUser(roles = "ADMIN")
     public void findApplicationForOffer_success() throws Exception {
+        String companyId = "101";
+        var mockCompany = new CompanyEntity();
+        mockCompany.setId(companyId);
+
         String offerId = "456";
         var mockOffer = new OfferEntity();
         mockOffer.setId(offerId);
+        mockOffer.setCompany(mockCompany);
+
+        String studentId = "789";
+        var mockStudent = new StudentEntity();
+        mockStudent.setId(studentId);
 
         String applicationId = "123";
         var mockApplication = new ApplicationEntity();
         mockApplication.setId(applicationId);
         mockApplication.setOffer(mockOffer);
+        mockApplication.setStudent(mockStudent);
 
         when(applicationService.getApplicationsForOffer(offerId)).thenReturn(List.of(mockApplication));
         when(offerService.findOfferById(offerId)).thenReturn(mockOffer);
@@ -95,6 +108,15 @@ public class ApplicationControllerTests {
     @Test
     @WithMockUser(roles = "ADMIN")
     public void findApplicationForStudent_success() throws Exception {
+        String companyId = "101";
+        var mockCompany = new CompanyEntity();
+        mockCompany.setId(companyId);
+
+        String offerId = "456";
+        var mockOffer = new OfferEntity();
+        mockOffer.setId(offerId);
+        mockOffer.setCompany(mockCompany);
+
         String studentId = "456";
         var mockStudent = new StudentEntity();
         mockStudent.setId(studentId);
@@ -103,9 +125,9 @@ public class ApplicationControllerTests {
         var mockApplication = new ApplicationEntity();
         mockApplication.setId(applicationId);
         mockApplication.setStudent(mockStudent);
+        mockApplication.setOffer(mockOffer);
 
         when(applicationService.getApplicationsForStudent(studentId)).thenReturn(List.of(mockApplication));
-        when(studentService.findByUserId(studentId)).thenReturn(StudentDto.fromEntity(mockStudent));
 
         mockMvc.perform(get("/applications/student/{id}", studentId))
                 .andExpect(status().isOk())
