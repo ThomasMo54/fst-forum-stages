@@ -10,6 +10,13 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=dev
+      - MONGODB_URI=mongodb+srv://forumstages_backend:aSrofkAKcuO4rAwS@forumstages.h1fu1c6.mongodb.net/?appName=ForumStages
+      - MONGODB_DATABASE=forum_stages
+      - JWT_SECRET_KEY=39ffc36a1d2d4fc64ff9c8e7614f723abd10439f6373609c3d2001283487e5e3
+      - EMAIL_HOST=ssl0.ovh.net
+      - EMAIL_PORT=587
+      - EMAIL_USERNAME=noreply@fstforumstages.ovh
+      - EMAIL_PASSWORD=:t5W2%L5|LTBC9w1
   frontend:
     build:
       context: ./frontend

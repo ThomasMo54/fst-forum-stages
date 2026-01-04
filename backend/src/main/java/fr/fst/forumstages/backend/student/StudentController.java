@@ -25,9 +25,4 @@ public class StudentController {
         return studentService.updateStudent(id, requestDto);
     }
 
-    @GetMapping("/by-user/{userId}")
-    public StudentDto getStudentByUserId(@PathVariable String userId) {
-        return studentService.findByUserId(userId);
-    }
-
 }

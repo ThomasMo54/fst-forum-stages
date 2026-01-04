@@ -46,9 +46,6 @@ public class StudentEntity {
 
     private LocalDateTime registrationDate = LocalDateTime.now();
 
-    @DBRef
-    private UserEntity user;
-
     /**
      * Crée une entité Student à partir d'un DTO de requête
      */
@@ -101,8 +98,7 @@ public class StudentEntity {
                 this.yearOfStudy,
                 this.skills,
                 this.cvPath,
-                this.registrationDate,
-                this.user != null ? this.user.getId() : null
+                this.registrationDate
         );
     }
 }
