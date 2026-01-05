@@ -4,6 +4,10 @@ import fr.fst.forumstages.backend.company.CompanyEntity;
 import fr.fst.forumstages.backend.company.CompanyRepository;
 import fr.fst.forumstages.backend.offer.dto.CreateOfferDto;
 import fr.fst.forumstages.backend.offer.dto.OfferDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -56,8 +60,9 @@ public class OfferService {
                 .orElseThrow(() -> new NoSuchElementException(("Offer with id " + id + " not found")));
     }
 
-    public List<OfferEntity> getAllOffers() {
-        return offerRepository.findAll();
+    public Page<OfferEntity> getAllOffers(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("creationDate").descending());
+        return offerRepository.findAll(pageable);
     }
 
     public void updateOffer(String offerId, CreateOfferDto createOfferDto) {
