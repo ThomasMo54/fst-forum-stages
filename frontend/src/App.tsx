@@ -8,7 +8,6 @@ import { AuthProvider } from "./context/AuthContext.tsx";
 import PublicRoute from "./components/route/PublicRoute.tsx";
 import CompanyRoute from "./components/route/CompanyRoute.tsx";
 import { VerifyPage } from "./pages/auth/verify/VerifyPage.tsx";
-import CreateOfferPage from "./pages/company/offer/CreateOfferPage.tsx";
 import MyOffersPage from "./pages/company/offer/MyOffersPage.tsx";
 import OffersPage from "./pages/offers/OffersPage.tsx";
 import ApplyOfferPage from "./pages/offers/ApplyOfferPage.tsx";
@@ -16,6 +15,7 @@ import PrivateRoute from "./components/route/PrivateRoute.tsx";
 import ModifyStudentInfosPage from "./pages/student/ModifyStudentInfos.tsx";
 import StudentRoute from "./components/route/StudentRoute.tsx";
 import ModifyCompanyInfosPage from "./pages/company/ModifyCompanyInfos.tsx";
+import OfferFormPage from "./pages/company/offer/OfferFormPage.tsx";
 import StudentMyOffersPage from "./pages/student/offer/MyOffersPage.tsx";
 import ApplicationPage from "./pages/offers/ApplicationPage.tsx";
 
@@ -38,7 +38,8 @@ function App() {
             <Route path="/register/verify" element={<VerifyPage />} />
           </Route>
           <Route element={<CompanyRoute />}>
-            <Route path="/company/create-offer" element={<CreateOfferPage />} />
+            <Route path="/company/create-offer" element={<OfferFormPage mode="create" />} />
+            <Route path="/company/edit-offer/:offerId" element={<OfferFormPage mode="edit" />}/>
             <Route path="/company/my-offers" element={<MyOffersPage />} />
             <Route path="/company/modify-infos" element={<ModifyCompanyInfosPage />} />
           </Route>

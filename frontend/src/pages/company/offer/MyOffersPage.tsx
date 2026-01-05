@@ -4,17 +4,17 @@ import Footer from "../../../components/footer/Footer";
 import './MyOffersPage.css';
 import { useAuth } from "../../../context/AuthContext.tsx";
 import OfferService, { type OfferDto } from "../../../services/offer.service.ts";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Button from "../../../components/button/Button.tsx";
 
 const MyOffersPage: React.FC = () => {
   const {user} = useAuth();
+  const navigate = useNavigate();
   const [offers, setOffers] = useState<OfferDto[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchMyOffers = async () => {
+  const fetchMyOffers = async () => {
       if (!user || !user.entityId) {
         setError("Vous devez être connecté en tant qu'entreprise pour voir vos offres.");
         setLoading(false);
@@ -31,15 +31,24 @@ const MyOffersPage: React.FC = () => {
       }
     };
 
+  useEffect(() => {
     fetchMyOffers();
   }, [user]);
 
   const handleDelete = async (offerId: string) => {
-    console.log("Deleting offer with ID:", offerId);
+    const confirmDelete = window.confirm("Êtes-vous sûr de vouloir supprimer cette offre ? Cette action est irréversible.");
+    if (!confirmDelete) return;
+
+    try {
+      await OfferService.deleteOffer(offerId);
+      await fetchMyOffers();
+    } catch (err) {
+      setError("Erreur lors de la suppression de l'offre. Veuillez réessayer.");
+    }
   };
 
   const handleEdit = (offerId: string) => {
-    console.log("Editing offer with ID:", offerId);
+    navigate(`/company/edit-offer/${offerId}`);
   };
 
   const renderContent = () => {

@@ -7,10 +7,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+
+import org.springframework.data.mongodb.repository.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PathVariable;
+
 
 @RestController
 @RequestMapping("/offers")
@@ -53,5 +59,28 @@ public class OfferController {
     public List<OfferDto> findAllOffers() {
         List<OfferEntity> offers = offerService.getAllOffers();
         return offers.stream().map(OfferDto::fromEntity).toList();
+    }
+
+    @Operation(summary = "Mettre à jour une offre de stage", description = "Permet de mettre à jour les informations d'une offre de stage existante.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Offre de stage mise à jour avec succès"),
+            @ApiResponse(responseCode = "400", description = "Données invalides fournies"),
+            @ApiResponse(responseCode = "404", description = "Offre de stage non trouvée")
+    })
+    @PutMapping("/{offerId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateOffer(@PathVariable String offerId, @Valid @RequestBody CreateOfferDto createOfferDto) {
+        offerService.updateOffer(offerId, createOfferDto);
+    }
+
+    @Operation(summary = "Supprimer une offre de stage par son ID", description = "Permet de supprimer une offre de stage en utilisant son identifiant unique.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Offre de stage supprimée avec succès"),
+            @ApiResponse(responseCode = "404", description = "Offre de stage non trouvée")
+    })
+    @DeleteMapping("/{offerId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteOffer(@PathVariable String offerId) {
+        offerService.deleteOfferById(offerId);
     }
 }
