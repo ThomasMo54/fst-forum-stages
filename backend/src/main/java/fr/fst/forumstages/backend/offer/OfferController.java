@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,6 +35,7 @@ public class OfferController {
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN, COMPANY')")
     public OfferDto createOffer(@Valid @RequestBody CreateOfferDto createOfferDto) {
         OfferEntity offerEntity = offerService.createOffer(createOfferDto);
         return OfferDto.fromEntity(offerEntity);
@@ -68,6 +70,7 @@ public class OfferController {
     })
     @PutMapping("/{offerId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN, COMPANY')")
     public void updateOffer(@PathVariable String offerId, @Valid @RequestBody CreateOfferDto createOfferDto) {
         offerService.updateOffer(offerId, createOfferDto);
     }
@@ -79,6 +82,7 @@ public class OfferController {
     })
     @DeleteMapping("/{offerId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN, COMPANY')")
     public void deleteOffer(@PathVariable String offerId) {
         offerService.deleteOfferById(offerId);
     }
