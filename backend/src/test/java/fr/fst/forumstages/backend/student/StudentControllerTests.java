@@ -1,6 +1,7 @@
 package fr.fst.forumstages.backend.student;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.fst.forumstages.backend.storage.FileStorageService;
 import fr.fst.forumstages.backend.student.dto.StudentDto;
 import fr.fst.forumstages.backend.student.dto.UpdateStudentDto;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,8 @@ class StudentControllerTests {
 
     @MockitoBean
     private StudentService studentService;
+    @MockitoBean
+    private FileStorageService fileStorageService;
 
     @Test
     @WithMockUser
