@@ -55,9 +55,9 @@ public class OfferController {
             @ApiResponse(responseCode = "200", description = "Offres de stage récupérées avec succès")
     })
     @GetMapping
-    public List<OfferDto> findAllOffers(@RequestParam int page, @RequestParam(defaultValue = "15") int size) {
+    public Page<OfferDto> findAllOffers(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "15") int size) {
         Page<OfferEntity> offers = offerService.getAllOffers(page, size);
-        return offers.stream().map(OfferDto::fromEntity).toList();
+        return offers.map(OfferDto::fromEntity);
     }
 
     @Operation(summary = "Mettre à jour une offre de stage", description = "Permet de mettre à jour les informations d'une offre de stage existante.")

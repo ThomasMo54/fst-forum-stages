@@ -28,6 +28,16 @@ export interface OfferDto {
   companyId: string;
 }
 
+export interface PaginatedOffers {
+  content: OfferDto[];
+  page: {
+    size: number,
+    number: number,
+    totalElements: number,
+    totalPages: number
+  }
+}
+
 export interface ApplyOfferDto {
   fullName: string;
   email: string;
@@ -42,8 +52,8 @@ const createOffer = async (offerData: CreateOfferDto): Promise<void> => {
   await api.post('/offers', offerData);
 };
 
-const getAllOffers = async (): Promise<OfferDto[]> => {
-  const response = await api.get('/offers');
+const getAllOffers = async (page:number = 0): Promise<PaginatedOffers> => {
+  const response = await api.get('/offers?page=' + page);
   return response.data;
 };
 
@@ -52,8 +62,8 @@ const getOfferById = async (offerId: string): Promise<OfferDto> => {
   return response.data;
 };
 
-const getOffersByCompany = async (companyId: string): Promise<OfferDto[]> => {
-  const response = await api.get<OfferDto[]>(`/companies/${companyId}/offers`);
+const getOffersByCompany = async (companyId: string, page:number = 0): Promise<PaginatedOffers> => {
+  const response = await api.get<PaginatedOffers>(`/companies/${companyId}/offers?page=${page}`);
   return response.data;
 };
 

@@ -3,14 +3,14 @@ import Header from "../../../components/header/Header";
 import Footer from "../../../components/footer/Footer";
 import './MyOffersPage.css';
 import { useAuth } from "../../../context/AuthContext.tsx";
-import OfferService, { type OfferDto } from "../../../services/offer.service.ts";
+import OfferService, { type PaginatedOffers } from "../../../services/offer.service.ts";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "../../../components/button/Button.tsx";
 
 const MyOffersPage: React.FC = () => {
   const {user} = useAuth();
+  const [offers, setOffers] = useState<PaginatedOffers>({content: [], page: {size: 0, number: 0, totalElements: 0, totalPages: 0}});
   const navigate = useNavigate();
-  const [offers, setOffers] = useState<OfferDto[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,7 +68,7 @@ const MyOffersPage: React.FC = () => {
             <Button variant="primary">Créer une nouvelle offre</Button>
           </Link>
         </div>
-        {offers.length === 0 ? (
+        {offers.content?.length === 0 ? (
           <div className="no-offers-container">
             <p className="no-offers-message">Vous n'avez pas encore publié d'offres.</p>
             <Link to="/company/create-offer">
@@ -77,15 +77,15 @@ const MyOffersPage: React.FC = () => {
           </div>
         ) : (
           <div className="offers-list">
-            {offers.map(offer => (
+            {offers.content?.map(offer => (
               <div key={offer.id} className="offer-card">
                 <div className="offer-card-header">
                     <h2>{offer.title}</h2>
                     <span className="creation-date">Publié le {new Date(offer.creationDate).toLocaleDateString()}</span>
                 </div>
-                
+
                 <p className="offer-description">{offer.description.substring(0, 100)}...</p>
-                
+
                 <div className="offer-details-grid">
                     <div className="detail-item">
                         <i className="fa-solid fa-euro-sign"></i>

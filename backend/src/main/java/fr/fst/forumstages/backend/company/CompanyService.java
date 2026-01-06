@@ -2,6 +2,11 @@ package fr.fst.forumstages.backend.company;
 
 import fr.fst.forumstages.backend.company.dto.UpdateCompanyDto;
 import fr.fst.forumstages.backend.offer.OfferEntity;
+import fr.fst.forumstages.backend.offer.OfferRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,8 +17,11 @@ public class CompanyService {
 
     private final CompanyRepository companyRepository;
 
-    public CompanyService(CompanyRepository companyRepository) {
+    private final OfferRepository offerRepository;
+
+    public CompanyService(CompanyRepository companyRepository, OfferRepository offerRepository) {
         this.companyRepository = companyRepository;
+        this.offerRepository = offerRepository;
     }
 
     public CompanyEntity findCompanyById(String id) {
@@ -49,9 +57,10 @@ public class CompanyService {
         companyRepository.delete(existingCompany);
     }
 
-    public List<OfferEntity> getCompanyOffers(String companyId) {
+    public Page<OfferEntity> getCompanyOffers(String companyId, int page, int size) {
         CompanyEntity company = findCompanyById(companyId);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("creationDate").descending());
 
-        return company.getPublishedOffers();
+        return this.offerRepository.findOfferEntitiesByCompany_Id(companyId, pageable);
     }
 }
