@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.fst.forumstages.backend.application.dto.CreateApplicationDto;
 import fr.fst.forumstages.backend.company.CompanyEntity;
+import fr.fst.forumstages.backend.storage.FileStorageService;
 import fr.fst.forumstages.backend.student.StudentEntity;
 import fr.fst.forumstages.backend.student.StudentService;
 import fr.fst.forumstages.backend.offer.OfferEntity;
@@ -42,8 +43,11 @@ public class ApplicationControllerTests {
     @MockitoBean
     private StudentService studentService;
 
+    @MockitoBean
+    private FileStorageService fileStorageService;
+
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "USER")
     public void createApplication_success() throws Exception {
         var studentEntity = new StudentEntity();
         studentEntity.setId("456");
@@ -76,7 +80,7 @@ public class ApplicationControllerTests {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "USER")
     public void findApplicationForOffer_success() throws Exception {
         String companyId = "101";
         var mockCompany = new CompanyEntity();
@@ -106,7 +110,7 @@ public class ApplicationControllerTests {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "USER")
     public void findApplicationForStudent_success() throws Exception {
         String companyId = "101";
         var mockCompany = new CompanyEntity();
