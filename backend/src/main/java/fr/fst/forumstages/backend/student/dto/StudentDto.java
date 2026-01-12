@@ -23,21 +23,22 @@ public record StudentDto(
         String cvPath,
         LocalDateTime registrationDate
 ) {
-    public static StudentDto fromEntity(StudentEntity studentEntity){
+
+    public static StudentDto fromEntity(StudentEntity entity) {
         return new StudentDto(
-                studentEntity.getId(),
-                studentEntity.getFirstName(),
-                studentEntity.getLastName(),
-                studentEntity.getEmail(),
-                studentEntity.getStudentNumber(),
-                studentEntity.getPhone(),
-                studentEntity.getEducationLevel(),
-                studentEntity.getFieldOfStudy(),
-                studentEntity.getSpecialization(),
-                studentEntity.getYearOfStudy(),
-                studentEntity.getSkills(),
-                studentEntity.getCvPath(),
-                studentEntity.getRegistrationDate()
+                entity.getId(),
+                entity.getFirstName(),
+                entity.getLastName(),
+                entity.getEmail(),
+                entity.getStudentNumber(),
+                entity.getPhone(),
+                entity.getEducationLevel(),
+                entity.getFieldOfStudy(),
+                entity.getSpecialization(),
+                entity.getYearOfStudy(),
+                entity.getSkills(),
+                entity.getCvPath(),
+                entity.getRegistrationDate()
         );
     }
 }

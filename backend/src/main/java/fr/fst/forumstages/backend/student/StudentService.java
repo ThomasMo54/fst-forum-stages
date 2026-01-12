@@ -16,6 +16,10 @@ public class StudentService {
 
     private final StudentRepository studentRepository;
 
+    public StudentEntity getStudentById(String id) {
+        return studentRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Student not found with ID: " + id));
+    }
 
     /**
      * Modifie un étudiant existant
