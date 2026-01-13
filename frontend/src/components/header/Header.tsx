@@ -22,7 +22,7 @@ const Header: React.FC = () => {
       }
     }
     fetchUserName();
-  })
+  }, [])
 
   const handleLogout = () => {
     logout();

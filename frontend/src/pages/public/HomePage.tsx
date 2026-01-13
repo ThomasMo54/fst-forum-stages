@@ -116,7 +116,7 @@ const HomePage: React.FC = () => {
               title="Espace Entreprises"
               description="Déposez vos offres, recherchez des profils et gérez les processus de recrutement."
               buttonText="Publier une offre"
-              linkTo="/offers#new-offer"
+              linkTo="/company/create-offer"
               iconColorVar="--success-color"
             />
 
