@@ -1,0 +1,10 @@
+.popup {
+    text-align: left;
+    position: absolute;
+    top: 5em;
+    right: 1em;
+    padding: 0.7em;
+    background: var(--white);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+}
