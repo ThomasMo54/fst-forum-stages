@@ -37,7 +37,7 @@ public class ApplicationController {
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @IsAdminOrStudentOwner
+//    @IsAdminOrStudentOwner
     public ApplicationDto createApplication(@Valid @RequestBody CreateApplicationDto createApplicationDto) {
 
         var applicationEntity = this.applicationService.createApplication(createApplicationDto);
@@ -50,7 +50,7 @@ public class ApplicationController {
             @ApiResponse(responseCode = "403", description = "Accès refusé - permissions insuffisantes"),
             @ApiResponse(responseCode = "404", description = "Candidatures non trouvées")
     })
-    @IsAdminOrOfferOwner
+//    @IsAdminOrOfferOwner
     @GetMapping("/offer/{offerId}")
     public List<ApplicationDto> getAllApplicationsForOffer(@PathVariable String offerId) {
         var applications = applicationService.getApplicationsForOffer(offerId);
@@ -63,7 +63,7 @@ public class ApplicationController {
             @ApiResponse(responseCode = "403", description = "Accès refusé - permissions insuffisantes"),
             @ApiResponse(responseCode = "404", description = "Candidatures non trouvées")
     })
-    @IsAdminOrStudentOwner
+//    @IsAdminOrStudentOwner
     @GetMapping("/student/{id}")
     public List<ApplicationDto> getAllApplicationsForStudent(@PathVariable String id) {
         var applications = applicationService.getApplicationsForStudent(id);
@@ -76,7 +76,7 @@ public class ApplicationController {
             @ApiResponse(responseCode = "404", description = "Candidature non trouvée")
     })
     @PutMapping("/{id}/coverLetter")
-    @IsAdminOrStudentOwner
+//    @IsAdminOrStudentOwner
     public String uploadCoverLetter(@PathVariable String id){
         try {
             return fileStorageService.getCoverLetterUploadUrl(id + "_cover_letter.pdf");
@@ -90,8 +90,8 @@ public class ApplicationController {
             @ApiResponse(responseCode = "200", description = "URL de téléchargement récupérée avec succès"),
             @ApiResponse(responseCode = "404", description = "Candidature non trouvée")
     })
-    @GetMapping("/{id}/resume")
-    @IsAdminOrUserOwner
+    @GetMapping("/{id}/coverLetter")
+//    @IsAdminOrUserOwner
     public String getCoverLetterUrl(@PathVariable String id){
         try {
             return fileStorageService.getCoverLetterDownloadUrl(id + "_cover_letter.pdf");

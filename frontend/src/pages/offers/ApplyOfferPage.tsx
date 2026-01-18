@@ -9,6 +9,7 @@ import OfferService, { type ApplyOfferDto, type OfferDto } from '../../services/
 import CompanyService from '../../services/company.service';
 import StudentService, { type StudentDto } from '../../services/student.service';
 import { useAuth } from '../../context/AuthContext';
+import ApplicationService, {type CreateApplicationDto, type ApplicationDto } from '../../services/application.service';
 
 const formatDate = (date?: string | null) => {
   if (!date) return 'Non renseignée';
@@ -22,14 +23,16 @@ type LocationState = {
 };
 
 interface ApplicationForm {
-  fullName: string;
-  email: string;
-  phone: string;
-  cvLink: string;
-  cvFileName?: string;
-  coverLetter: string;
-  availability: string;
-  portfolio: string;
+  // fullName: string;
+  // email: string;
+  // phone: string;
+  // cvLink: string;
+  // cvFileName?: string;
+  coverLetterLink: string;
+  coverLetterFileName?: string;
+  // coverLetter: string;
+  // availability: string;
+  // portfolio: string;
 }
 
 const ApplyOfferPage: React.FC = () => {
@@ -50,13 +53,14 @@ const ApplyOfferPage: React.FC = () => {
 
   const [formErrors, setFormErrors] = useState<Partial<ApplicationForm>>({});
   const [formData, setFormData] = useState<ApplicationForm>({
-    fullName: '',
-    email: '',
-    phone: '',
-    cvLink: '',
-    coverLetter: '',
-    availability: '',
-    portfolio: ''
+    // fullName: '',
+    // email: '',
+    // phone: '',
+    // cvLink: '',
+    coverLetterLink: '',
+    coverLetterFileName: '',
+    // availability: '',
+    // portfolio: ''
   });
 
   useEffect(() => {
@@ -96,7 +100,7 @@ const ApplyOfferPage: React.FC = () => {
     const fetchStudentData = async () => {
       if (!user) return;
       try {
-        const student: StudentDto = await StudentService.getStudentByUserId(user.userId);
+        const student: StudentDto = await StudentService.getStudentById(user.entityId);
         setFormData((prev) => ({
           ...prev,
           fullName: `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim(),
@@ -112,14 +116,14 @@ const ApplyOfferPage: React.FC = () => {
     void fetchStudentData();
   }, [user]);
 
-  useEffect(() => {
-    if (offer?.internshipStartDate && !formData.availability) {
-      setFormData((prev) => ({
-        ...prev,
-        availability: `Disponible dès le ${formatDate(offer.internshipStartDate)}`
-      }));
-    }
-  }, [offer, formData.availability]);
+  // useEffect(() => {
+  //   if (offer?.internshipStartDate && !formData.availability) {
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       availability: `Disponible dès le ${formatDate(offer.internshipStartDate)}`
+  //     }));
+  //   }
+  // }, [offer, formData.availability]);
 
   const topTags = useMemo(() => {
     if (!offer?.tags || offer.tags.length === 0) return [];
@@ -150,20 +154,39 @@ const ApplyOfferPage: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
+  const handleCoverLetterFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      setFormData((prev) => ({
+        ...prev,
+        coverLetterLink: result,
+        coverLetterFileName: file.name
+      }));
+    };
+    reader.readAsDataURL(file);
+  }
+
   const validate = (): boolean => {
     const errors: Partial<ApplicationForm> = {};
-    if (!formData.fullName.trim()) errors.fullName = 'Votre nom complet est requis.';
-    if (!formData.email.trim()) {
-      errors.email = 'Votre email est requis.';
-    } else {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email.trim())) {
-        errors.email = "L'email n'est pas valide.";
-      }
-    }
-    if (!formData.coverLetter.trim()) errors.coverLetter = 'Un message de motivation est requis.';
-    if (formData.coverLetter && formData.coverLetter.trim().length < 30) {
-      errors.coverLetter = 'Ajoutez quelques détails sur votre profil (30 caractères min).';
+    // if (!formData.fullName.trim()) errors.fullName = 'Votre nom complet est requis.';
+    // if (!formData.email.trim()) {
+    //   errors.email = 'Votre email est requis.';
+    // } else {
+    //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    //   if (!emailRegex.test(formData.email.trim())) {
+    //     errors.email = "L'email n'est pas valide.";
+    //   }
+    // }
+    // if (!formData.coverLetter.trim()) errors.coverLetter = 'Un message de motivation est requis.';
+    // if (formData.coverLetter && formData.coverLetter.trim().length < 30) {
+    //   errors.coverLetter = 'Ajoutez quelques détails sur votre profil (30 caractères min).';
+    // }
+    if (!formData.coverLetterLink || !formData.coverLetterFileName) {
+      errors.coverLetterLink = 'Une lettre de motivation est requise.';
     }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -182,18 +205,39 @@ const ApplyOfferPage: React.FC = () => {
     setApplicationError('');
     setSubmitMessage('');
 
-    const application: ApplyOfferDto = {
-      fullName: formData.fullName.trim(),
-      email: formData.email.trim(),
-      phone: formData.phone.trim() || undefined,
-      cvLink: formData.cvLink.trim() || undefined,
-      coverLetter: formData.coverLetter.trim(),
-      availability: formData.availability.trim() || undefined,
-      portfolio: formData.portfolio.trim() || undefined
-    };
+    // const application: ApplyOfferDto = {
+    //   fullName: formData.fullName.trim(),
+    //   email: formData.email.trim(),
+    //   phone: formData.phone.trim() || undefined,
+    //   cvLink: formData.cvLink.trim() || undefined,
+    //   coverLetter: formData.coverLetter.trim(),
+    //   availability: formData.availability.trim() || undefined,
+    //   portfolio: formData.portfolio.trim() || undefined
+    // };
 
     try {
-      await OfferService.applyToOffer(offerId, application);
+      console.log(formData.coverLetterLink);
+      console.log(formData.coverLetterFileName);
+      const result: ApplicationDto = await ApplicationService.createApplication({
+          studentId: user?.entityId || '',
+          offerId: offerId
+        }
+      );
+
+      console.log('Application created with ID:', result.id);
+
+      const uploadLink = await ApplicationService.uploadCoverLetter(result.id);
+
+      console.log('Upload link received:', uploadLink);
+
+      await fetch(uploadLink, {
+        method: 'PUT',
+        body: formData.coverLetterLink,
+        headers: {
+          'Content-Type': 'application/pdf',
+        },
+      });
+      
       setSubmitMessage('Votre candidature a bien été envoyée. Notre équipe et l’entreprise seront notifiées.');
     } catch (e) {
       setApplicationError("Impossible d'envoyer votre candidature pour le moment. Veuillez réessayer.");
@@ -257,7 +301,7 @@ const ApplyOfferPage: React.FC = () => {
                 </div>
               ) : (
                 <form className="apply-form" onSubmit={handleSubmit}>
-                  <div className="form-row">
+                  {/* <div className="form-row">
                     <div className="form-group">
                       <label htmlFor="fullName">Nom complet *</label>
                       <input
@@ -284,10 +328,10 @@ const ApplyOfferPage: React.FC = () => {
                       />
                       {formErrors.email && <p className="error-message">{formErrors.email}</p>}
                     </div>
-                  </div>
+                  </div> */}
 
                   <div className="form-row">
-                    <div className="form-group">
+                    {/* <div className="form-group">
                       <label htmlFor="phone">Téléphone</label>
                       <input
                         id="phone"
@@ -297,8 +341,8 @@ const ApplyOfferPage: React.FC = () => {
                         onChange={handleChange}
                         placeholder="+33 6 12 34 56 78"
                       />
-                    </div>
-                    <div className="form-group">
+                    </div> */}
+                    {/* <div className="form-group">
                       <label htmlFor="cvLink">CV (import ou lien)</label>
                       <div className="file-input-row">
                         <label className="file-upload">
@@ -323,24 +367,43 @@ const ApplyOfferPage: React.FC = () => {
                       <p className="muted tiny">
                         {formData.cvFileName ? `Fichier prêt: ${formData.cvFileName}` : 'PDF ou DOC recommandé, 5 Mo max.'}
                       </p>
+                    </div> */}
+                    <div className="form-group">
+                      <label htmlFor="coverLetter">Lettre de motivation *</label>
+                      <div className='file-input-row'>
+                          <label className="file-upload">
+                            Importer un fichier
+                            <input
+                              id="coverLetterFile"
+                              name="coverLetterFile"
+                              type="file"
+                              accept=".pdf,.doc,.docx"
+                              onChange={handleCoverLetterFileChange}
+                            />
+                          </label>
+                      
+                      </div>
+                      <p className="muted tiny">
+                          {formData.coverLetterFileName ? `Fichier prêt: ${formData.coverLetterFileName}` : 'PDF ou DOC recommandé, 5 Mo max.'}
+                      </p>
+                      {formErrors.coverLetterLink && <p className="error-message">{formErrors.coverLetterLink}</p>}
+                      
+                      {/* <textarea
+                        id="coverLetter"
+                        name="coverLetter"
+                        value={formData.coverLetter}
+                        onChange={handleChange}
+                        rows={6}
+                        placeholder="Expliquez pourquoi vous êtes le bon profil pour ce stage (stack, projets, disponibilités...)"
+                        className={formErrors.coverLetter ? 'input-error' : ''}
+                      />
+                      {formErrors.coverLetter && <p className="error-message">{formErrors.coverLetter}</p>} */}
                     </div>
                   </div>
 
-                  <div className="form-group">
-                    <label htmlFor="coverLetter">Message de motivation *</label>
-                    <textarea
-                      id="coverLetter"
-                      name="coverLetter"
-                      value={formData.coverLetter}
-                      onChange={handleChange}
-                      rows={6}
-                      placeholder="Expliquez pourquoi vous êtes le bon profil pour ce stage (stack, projets, disponibilités...)"
-                      className={formErrors.coverLetter ? 'input-error' : ''}
-                    />
-                    {formErrors.coverLetter && <p className="error-message">{formErrors.coverLetter}</p>}
-                  </div>
+                  
 
-                  <div className="form-row">
+                  {/* <div className="form-row">
                     <div className="form-group">
                       <label htmlFor="availability">Disponibilités</label>
                       <input
@@ -363,7 +426,7 @@ const ApplyOfferPage: React.FC = () => {
                         placeholder="LinkedIn, GitHub, site perso..."
                       />
                     </div>
-                  </div>
+                  </div> */}
 
                   <div className="form-actions">
                     <Button variant="secondary" type="button" onClick={() => navigate('/offers')}>
