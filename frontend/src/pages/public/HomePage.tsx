@@ -1,18 +1,17 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import '../../styles/global.css';
 import './HomePage.css';
 import Button from '../../components/button/Button';
 import Header from '../../components/header/Header';
 import Footer from '../../components/footer/Footer';
-import { useAuth } from '../../context/AuthContext';
-import roles from '../../constants/user_roles';
+import OfferService, { type OfferDto } from '../../services/offer.service';
 
 interface DashboardCardProps {
   icon: string;
   title: string;
   description: string;
   buttonText: string;
-  onClick?: () => void;
+  linkTo: string;
   iconColorVar: string;
 }
 
@@ -26,7 +25,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   title,
   description,
   buttonText,
-  onClick,
+  linkTo,
   iconColorVar
 }) => {
   return (
@@ -42,7 +41,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
       <p>{description}</p>
 
       <Button
-        onClick={onClick}
+        to={linkTo}
         variant="primary"
         className="card-button-override"
       >
@@ -62,46 +61,38 @@ const StatItem: React.FC<StatItemProps> = ({ number, label }) => {
 };
 
 const HomePage: React.FC = () => {
-  const { isAuthenticated, user } = useAuth();
-  const navigate = useNavigate();
+  const [offers, setOffers] = useState<OfferDto[]>([]);
+  const [loadingStats, setLoadingStats] = useState<boolean>(true);
+  const [statsError, setStatsError] = useState<boolean>(false);
 
-  const handleStudentSpaceClick = () => {
-    if (!isAuthenticated) {
-      
-      navigate('/login', { state: { from: '/offers' } });
-    } else if (user?.roles.includes(roles.STUDENT)) {
-      
-      navigate('/offers');
-    } else {
-      
-      navigate('/login', { state: { from: '/offers' } });
-    }
-  };
+  useEffect(() => {
+    const fetchStats = async () => {
+      setLoadingStats(true);
+      setStatsError(false);
+      try {
+        const data = await OfferService.getAllOffers();
+        setOffers(data);
+      } catch (e) {
+        setStatsError(true);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
 
-  const handleCompanySpaceClick = () => {
-    if (!isAuthenticated) {
-      
-      navigate('/login', { state: { from: '/company/my-offers' } });
-    } else if (user?.roles.includes(roles.COMPANY)) {
-      
-      navigate('/company/my-offers');
-    } else {
-      
-      navigate('/login', { state: { from: '/company/my-offers' } });
-    }
-  };
+    void fetchStats();
+  }, []);
 
-  const handleAdminSpaceClick = () => {
-    if (!isAuthenticated) {
-      
-      navigate('/login', { state: { from: '/' } });
-    } else if (user?.roles.includes(roles.ADMIN)) {
-      
-      navigate('/');
-    } else {
-      
-      navigate('/login', { state: { from: '/' } });
-    }
+  const stats = useMemo(() => {
+    const offersCount = offers.length;
+    const companyCount = new Set(offers.map((o) => o.companyId)).size;
+    const remoteCount = offers.filter((o) => !!o.remoteWorkPolicy).length;
+    return { offersCount, companyCount, remoteCount };
+  }, [offers]);
+
+  const displayValue = (value: number) => {
+    if (loadingStats) return '...';
+    if (statsError) return 'N/A';
+    return value.toString();
   };
 
   return (
@@ -115,7 +106,7 @@ const HomePage: React.FC = () => {
           <section className="welcome-section">
             <h2>Bienvenue sur le portail des stages</h2>
             <p className="subtitle">
-              Université de Lorraine : Connectez talents et opportunités
+              Universite de Lorraine : Connectez talents et opportunites
             </p>
 
             <div
@@ -140,17 +131,17 @@ const HomePage: React.FC = () => {
           {/* ===== Portals ===== */}
           <section id="portals" className="page-header">
             <h2>Choisissez votre espace</h2>
-            <p>Accédez aux services dédiés selon votre profil</p>
+            <p>Accedez aux services dedies selon votre profil</p>
           </section>
 
           <section className="dashboard-grid">
-            {/* Étudiants */}
+            {/* Etudiants */}
             <DashboardCard
               icon="🎓"
-              title="Espace Étudiants"
-              description="Consultez les offres de stage, gérez vos candidatures et validez votre convention."
+              title="Espace Etudiants"
+              description="Consultez les offres de stage, gerez vos candidatures et validez votre convention."
               buttonText="Voir les offres de stage"
-              onClick={handleStudentSpaceClick}
+              linkTo="/offers"
               iconColorVar="--secondary-color"
             />
 
@@ -158,20 +149,20 @@ const HomePage: React.FC = () => {
             <DashboardCard
               icon="🏢"
               title="Espace Entreprises"
-              description="Déposez vos offres, recherchez des profils et gérez les processus de recrutement."
+              description="Deposez vos offres, recherchez des profils et gerez les processus de recrutement."
               buttonText="Publier une offre"
-              onClick={handleCompanySpaceClick}
+              linkTo="/company/create-offer"
               iconColorVar="--success-color"
             />
 
-            {/* Administration */}
+            {/* Admin */}
             <DashboardCard
-              icon="⚙️"
-              title="Espace Administration"
-              description="Gérez la plateforme, validez les entreprises et modérez les offres de stage."
-              buttonText="Accéder à l'administration"
-              onClick={handleAdminSpaceClick}
-              iconColorVar="--primary-color"
+              icon="🛡️"
+              title="Administration"
+              description="Espace reserve au personnel de l'universite pour la gestion de la plateforme."
+              buttonText="Acces Admin"
+              linkTo="/auth/login?role=admin"
+              iconColorVar="--danger-color"
             />
           </section>
 
@@ -179,9 +170,9 @@ const HomePage: React.FC = () => {
           <section id="stats" className="quick-stats">
             <h3>La plateforme en chiffres</h3>
             <div className="stats-grid">
-              <StatItem number="500+" label="Offres disponibles" />
-              <StatItem number="120" label="Entreprises partenaires" />
-              <StatItem number="100%" label="Sécurisé & Validé" />
+              <StatItem number={displayValue(stats.offersCount)} label="Offres disponibles" />
+              <StatItem number={displayValue(stats.companyCount)} label="Entreprises partenaires" />
+              <StatItem number={displayValue(stats.remoteCount)} label="Offres avec teletravail" />
             </div>
           </section>
 
@@ -189,13 +180,13 @@ const HomePage: React.FC = () => {
           <section className="info-section" style={{ marginTop: '3rem' }}>
             <h3>Pourquoi utiliser cette plateforme ?</h3>
             <ul className="info-list">
-              <li>Centralisation de toutes les offres de stage de l'université</li>
+              <li>Centralisation de toutes les offres de stage de l'universite</li>
               <li>Validation stricte des entreprises par l'administration</li>
             </ul>
 
             <div style={{ marginTop: '1.5rem' }}>
               <Button to="/offers" variant="secondary">
-                Accéder aux offres disponibles
+                Acceder aux offres disponibles
               </Button>
             </div>
           </section>

@@ -45,11 +45,25 @@ const refreshVerificationCode = async (email: string): Promise<void> => {
   await api.post(`/users/refresh-verification`, { email });
 };
 
+const getDisplayName = async (entityId: string, roles: string[]): Promise<string> => {
+  if (roles.includes('COMPANY')) {
+    const response = await api.get(`/companies/${entityId}`);
+    return response.data.name ?? 'User';
+  } else if (roles.includes('STUDENT')) {
+    const response = await api.get(`/students/${entityId}`);
+    return `${response.data.firstName ?? ''} ${response.data.lastName ?? 'User'}`;
+  } else if (roles.includes('ADMIN')) {
+    return 'Admin';
+  }
+  return 'User';
+}
+
 const UserService = {
   registerCompany,
   registerStudent,
   verifyUser,
   refreshVerificationCode,
+  getDisplayName,
 };
 
 export default UserService;

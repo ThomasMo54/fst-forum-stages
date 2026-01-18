@@ -28,6 +28,16 @@ export interface OfferDto {
   companyId: string;
 }
 
+export interface ApplyOfferDto {
+  fullName: string;
+  email: string;
+  phone?: string;
+  cvLink?: string;
+  coverLetter: string;
+  availability?: string;
+  portfolio?: string;
+}
+
 const createOffer = async (offerData: CreateOfferDto): Promise<void> => {
   await api.post('/offers', offerData);
 };
@@ -51,12 +61,17 @@ const deleteOffer = async (offerId: string): Promise<void> => {
   await api.delete(`/offers/${offerId}`);
 };
 
+const applyToOffer = async (offerId: string, application: ApplyOfferDto): Promise<void> => {
+  await api.post(`/offers/${offerId}/apply`, application);
+};
+
 const OfferService = {
   createOffer,
   getAllOffers,
   getOfferById,
   getOffersByCompany,
-  deleteOffer
+  deleteOffer,
+  applyToOffer
 };
 
 export default OfferService;
