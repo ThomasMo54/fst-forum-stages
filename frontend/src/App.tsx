@@ -11,6 +11,7 @@ import { VerifyPage } from "./pages/auth/verify/VerifyPage.tsx";
 import CreateOfferPage from "./pages/company/offer/CreateOfferPage.tsx";
 import MyOffersPage from "./pages/company/offer/MyOffersPage.tsx";
 import OffersPage from "./pages/offers/OffersPage.tsx";
+import ApplyOfferPage from "./pages/offers/ApplyOfferPage.tsx";
 import PrivateRoute from "./components/route/PrivateRoute.tsx";
 import ModifyStudentInfosPage from "./pages/student/ModifyStudentInfos.tsx";
 import StudentRoute from "./components/route/StudentRoute.tsx";
@@ -24,6 +25,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route element={<PrivateRoute />}>
             <Route path="/offers" element={<OffersPage />} />
+            <Route path="/offers/:offerId/apply" element={<ApplyOfferPage />} />
           </Route>
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<LoginPage />} />
@@ -39,6 +41,7 @@ function App() {
           </Route>
           <Route element={<StudentRoute />}>
             <Route path="/student/modify-infos" element={<ModifyStudentInfosPage />} />
+
           </Route>
         </Routes>
       </AuthProvider>
