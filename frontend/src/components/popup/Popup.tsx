@@ -21,8 +21,10 @@ const Popup: React.FC<PopupProps> = ({ children, popupId, time = 5, onClose, ...
             className="popup"
             {...rest}
         >
-            {children}
-            <button onClick={closeThis}>x</button>
+            <a className="btn btn-secondary" onClick={closeThis}>x</a>
+            <div className="popup-content">
+                {children}
+            </div>
         </div>
     )
 }

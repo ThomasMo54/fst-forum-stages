@@ -1,10 +1,16 @@
 .popup {
-    text-align: left;
-    position: absolute;
-    top: 5em;
-    right: 1em;
+    text-align: right;
     padding: 0.7em;
     background: var(--white);
     border-radius: 10px;
     box-shadow: var(--shadow);
+    margin: 0.5em;
+}
+
+.popup>.btn {
+    padding: 0.1rem 0.5rem;
+}
+
+.popup-content { 
+    text-align: left;
 }

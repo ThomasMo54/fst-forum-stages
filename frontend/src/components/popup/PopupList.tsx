@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PopupContext } from "./PopupContext";
 import Popup from "./Popup";
+import "./PopupList.css";
 
 const PopupList: React.FC = () => {
     const popupsContext = React.useContext(PopupContext);
@@ -15,18 +16,14 @@ const PopupList: React.FC = () => {
 
     return (
         <PopupContext value={popups}>
-            <div>
-                <ul>
-                    {
-                        popups.map(({ id, opt }) => (
-                            <li key={id} style={{ top: id + "em" }} >
-                                <Popup onClose={deleteThis} popupId={id} time={opt.time ?? 5}>
-                                    {opt.children}
-                                </Popup>
-                            </li>
-                        ))
-                    }
-                </ul>
+            <div className="popup-list">
+                {
+                    popups.map(({ id, opt }) => (
+                        <Popup key={id} onClose={deleteThis} popupId={id} time={opt.time ?? 5}>
+                            {opt.children}
+                        </Popup>
+                    ))
+                }
             </div>
         </PopupContext >
     )
