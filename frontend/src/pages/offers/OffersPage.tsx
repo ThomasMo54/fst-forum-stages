@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../../styles/global.css';
 import './OffersPage.css';
 import Header from '../../components/header/Header';
@@ -20,6 +21,8 @@ const OffersPage: React.FC = () => {
   const [listError, setListError] = useState<string>('');
 
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [selectedOffer, setSelectedOffer] = useState<OfferDto | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     void fetchOffers();
@@ -64,6 +67,16 @@ const OffersPage: React.FC = () => {
       return hasTextMatch || hasTagMatch;
     });
   }, [offers, searchTerm, companyNames]);
+
+  const handleApplyRedirect = (offer: OfferDto) => {
+    setSelectedOffer(null);
+    navigate(`/offers/${offer.id}/apply`, {
+      state: {
+        offer,
+        companyName: companyNames[offer.companyId] || `Entreprise #${offer.companyId}`
+      }
+    });
+  };
 
   return (
     <div className="page-wrapper">
@@ -120,14 +133,33 @@ const OffersPage: React.FC = () => {
             )}
 
             {loading ? (
-              <div className="offers-grid">
-                {[1, 2, 3].map((item) => (
-                  <div key={item} className="offer-card skeleton">
-                    <div className="skeleton-line short"/>
-                    <div className="skeleton-line"/>
-                    <div className="skeleton-line"/>
-                  </div>
-                ))}
+              <div className="table-wrapper">
+                <table className="offers-table loading">
+                  <thead>
+                  <tr>
+                    <th>Titre</th>
+                    <th>Entreprise</th>
+                    <th>Tags</th>
+                    <th>Début</th>
+                    <th>Durée</th>
+                    <th>Salaire</th>
+                    <th>Actions</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  {[1, 2, 3].map((item) => (
+                    <tr key={item}>
+                      <td><div className="skeleton-line short"/></td>
+                      <td><div className="skeleton-line"/></td>
+                      <td><div className="skeleton-line"/></td>
+                      <td><div className="skeleton-line short"/></td>
+                      <td><div className="skeleton-line short"/></td>
+                      <td><div className="skeleton-line short"/></td>
+                      <td><div className="skeleton-line short"/></td>
+                    </tr>
+                  ))}
+                  </tbody>
+                </table>
               </div>
             ) : filteredOffers.length === 0 ? (
               <div className="empty-state">
@@ -137,64 +169,125 @@ const OffersPage: React.FC = () => {
                 </Button>
               </div>
             ) : (
-              <div className="offers-grid">
-                {filteredOffers.map((offer) => (
-                  <div key={offer.id} className="offer-card">
-                    <div className="offer-card-header">
-                      <div>
-                        <h3>{offer.title}</h3>
+              <>
+                <div className="table-wrapper">
+                  <table className="offers-table">
+                    <thead>
+                    <tr>
+                      <th>Titre</th>
+                      <th>Entreprise</th>
+                      <th>Tags</th>
+                      <th>Début</th>
+                      <th>Durée</th>
+                      <th>Salaire</th>
+                      <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {filteredOffers.map((offer) => (
+                      <tr key={offer.id}>
+                        <td>
+                          <div className="table-title">{offer.title}</div>
+                        </td>
+                        <td>{companyNames[offer.companyId] || `Entreprise #${offer.companyId}`}</td>
+                        <td>
+                          <div className="table-tags">
+                            {(offer.tags ?? []).length === 0 ? (
+                              <span className="tag muted">Aucun</span>
+                            ) : (
+                              (offer.tags ?? []).slice(0, 3).map((tag) => (
+                                <span key={tag} className="tag">{tag}</span>
+                              ))
+                            )}
+                            {(offer.tags ?? []).length > 3 && (
+                              <span className="tag more">+{(offer.tags ?? []).length - 3}</span>
+                            )}
+                          </div>
+                        </td>
+                        <td>{formatDate(offer.internshipStartDate)}</td>
+                        <td>{offer.internshipDuration || 'Non renseignée'}</td>
+                        <td>{offer.salary || 'Non renseigné'}</td>
+                        <td className="table-actions">
+                          <Button
+                            size="small"
+                            variant="secondary"
+                            onClick={() => setSelectedOffer(offer)}
+                          >
+                            Voir le détail
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {selectedOffer && (
+                  <div className="offer-modal-overlay" onClick={() => setSelectedOffer(null)}>
+                    <div className="offer-modal" onClick={(e) => e.stopPropagation()}>
+                      <div className="modal-header">
+                        <div>
+                          <p className="eyebrow">Offre {selectedOffer.id}</p>
+                          <h3>{selectedOffer.title}</h3>
+                          <p className="detail-company">{companyNames[selectedOffer.companyId] || `Entreprise #${selectedOffer.companyId}`}</p>
+                        </div>
+                        <div className="modal-actions">
+                          <Button size="small" variant="secondary" onClick={() => setSelectedOffer(null)}>
+                            Fermer
+                          </Button>
+                          <Button size="small" onClick={() => handleApplyRedirect(selectedOffer)}>
+                            Je postule
+                          </Button>
+                        </div>
                       </div>
-                      <span className="badge">{companyNames[offer.companyId] || `Entreprise #${offer.companyId}`}</span>
+
+                      <p className="offer-description">{selectedOffer.description}</p>
+
+                      <div className="offer-meta">
+                        <div className="meta-item">
+                          <span>Début</span>
+                          <strong>{formatDate(selectedOffer.internshipStartDate)}</strong>
+                        </div>
+                        <div className="meta-item">
+                          <span>Durée</span>
+                          <strong>{selectedOffer.internshipDuration || 'Non renseignée'}</strong>
+                        </div>
+                        <div className="meta-item">
+                          <span>Limite</span>
+                          <strong>{selectedOffer.limitApplicationDate ? formatDate(selectedOffer.limitApplicationDate) : 'Sans limite'}</strong>
+                        </div>
+                        <div className="meta-item">
+                          <span>Salaire</span>
+                          <strong>{selectedOffer.salary || 'Non renseigné'}</strong>
+                        </div>
+                      </div>
+
+                      <div className="offer-meta secondary">
+                        <div className="meta-item">
+                          <span>Niveau</span>
+                          <strong>{selectedOffer.studyLevel || 'Ouvert'}</strong>
+                        </div>
+                        <div className="meta-item">
+                          <span>Télétravail</span>
+                          <strong>{selectedOffer.remoteWorkPolicy || 'À définir'}</strong>
+                        </div>
+                        <div className="meta-item">
+                          <span>Créée le</span>
+                          <strong>{formatDate(selectedOffer.creationDate)}</strong>
+                        </div>
+                      </div>
+
+                      {(selectedOffer.tags ?? []).length > 0 && (
+                        <div className="tags">
+                          {(selectedOffer.tags ?? []).map((tag) => (
+                            <span key={tag} className="tag">{tag}</span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-
-                    <p className="offer-description">
-                      {offer.description}
-                    </p>
-
-                    <div className="offer-meta">
-                      <div className="meta-item">
-                        <span>Début</span>
-                        <strong>{formatDate(offer.internshipStartDate)}</strong>
-                      </div>
-                      <div className="meta-item">
-                        <span>Durée</span>
-                        <strong>{offer.internshipDuration || 'Non renseignée'}</strong>
-                      </div>
-                      <div className="meta-item">
-                        <span>Candidature</span>
-                        <strong>{offer.limitApplicationDate ? formatDate(offer.limitApplicationDate) : 'Sans limite'}</strong>
-                      </div>
-                      <div className="meta-item">
-                        <span>Salaire</span>
-                        <strong>{offer.salary || 'Non renseigné'}</strong>
-                      </div>
-                    </div>
-
-                    <div className="offer-meta secondary">
-                      <div className="meta-item">
-                        <span>Niveau requis</span>
-                        <strong>{offer.studyLevel || 'Ouvert'}</strong>
-                      </div>
-                      <div className="meta-item">
-                        <span>Télétravail</span>
-                        <strong>{offer.remoteWorkPolicy || 'À définir'}</strong>
-                      </div>
-                      <div className="meta-item">
-                        <span>Créée le</span>
-                        <strong>{formatDate(offer.creationDate)}</strong>
-                      </div>
-                    </div>
-
-                    {(offer.tags ?? []).length > 0 && (
-                      <div className="tags">
-                        {(offer.tags ?? []).map((tag) => (
-                          <span key={tag} className="tag">{tag}</span>
-                        ))}
-                      </div>
-                    )}
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </section>
         </div>

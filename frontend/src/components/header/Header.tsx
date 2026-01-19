@@ -1,12 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './Header.css';
 import user_roles from "../../constants/user_roles.ts";
+import UserService from '../../services/user.service';
 
 const Header: React.FC = () => {
   const {isAuthenticated, user, logout} = useAuth();
+  const [name, setName] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      if (isAuthenticated && user) {
+        try {
+          const response = await UserService.getDisplayName(user.entityId, user.roles);
+          setName(response);
+        } catch (error) {
+          console.error('Error fetching user name:', error);
+        }
+      }
+    }
+    fetchUserName();
+  }, [])
 
   const handleLogout = () => {
     logout();
@@ -28,7 +44,7 @@ const Header: React.FC = () => {
             {isAuthenticated && user ? (
               <div className="user-menu">
                 <span className="user-email">
-                  {user.sub}
+                  {name}
                 </span>
                 <button onClick={handleLogout} className="logout-btn">
                   Déconnexion

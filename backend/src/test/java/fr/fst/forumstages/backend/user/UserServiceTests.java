@@ -121,6 +121,58 @@ public class UserServiceTests {
     }
 
     @Test
+    public void createStudentUser_success() {
+        String password = "12345678";
+        String encodedPassword = "encodedPassword";
+        CreateStudentDto createStudentDto = new CreateStudentDto(
+                "a@b.fr",
+                password,
+                "John",
+                "Doe",
+                "S123456",
+                "1234567890",
+                "Bachelor's",
+                "Computer Science",
+                "Software Engineering",
+                2,
+                Arrays.asList("Java", "Spring")
+        );
+
+        when(userRepository.save(any(UserEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(studentRepository.save(any(StudentEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
+        ArgumentCaptor<UserEntity> userCaptor = ArgumentCaptor.forClass(UserEntity.class);
+        ArgumentCaptor<StudentEntity> studentCaptor = ArgumentCaptor.forClass(StudentEntity.class);
+
+        UserEntity result = userService.createStudentUser(createStudentDto);
+
+        verify(userRepository, times(1)).save(userCaptor.capture());
+        verify(studentRepository, times(1)).save(studentCaptor.capture());
+
+        UserEntity createdUser = userCaptor.getValue();
+        StudentEntity createdStudent = studentCaptor.getValue();
+
+        assertEquals("a@b.fr", createdUser.getEmail());
+        assertEquals(encodedPassword, createdUser.getPassword());
+        assertEquals(UserRole.STUDENT, createdUser.getRole());
+        assertFalse(createdUser.isVerified());
+        assertEquals(createdUser, result);
+        assertNull(createdStudent.getId());
+
+        assertEquals("John", createdStudent.getFirstName());
+        assertEquals("Doe", createdStudent.getLastName());
+        assertEquals("a@b.fr", createdStudent.getEmail());
+        assertEquals("S123456", createdStudent.getStudentNumber());
+        assertEquals("1234567890", createdStudent.getPhone());
+        assertEquals("Bachelor's", createdStudent.getEducationLevel());
+        assertEquals("Computer Science", createdStudent.getFieldOfStudy());
+        assertEquals("Software Engineering", createdStudent.getSpecialization());
+        assertEquals(2, createdStudent.getYearOfStudy());
+        assertEquals(Arrays.asList("Java", "Spring"), createdStudent.getSkills());
+        assertEquals(createdStudent, createdUser.getStudent());
+    }
+
+    @Test
     public void verifyUser_success() {
         String email = "a@b.fr";
         String code = "123456";
