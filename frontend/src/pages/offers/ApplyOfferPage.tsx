@@ -5,11 +5,10 @@ import './ApplyOfferPage.css';
 import Header from '../../components/header/Header';
 import Footer from '../../components/footer/Footer';
 import Button from '../../components/button/Button';
-import OfferService, { type ApplyOfferDto, type OfferDto } from '../../services/offer.service';
+import OfferService, { type OfferDto } from '../../services/offer.service';
 import CompanyService from '../../services/company.service';
-import StudentService, { type StudentDto } from '../../services/student.service';
 import { useAuth } from '../../context/AuthContext';
-import ApplicationService, {type CreateApplicationDto, type ApplicationDto } from '../../services/application.service';
+import ApplicationService, { type ApplicationDto } from '../../services/application.service';
 
 const formatDate = (date?: string | null) => {
   if (!date) return 'Non renseignée';
@@ -97,25 +96,25 @@ const ApplyOfferPage: React.FC = () => {
     void fetchCompanyName();
   }, [offer, companyName]);
 
-  useEffect(() => {
-    const fetchStudentData = async () => {
-      if (!user) return;
-      try {
-        const student: StudentDto = await StudentService.getStudentById(user.entityId);
-        setFormData((prev) => ({
-          ...prev,
-          fullName: `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim(),
-          email: student.email ?? '',
-          phone: student.phone ?? '',
-          cvLink: student.cvPath ?? ''
-        }));
-      } catch (e) {
-        setPrefillError("Vos informations étudiant n'ont pas pu être chargées automatiquement.");
-      }
-    };
+  // useEffect(() => {
+  //   const fetchStudentData = async () => {
+  //     if (!user) return;
+  //     try {
+  //       const student: StudentDto = await StudentService.getStudentById(user.entityId);
+  //       setFormData((prev) => ({
+  //         ...prev,
+  //         fullName: `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim(),
+  //         email: student.email ?? '',
+  //         phone: student.phone ?? '',
+  //         cvLink: student.cvPath ?? ''
+  //       }));
+  //     } catch (e) {
+  //       setPrefillError("Vos informations étudiant n'ont pas pu être chargées automatiquement.");
+  //     }
+  //   };
 
-    void fetchStudentData();
-  }, [user]);
+  //   void fetchStudentData();
+  // }, [user]);
 
   // useEffect(() => {
   //   if (offer?.internshipStartDate && !formData.availability) {
@@ -131,29 +130,29 @@ const ApplyOfferPage: React.FC = () => {
     return offer.tags.slice(0, 4);
   }, [offer]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  // const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  //   const { name, value } = e.target;
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     [name]: value
+  //   }));
+  // };
 
-  const handleCvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // const handleCvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === 'string' ? reader.result : '';
-      setFormData((prev) => ({
-        ...prev,
-        cvLink: result,
-        cvFileName: file.name
-      }));
-    };
-    reader.readAsDataURL(file);
-  };
+  //   const reader = new FileReader();
+  //   reader.onload = () => {
+  //     const result = typeof reader.result === 'string' ? reader.result : '';
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       cvLink: result,
+  //       cvFileName: file.name
+  //     }));
+  //   };
+  //   reader.readAsDataURL(file);
+  // };
 
   const handleCoverLetterFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
