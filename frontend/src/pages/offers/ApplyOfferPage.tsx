@@ -30,6 +30,7 @@ interface ApplicationForm {
   // cvFileName?: string;
   coverLetterLink: string;
   coverLetterFileName?: string;
+  coverLetterFile?: File;
   // coverLetter: string;
   // availability: string;
   // portfolio: string;
@@ -158,16 +159,11 @@ const ApplyOfferPage: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === 'string' ? reader.result : '';
-      setFormData((prev) => ({
-        ...prev,
-        coverLetterLink: result,
-        coverLetterFileName: file.name
-      }));
-    };
-    reader.readAsDataURL(file);
+    setFormData((prev) => ({
+      ...prev,
+      coverLetterFileName: file.name,
+      coverLetterFile: file
+    }));
   }
 
   const validate = (): boolean => {
@@ -185,7 +181,7 @@ const ApplyOfferPage: React.FC = () => {
     // if (formData.coverLetter && formData.coverLetter.trim().length < 30) {
     //   errors.coverLetter = 'Ajoutez quelques détails sur votre profil (30 caractères min).';
     // }
-    if (!formData.coverLetterLink || !formData.coverLetterFileName) {
+    if (!formData.coverLetterFile || !formData.coverLetterFileName) {
       errors.coverLetterLink = 'Une lettre de motivation est requise.';
     }
     setFormErrors(errors);
@@ -216,27 +212,23 @@ const ApplyOfferPage: React.FC = () => {
     // };
 
     try {
-      console.log(formData.coverLetterLink);
-      console.log(formData.coverLetterFileName);
       const result: ApplicationDto = await ApplicationService.createApplication({
           studentId: user?.entityId || '',
           offerId: offerId
         }
       );
 
-      console.log('Application created with ID:', result.id);
-
       const uploadLink = await ApplicationService.uploadCoverLetter(result.id);
 
-      console.log('Upload link received:', uploadLink);
-
-      await fetch(uploadLink, {
-        method: 'PUT',
-        body: formData.coverLetterLink,
-        headers: {
-          'Content-Type': 'application/pdf',
-        },
-      });
+      if (formData.coverLetterFile) {
+        await fetch(uploadLink, {
+          method: 'PUT',
+          body: formData.coverLetterFile,
+          headers: {
+            'Content-Type': formData.coverLetterFile.type || 'application/pdf',
+          },
+        });
+      }
       
       setSubmitMessage('Votre candidature a bien été envoyée. Notre équipe et l’entreprise seront notifiées.');
     } catch (e) {
