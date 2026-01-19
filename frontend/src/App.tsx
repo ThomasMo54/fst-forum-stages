@@ -16,6 +16,8 @@ import PrivateRoute from "./components/route/PrivateRoute.tsx";
 import ModifyStudentInfosPage from "./pages/student/ModifyStudentInfos.tsx";
 import StudentRoute from "./components/route/StudentRoute.tsx";
 import ModifyCompanyInfosPage from "./pages/company/ModifyCompanyInfos.tsx";
+import StudentMyOffersPage from "./pages/student/offer/MyOffersPage.tsx";
+import ApplicationPage from "./pages/offers/ApplicationPage.tsx";
 
 function App() {
   return (
@@ -26,6 +28,7 @@ function App() {
           <Route element={<PrivateRoute />}>
             <Route path="/offers" element={<OffersPage />} />
             <Route path="/offers/:offerId/apply" element={<ApplyOfferPage />} />
+            <Route path="/offers/:offerId/applications" element={<ApplicationPage />} />
           </Route>
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<LoginPage />} />
@@ -41,6 +44,7 @@ function App() {
           </Route>
           <Route element={<StudentRoute />}>
             <Route path="/student/modify-infos" element={<ModifyStudentInfosPage />} />
+            <Route path="/student/my-offers" element={<StudentMyOffersPage />} />
 
           </Route>
         </Routes>

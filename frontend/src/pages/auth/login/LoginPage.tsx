@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
+import AuthService from '../../../services/auth.service';
+import roles from '../../../constants/user_roles';
 
-import '../../../styles/global.css';
 import './LoginPage.css';
 
 import Header from '../../../components/header/Header';
@@ -29,7 +30,37 @@ const LoginPage: React.FC = () => {
 
     try {
       await login(email, password);
-      navigate(redirectTo, { replace: true })
+      
+      
+      const currentUser = AuthService.getCurrentUser();
+      
+      if (!currentUser) {
+        setError('Erreur lors de la récupération des informations utilisateur.');
+        return;
+      }
+
+      
+      if (!Array.isArray(currentUser.roles)) {
+        setError('Format de rôles invalide.');
+        return;
+      }
+
+      
+      if (currentUser.roles.includes(roles.STUDENT)) {
+        navigate('/offers', { replace: true });
+        return;
+      }
+      if (currentUser.roles.includes(roles.COMPANY)) {
+        navigate('/company/my-offers', { replace: true });
+        return;
+      }
+      if (currentUser.roles.includes(roles.ADMIN)) {
+        navigate('/', { replace: true });
+        return;
+      }
+      
+      
+      navigate(redirectTo, { replace: true });
     } catch (err: any) {
       if (err.response && err.response.status === 403) {
         navigate("/register/verify", { state: { email } });

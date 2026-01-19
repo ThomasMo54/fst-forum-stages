@@ -50,6 +50,10 @@ const Header: React.FC = () => {
                   Déconnexion
                 </button>
                 <Link to={user.roles.includes(user_roles.COMPANY) ? "/company/modify-infos" : "/student/modify-infos"} className="nav-link active">Modifier vos informations</Link>
+                {user.roles.includes(user_roles.STUDENT) ?(
+                  <Link to="/student/my-offers" className="nav-link active">Voir mes postulations</Link>  
+                ): null}
+
               </div>
             ) : (
               <Link to="/login" className="nav-link btn-login">

@@ -1,0 +1,85 @@
+.my-offers-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.my-offers-container {
+    flex-grow: 1;
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 2rem;
+    width: 100%;
+}
+
+.my-offers-title-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.my-offers-title {
+    color: var(--text-dark);
+    font-size: 2rem;
+    margin: 0;
+}
+
+.offers-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.offer-card {
+    background-color: var(--light-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease-in-out;
+}
+
+.offer-card:hover {
+    transform: translateY(-5px);
+}
+
+.offer-card h2 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-bottom: 0.8rem;
+}
+
+.offer-card p {
+    color: var(--text-dark);
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+}
+
+.offer-card strong {
+    color: var(--text-dark);
+}
+
+.offer-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.8rem;
+    justify-content: flex-end;
+}
+
+.no-offers-container {
+    text-align: center;
+    padding: 4rem 2rem;
+    border: 1px dashed var(--border-color);
+    border-radius: 8px;
+    margin-top: 2rem;
+}
+
+.no-offers-message {
+    color: var(--text-light);
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}

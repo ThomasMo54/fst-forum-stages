@@ -7,6 +7,10 @@ import Footer from '../../components/footer/Footer';
 import Button from '../../components/button/Button';
 import OfferService, { type OfferDto } from '../../services/offer.service';
 import CompanyService from '../../services/company.service';
+import type { ApplicationDto } from '../../services/application.service';
+import ApplicationService from '../../services/application.service';
+import { useAuth } from '../../context/AuthContext';
+import user_roles from "../../constants/user_roles.ts";
 
 const formatDate = (date?: string | null) => {
   if (!date) return 'Non renseignée';
@@ -22,13 +26,15 @@ const OffersPage: React.FC = () => {
 
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedOffer, setSelectedOffer] = useState<OfferDto | null>(null);
+  const [studentApplications, setStudentApplications] = useState<ApplicationDto[]>([]);
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    void fetchOffers();
+    void  fetchOffersAndApplications();
   }, []);
 
-  const fetchOffers = async () => {
+  const fetchOffersAndApplications = async () => {
     setLoading(true);
     setListError('');
     try {
@@ -46,12 +52,17 @@ const OffersPage: React.FC = () => {
         }
       }));
       setCompanyNames(names);
+      if(user){
+        const applications = await ApplicationService.getAllApplicationForStudent(user.entityId);
+        setStudentApplications(applications);
+      }
     } catch (err) {
       setListError("Impossible de récupérer les offres pour le moment.");
     } finally {
       setLoading(false);
     }
   };
+
 
   const filteredOffers = useMemo(() => {
     if (!searchTerm.trim()) return offers;
@@ -120,7 +131,7 @@ const OffersPage: React.FC = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <Button size="small" variant="secondary" onClick={() => void fetchOffers()}>
+                <Button size="small" variant="secondary" onClick={() => void fetchOffersAndApplications()}>
                   Actualiser
                 </Button>
               </div>
@@ -235,9 +246,17 @@ const OffersPage: React.FC = () => {
                           <Button size="small" variant="secondary" onClick={() => setSelectedOffer(null)}>
                             Fermer
                           </Button>
-                          <Button size="small" onClick={() => handleApplyRedirect(selectedOffer)}>
-                            Je postule
-                          </Button>
+                          {user && user.roles.includes(user_roles.STUDENT) ? (
+                            <>
+                              {studentApplications.find(app => app.offerId === selectedOffer.id) ? (
+                                <span className="applied-badge">Candidature envoyée</span>
+                              ) : (
+                                <Button size="small" onClick={() => handleApplyRedirect(selectedOffer)}>
+                                  Je postule
+                                </Button>
+                              )}
+                            </>
+                          ) : null}
                         </div>
                       </div>
 

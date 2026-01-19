@@ -77,6 +77,9 @@ const MyOffersPage: React.FC = () => {
                 <p><strong>Début:</strong> {new Date(offer.internshipStartDate).toLocaleDateString()}</p>
                 <p><strong>Date limite:</strong> {new Date(offer.limitApplicationDate).toLocaleDateString()}</p>
                 <div className="offer-actions">
+                  <Link to={`/offers/${offer.id}/applications`}>
+                    <Button variant='icon'><i className="fas fa-list"></i></Button>
+                  </Link>
                   <Button variant="icon" onClick={() => handleEdit(offer.id)}>
                     <i className="fas fa-pencil-alt"></i>
                   </Button>
