@@ -49,7 +49,6 @@ const ApplyOfferPage: React.FC = () => {
   const [applicationError, setApplicationError] = useState<string>('');
   const [submitMessage, setSubmitMessage] = useState<string>('');
   const [submitting, setSubmitting] = useState<boolean>(false);
-  const [prefillError, setPrefillError] = useState<string>('');
 
   const [formErrors, setFormErrors] = useState<Partial<ApplicationForm>>({});
   const [formData, setFormData] = useState<ApplicationForm>({
@@ -281,7 +280,6 @@ const ApplyOfferPage: React.FC = () => {
                 </Button>
               </div>
 
-              {prefillError && <div className="info-banner warning">{prefillError}</div>}
               {applicationError && <div className="info-banner danger">{applicationError}</div>}
               {submitMessage && <div className="info-banner success">{submitMessage}</div>}
 
