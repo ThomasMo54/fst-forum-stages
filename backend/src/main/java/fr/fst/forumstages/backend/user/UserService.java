@@ -4,6 +4,7 @@ import fr.fst.forumstages.backend.company.CompanyEntity;
 import fr.fst.forumstages.backend.company.CompanyRepository;
 import fr.fst.forumstages.backend.company.dto.CompanyDto;
 import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
+import fr.fst.forumstages.backend.notification.NotificationService;
 import fr.fst.forumstages.backend.student.StudentEntity;
 import fr.fst.forumstages.backend.student.StudentRepository;
 import fr.fst.forumstages.backend.student.dto.CreateStudentDto;
@@ -28,6 +29,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
     private final StudentRepository studentRepository;
+    private final NotificationService notificationService;
+
 
     private final PasswordEncoder passwordEncoder;
 
@@ -36,12 +39,13 @@ public class UserService {
     public UserService(
             UserRepository userRepository,
             CompanyRepository companyRepository,
-            StudentRepository studentRepository,
+            StudentRepository studentRepository, NotificationService notificationService,
             PasswordEncoder passwordEncoder
     ) {
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
         this.studentRepository = studentRepository;
+        this.notificationService = notificationService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -171,6 +175,8 @@ public class UserService {
     }
 
     public void deleteUser(String id) {
+        // Supprimer les notifications
+        notificationService.deleteUserNotifications(id);
         UserEntity existingUser = findById(id);
         userRepository.delete(existingUser);
         if (existingUser.getCompany() != null) {
