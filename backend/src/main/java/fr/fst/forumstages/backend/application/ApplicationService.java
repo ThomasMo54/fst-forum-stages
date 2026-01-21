@@ -42,11 +42,12 @@ public class ApplicationService {
         applicationEntity.setStudent(studentEntity);
         applicationEntity.setOffer(offerEntity);
 
-        // Créer les notifications
-        notificationService.notifyApplicationSubmitted(applicationEntity);
-        notificationService.notifyNewApplicationReceived(applicationEntity);
+        ApplicationEntity savedApplication = applicationRepository.save(applicationEntity);
 
-        return applicationRepository.save(applicationEntity);
+        notificationService.notifyApplicationSubmitted(savedApplication);
+        notificationService.notifyNewApplicationReceived(savedApplication);
+
+        return savedApplication;
     }
 
     public List<ApplicationEntity> getApplicationsForOffer(String offerId) {

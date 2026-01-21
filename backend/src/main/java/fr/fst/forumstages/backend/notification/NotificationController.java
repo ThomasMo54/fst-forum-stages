@@ -2,7 +2,7 @@ package fr.fst.forumstages.backend.notification;
 
 import fr.fst.forumstages.backend.notification.dto.MarkAsReadDto;
 import fr.fst.forumstages.backend.notification.dto.NotificationDto;
-import fr.fst.forumstages.backend.user.UserEntity;
+import fr.fst.forumstages.backend.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,9 +21,20 @@ import java.util.Map;
 @Tag(name = "Notifications", description = "Endpoints pour la gestion des notifications")
 public class NotificationController {
     private final NotificationService notificationService;
+    private final UserService userService;
 
-    public NotificationController(NotificationService notificationService) {
+    public NotificationController(NotificationService notificationService, UserService userService) {
         this.notificationService = notificationService;
+        this.userService = userService;
+    }
+
+    /**
+     * Extrait l'ID utilisateur depuis le JWT
+     */
+    private String getUserIdFromAuthentication(Authentication authentication) {
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String email = jwt.getSubject(); // Le "sub" contient l'email
+        return userService.findByEmail(email).getId();
     }
 
     @Operation(summary = "Récupérer toutes les notifications de l'utilisateur connecté")
@@ -31,8 +43,8 @@ public class NotificationController {
     })
     @GetMapping
     public List<NotificationDto> getMyNotifications(Authentication authentication) {
-        UserEntity user = (UserEntity) authentication.getPrincipal();
-        return notificationService.getUserNotifications(user.getId())
+        String userId = getUserIdFromAuthentication(authentication);
+        return notificationService.getUserNotifications(userId)
                 .stream()
                 .map(NotificationDto::fromEntity)
                 .toList();
@@ -44,8 +56,8 @@ public class NotificationController {
     })
     @GetMapping("/unread")
     public List<NotificationDto> getUnreadNotifications(Authentication authentication) {
-        UserEntity user = (UserEntity) authentication.getPrincipal();
-        return notificationService.getUnreadNotifications(user.getId())
+        String userId = getUserIdFromAuthentication(authentication);
+        return notificationService.getUnreadNotifications(userId)
                 .stream()
                 .map(NotificationDto::fromEntity)
                 .toList();
@@ -57,8 +69,8 @@ public class NotificationController {
     })
     @GetMapping("/unread/count")
     public Map<String, Long> getUnreadCount(Authentication authentication) {
-        UserEntity user = (UserEntity) authentication.getPrincipal();
-        long count = notificationService.getUnreadCount(user.getId());
+        String userId = getUserIdFromAuthentication(authentication);
+        long count = notificationService.getUnreadCount(userId);
         return Map.of("count", count);
     }
 
@@ -90,8 +102,8 @@ public class NotificationController {
     @PutMapping("/read-all")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void markAllAsRead(Authentication authentication) {
-        UserEntity user = (UserEntity) authentication.getPrincipal();
-        notificationService.markAllAsRead(user.getId());
+        String userId = getUserIdFromAuthentication(authentication);
+        notificationService.markAllAsRead(userId);
     }
 
     @Operation(summary = "Supprimer une notification")

@@ -7,8 +7,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import lombok.Data;
-import java.time.LocalDateTime;
+import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.time.LocalDateTime;
 @Data
 @Document(collection = "notifications")
 public class NotificationEntity {
@@ -28,10 +29,11 @@ public class NotificationEntity {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // Relations optionnelles selon le type de notification
-    @DBRef
-    private ApplicationEntity application; // Si lié à une candidature
+    @DBRef(lazy = true)
+    @Field(write = Field.Write.NON_NULL)
+    private ApplicationEntity application;
 
-    @DBRef
-    private OfferEntity offer; // Si lié à une offre
+    @DBRef(lazy = true)
+    @Field(write = Field.Write.NON_NULL)
+    private OfferEntity offer;
 }
