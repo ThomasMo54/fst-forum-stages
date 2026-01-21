@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import user_roles from '../../constants/user_roles';
 import NotificationService from '../../services/notification.service';
 import {type NotificationDto, NotificationType } from '../../types/notification.types';
 import './NotificationDropdown.css';
@@ -13,6 +15,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onClose, on
     const [notifications, setNotifications] = useState<NotificationDto[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     useEffect(() => {
         fetchNotifications();
@@ -61,11 +64,15 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onClose, on
                 onUpdate();
             }
 
-            // Navigation selon le type de notification
-            if (notification.applicationId) {
+            // Navigation selon le rôle de l'utilisateur
+            if (user?.roles.includes(user_roles.STUDENT)) {
+                // Étudiant -> Ses candidatures
                 navigate(`/student/my-offers`);
-            } else if (notification.offerId) {
-                navigate(`/offers`);
+            } else if (user?.roles.includes(user_roles.COMPANY)) {
+                // Entreprise -> Candidatures de l'offre
+                if (notification.offerId) {
+                    navigate(`/offers/${notification.offerId}/applications`);
+                }
             }
 
             onClose();
