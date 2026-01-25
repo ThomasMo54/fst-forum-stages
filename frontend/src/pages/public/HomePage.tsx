@@ -5,6 +5,8 @@ import Button from '../../components/button/Button';
 import Header from '../../components/header/Header';
 import Footer from '../../components/footer/Footer';
 import OfferService, { type OfferDto } from '../../services/offer.service';
+import { useAuth } from '../../context/AuthContext';
+import roles from '../../constants/user_roles';
 
 interface DashboardCardProps {
   icon: string;
@@ -61,6 +63,7 @@ const StatItem: React.FC<StatItemProps> = ({ number, label }) => {
 };
 
 const HomePage: React.FC = () => {
+  const { isAuthenticated, user } = useAuth();
   const [offers, setOffers] = useState<OfferDto[]>([]);
   const [loadingStats, setLoadingStats] = useState<boolean>(true);
   const [statsError, setStatsError] = useState<boolean>(false);
@@ -135,36 +138,68 @@ const HomePage: React.FC = () => {
           </section>
 
           <section className="dashboard-grid">
-            {/* Etudiants */}
-            <DashboardCard
-              icon="🎓"
-              title="Espace Etudiants"
-              description="Consultez les offres de stage, gerez vos candidatures et validez votre convention."
-              buttonText="Voir les offres de stage"
-              linkTo="/offers"
-              iconColorVar="--secondary-color"
-            />
+            {/* Affichage des cartes selon l'état d'authentification */}
+            {isAuthenticated ? (
+              // Utilisateur connecté : affiche seulement sa carte
+              <>
+                {user?.roles.includes(roles.STUDENT) && (
+                  <DashboardCard
+                    icon="🎓"
+                    title="Espace Etudiants"
+                    description="Consultez les offres de stage, gérez vos candidatures et validez votre convention."
+                    buttonText="Accéder à mon espace"
+                    linkTo="/offers"
+                    iconColorVar="--secondary-color"
+                  />
+                )}
 
-            {/* Entreprises */}
-            <DashboardCard
-              icon="🏢"
-              title="Espace Entreprises"
-              description="Deposez vos offres, recherchez des profils et gerez les processus de recrutement."
-              buttonText="Publier une offre"
-              linkTo="/company/create-offer"
-              iconColorVar="--success-color"
-            />
+                {user?.roles.includes(roles.COMPANY) && (
+                  <DashboardCard
+                    icon="🏢"
+                    title="Espace Entreprises"
+                    description="Déposez vos offres, recherchez des profils et gérez les processus de recrutement."
+                    buttonText="Publier une offre"
+                    linkTo="/company/create-offer"
+                    iconColorVar="--success-color"
+                  />
+                )}
 
-            {/* Admin */}
-            <DashboardCard
-              icon="🛡️"
-              title="Administration"
-              description="Espace reserve au personnel de l'universite pour la gestion de la plateforme."
-              buttonText="Acces Admin"
-              linkTo="/auth/login?role=admin"
-              iconColorVar="--danger-color"
-            />
+                {user?.roles.includes(roles.ADMIN) && (
+                  <DashboardCard
+                    icon="🛡️"
+                    title="Administration"
+                    description="Espace réservé au personnel de l'université pour la gestion de la plateforme."
+                    buttonText="Panel d'administration"
+                    linkTo="/auth/login?role=admin"
+                    iconColorVar="--danger-color"
+                  />
+                )}
+              </>
+            ) : (
+              // Visiteur non connecté : affiche toutes les cartes
+              <>
+                <DashboardCard
+                  icon="🎓"
+                  title="Espace Étudiants"
+                  description="Consultez les offres de stage, gérez vos candidatures et validez votre convention."
+                  buttonText="Voir les offres"
+                  linkTo="/offers"
+                  iconColorVar="--secondary-color"
+                />
+
+                <DashboardCard
+                  icon="🏢"
+                  title="Espace Entreprises"
+                  description="Déposez vos offres, recherchez des profils et gérez les processus de recrutement."
+                  buttonText="S'inscrire"
+                  linkTo="/register"
+                  iconColorVar="--success-color"
+                />
+
+              </>
+            )}
           </section>
+
 
           {/* ===== Stats ===== */}
           <section id="stats" className="quick-stats">
