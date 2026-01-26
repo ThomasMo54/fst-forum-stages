@@ -11,6 +11,7 @@ import type { ApplicationDto } from '../../services/application.service';
 import ApplicationService from '../../services/application.service';
 import { useAuth } from '../../context/AuthContext';
 import user_roles from "../../constants/user_roles.ts";
+import {Pagination} from "../../components/pagination/Pagination.tsx";
 
 const formatDate = (date?: string | null) => {
   if (!date) return 'Non renseignée';
@@ -34,6 +35,9 @@ const OffersPage: React.FC = () => {
   useEffect(() => {
     void  fetchOffersAndApplications();
   }, []);
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const currentPage = Number(searchParams.get('page')) || 1;
 
   const fetchOffersAndApplications = async () => {
     setLoading(true);
@@ -287,6 +291,13 @@ const OffersPage: React.FC = () => {
               </>
             )}
           </section>
+
+          {offers.page.totalPages > 1 && (
+              <Pagination
+                  currentPage={currentPage}
+                  totalPages={offers.page.totalPages}
+              />
+          )}
         </div>
       </main>
 

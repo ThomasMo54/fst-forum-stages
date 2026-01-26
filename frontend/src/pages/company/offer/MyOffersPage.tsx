@@ -6,6 +6,7 @@ import { useAuth } from "../../../context/AuthContext.tsx";
 import OfferService, { type PaginatedOffers } from "../../../services/offer.service.ts";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "../../../components/button/Button.tsx";
+import {Pagination} from "../../../components/pagination/Pagination.tsx";
 
 const MyOffersPage: React.FC = () => {
   const {user} = useAuth();
@@ -14,21 +15,24 @@ const MyOffersPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchMyOffers = async () => {
-      if (!user || !user.entityId) {
-        setError("Vous devez être connecté en tant qu'entreprise pour voir vos offres.");
-        setLoading(false);
-        return;
-      }
+  const searchParams = new URLSearchParams(window.location.search);
+  const currentPage = Number(searchParams.get('page')) || 1;
 
-      try {
-        const companyOffers = await OfferService.getOffersByCompany(user.entityId);
-        setOffers(companyOffers);
-      } catch (err) {
-        setError("Erreur lors du chargement de vos offres. Veuillez réessayer.");
-      } finally {
-        setLoading(false);
-      }
+    const fetchMyOffers = async () => {
+        if (!user || !user.entityId) {
+            setError("Vous devez être connecté en tant qu'entreprise pour voir vos offres.");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const companyOffers = await OfferService.getOffersByCompany(user.entityId);
+            setOffers(companyOffers);
+        } catch (err) {
+            setError("Erreur lors du chargement de vos offres. Veuillez réessayer.");
+        } finally {
+            setLoading(false);
+        }
     };
 
   useEffect(() => {
@@ -114,6 +118,13 @@ const MyOffersPage: React.FC = () => {
                 </div>
               </div>
             ))}
+
+            {offers.page.totalPages > 1 && (
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={offers.page.totalPages}
+                />
+            )}
           </div>
         )}
       </>
