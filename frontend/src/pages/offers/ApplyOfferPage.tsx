@@ -229,6 +229,11 @@ const ApplyOfferPage: React.FC = () => {
       }
       
       setSubmitMessage('Votre candidature a bien été envoyée. Notre équipe et l’entreprise seront notifiées.');
+
+      // Rafraîchir la page après 1.5 secondes
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (e) {
       setApplicationError("Impossible d'envoyer votre candidature pour le moment. Veuillez réessayer.");
     } finally {

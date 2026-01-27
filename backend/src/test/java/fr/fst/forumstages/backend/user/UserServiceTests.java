@@ -3,6 +3,7 @@ package fr.fst.forumstages.backend.user;
 import fr.fst.forumstages.backend.company.CompanyEntity;
 import fr.fst.forumstages.backend.company.CompanyRepository;
 import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
+import fr.fst.forumstages.backend.notification.NotificationService;
 import fr.fst.forumstages.backend.student.StudentEntity;
 import fr.fst.forumstages.backend.student.StudentRepository;
 import fr.fst.forumstages.backend.student.dto.CreateStudentDto;
@@ -49,6 +50,9 @@ public class UserServiceTests {
 
     @Mock
     private StudentRepository studentRepository;
+
+    @Mock
+    private NotificationService notificationService;
 
     @Test
     public void createAdminUser_success() {
