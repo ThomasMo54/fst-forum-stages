@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import NotificationBell from '../notifications/NotificationBell';
 import './Header.css';
 import user_roles from "../../constants/user_roles.ts";
 import UserService from '../../services/user.service';
@@ -22,7 +23,7 @@ const Header: React.FC = () => {
       }
     }
     fetchUserName();
-  }, [])
+  }, [isAuthenticated, user]);
 
   const handleLogout = () => {
     logout();
@@ -30,20 +31,24 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="header">
-      <div className="container">
-        <h1 className="logo">Forum des Stages</h1>
-        <nav className="nav">
-          <Link to="/" className="nav-link active">Accueil</Link>
-          {isAuthenticated && user?.roles.includes(user_roles.COMPANY) && (
-            <>
-              <Link to="/company/my-offers" className="nav-link">Vos Offres</Link>
-            </>
-          )}
-          <div className="auth-section">
-            {isAuthenticated && user ? (
-              <div className="user-menu">
-                <span className="user-email">
+      <header className="header">
+        <div className="container">
+          <h1 className="logo">Forum des Stages</h1>
+          <nav className="nav">
+            <Link to="/" className="nav-link active">Accueil</Link>
+            {isAuthenticated && user?.roles.includes(user_roles.COMPANY) && (
+                <>
+                  <Link to="/company/my-offers" className="nav-link">Vos Offres</Link>
+                </>
+            )}
+            <div className="auth-section">
+              {isAuthenticated && user ? (
+                  <div className="user-menu">
+                    {(user.roles.includes(user_roles.STUDENT) || user.roles.includes(user_roles.COMPANY)) && (
+                        <NotificationBell />
+                    )}
+
+                    <span className="user-email">
                   {name}
                 </span>
                 <button onClick={handleLogout} className="logout-btn">
