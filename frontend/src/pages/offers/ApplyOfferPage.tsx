@@ -36,7 +36,8 @@ interface ApplicationForm {
 }
 
 const ApplyOfferPage: React.FC = () => {
-  const { offerId } = useParams<{ offerId: string }>();
+  const { offerId, applicationId } = useParams<{ offerId: string; applicationId?: string }>();
+  const isUpdating = !!applicationId;
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -210,13 +211,17 @@ const ApplyOfferPage: React.FC = () => {
     // };
 
     try {
-      const result: ApplicationDto = await ApplicationService.createApplication({
+      let uploadLink = '';
+      if (!isUpdating) {
+        const result: ApplicationDto = await ApplicationService.createApplication({
           studentId: user?.entityId || '',
           offerId: offerId
-        }
-      );
-
-      const uploadLink = await ApplicationService.uploadCoverLetter(result.id);
+        });
+        uploadLink = await ApplicationService.uploadCoverLetter(result.id);
+      }else {
+        uploadLink = await ApplicationService.uploadCoverLetter(applicationId!);
+      }
+      
 
       if (formData.coverLetterFile) {
         await fetch(uploadLink, {
@@ -228,11 +233,15 @@ const ApplyOfferPage: React.FC = () => {
         });
       }
       
-      setSubmitMessage('Votre candidature a bien été envoyée. Notre équipe et l’entreprise seront notifiées.');
+      setSubmitMessage('Votre candidature a bien été envoyée. Notre équipe et l’entreprise seront notifiées.');      // Redirect to home page after 2 seconds to let user see the success message
+      setTimeout(() => {
+        navigate(isUpdating ? '/student/my-applications' : '/offers');
+      }, 2000);
     } catch (e) {
       setApplicationError("Impossible d'envoyer votre candidature pour le moment. Veuillez réessayer.");
     } finally {
-      setSubmitting(false);
+      setSubmitting(false); 
+
     }
   };
 

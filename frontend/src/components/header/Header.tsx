@@ -51,7 +51,7 @@ const Header: React.FC = () => {
                 </button>
                 <Link to={user.roles.includes(user_roles.COMPANY) ? "/company/modify-infos" : "/student/modify-infos"} className="nav-link active">Modifier vos informations</Link>
                 {user.roles.includes(user_roles.STUDENT) ?(
-                  <Link to="/student/my-offers" className="nav-link active">Voir mes postulations</Link>  
+                  <Link to="/student/my-applications" className="nav-link active">Voir mes postulations</Link>  
                 ): null}
 
               </div>

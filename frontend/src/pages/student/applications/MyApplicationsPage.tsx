@@ -2,28 +2,33 @@ import Footer from "../../../components/footer/Footer.tsx";
 import Header from "../../../components/header/Header.tsx";
 import user_roles from "../../../constants/user_roles.ts";
 import { useAuth } from "../../../context/AuthContext.tsx";
-import ApplicationService from "../../../services/application.service.ts";
+import ApplicationService, { type ApplicationDto } from "../../../services/application.service.ts";
 import React, { useEffect, useState } from 'react';
 import type { OfferDto } from "../../../services/offer.service.ts";
-import './MyOffersPage.css';
+import './MyApplicationsPage.css';
 import OfferService from "../../../services/offer.service.ts";
+import { Link } from "react-router-dom";
+import Button from "../../../components/button/Button.tsx";
 
 
-const StudentMyOffersPage: React.FC = () => {
+const StudentMyApplicationsPage: React.FC = () => {
     const {user} = useAuth();
     const [offers, setOffers] = useState<OfferDto[]>([]);
+    const [applications, setApplications] = useState<ApplicationDto[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchMyOffers = async () => {
+        const fetchMyApplications = async () => {
             if ((!user || !user.entityId) && !user!.roles.includes(user_roles.STUDENT)) {
-                setError("Vous devez être connecté en tant qu'étudiant pour voir vos offres.");
+                setError("Vous devez être connecté en tant qu'étudiant pour voir vos applications.");
                 setLoading(false);
                 return;
             }
             try {
                 const studentApplications = await ApplicationService.getAllApplicationForStudent(user!.entityId);
+                setApplications(studentApplications);
+
                 const studentOffers:OfferDto[] = [];
                 for(const app of studentApplications){
                     studentOffers.push(await OfferService.getOfferById(app.offerId));
@@ -37,8 +42,26 @@ const StudentMyOffersPage: React.FC = () => {
             }
         };
 
-        fetchMyOffers();
+        fetchMyApplications();
     }, [user]);
+
+    const handleDelete = async (applicationId: string) => {
+        if (window.confirm("Voulez-vous vraiment supprimer cette offre ?")) {
+            await ApplicationService.deleteApplication(applicationId);
+
+            setOffers(offers.filter(offer => offer.id !== applications.find(app => app.id === applicationId)!.offerId));
+            setApplications(applications.filter(app => app.id !== applicationId));
+            
+            var deleteUrl = await ApplicationService.getCoverLetterDeleteUrl(applicationId);
+            fetch(deleteUrl, { method: 'DELETE' });
+        }
+    };
+
+    const handleDownload = async (applicationId: string) => {
+        const coverLetterUrl = await ApplicationService.getCoverLetterUrl(applicationId);
+        window.open(coverLetterUrl, '_blank');
+    };
+
 
     const renderContent = () => {
         if (loading) {
@@ -68,6 +91,17 @@ const StudentMyOffersPage: React.FC = () => {
                                 <p><strong>Date de création:</strong> {new Date(offer.creationDate).toLocaleDateString()}</p>
                                 <p><strong>Début:</strong> {new Date(offer.internshipStartDate).toLocaleDateString()}</p>
                                 <p><strong>Date limite:</strong> {new Date(offer.limitApplicationDate).toLocaleDateString()}</p>
+                                <div className="offer-actions">
+                                    <Button variant="icon" onClick={() => handleDownload(applications.find(app => app.offerId === offer.id)!.id)} >
+                                        <i className="fas fa-eye"></i>
+                                    </Button>
+                                    <Link to={`/offers/${offer.id}/apply/${applications.find(app => app.offerId === offer.id)!.id}`}>
+                                        <Button variant="icon"><i className="fas fa-pencil-alt"></i></Button>
+                                    </Link>
+                                    <Button variant="icon" onClick={() => handleDelete(applications.find(app => app.offerId === offer.id)!.id)}>
+                                        <i className="fas fa-trash"></i>
+                                    </Button>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -76,7 +110,7 @@ const StudentMyOffersPage: React.FC = () => {
         );
     }
     return (
-        <div className="my-offers-page">
+        <div className="my-applications-page">
             <Header />
             <main className="my-offers-container">
                 {renderContent()}
@@ -86,4 +120,4 @@ const StudentMyOffersPage: React.FC = () => {
     );
 };
 
-export default StudentMyOffersPage;
+export default StudentMyApplicationsPage;
