@@ -51,7 +51,7 @@ const StudentMyApplicationsPage: React.FC = () => {
 
             setOffers(offers.filter(offer => offer.id !== applications.find(app => app.id === applicationId)!.offerId));
             setApplications(applications.filter(app => app.id !== applicationId));
-            
+
             var deleteUrl = await ApplicationService.getCoverLetterDeleteUrl(applicationId);
             fetch(deleteUrl, { method: 'DELETE' });
         }

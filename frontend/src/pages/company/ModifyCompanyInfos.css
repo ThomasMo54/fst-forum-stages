@@ -1,75 +1,156 @@
+/* Scoped variables based on Home Page */
 .modify-company-infos-container {
+    --hp-primary-blue: #2563eb;
+    --hp-secondary-blue: #1e40af;
+    --hp-text-dark: #1e293b;
+    --hp-text-light: #64748b;
+    --hp-white: #ffffff;
+    --hp-border-color: #e2e8f0;
+
     max-width: 800px;
-    margin: 2rem auto;
-    padding: 2rem;
-    background-color: var(--white);
-    border-radius: 8px;
-    box-shadow: var(--shadow);
+    margin: 40px auto;
+    padding: 50px;
+    background-color: var(--hp-white);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--hp-border-color);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 .modify-company-infos-title {
     text-align: center;
-    color: var(--text-dark);
-    margin-bottom: 2rem;
-    font-size: 2rem;
+    color: var(--hp-text-dark);
+    margin-bottom: 40px;
+    font-size: 32px;
+    font-weight: 700;
+    position: relative;
+    padding-bottom: 15px;
+}
+
+.modify-company-infos-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--hp-primary-blue), var(--hp-secondary-blue));
+    border-radius: 2px;
 }
 
 .modify-company-infos-form {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 25px;
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 8px;
 }
 
 .form-group label {
     font-weight: 600;
-    color: var(--text-dark);
+    color: var(--hp-text-dark);
+    font-size: 15px;
 }
 
 .form-group input,
 .form-group textarea,
 .form-group select {
-    padding: 0.8rem;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    font-size: 1rem;
-    transition: border-color 0.3s;
+    padding: 12px 16px;
+    border: 2px solid var(--hp-border-color);
+    border-radius: 8px;
+    font-size: 15px;
+    color: var(--hp-text-dark);
+    transition: all 0.3s ease;
+    background-color: #f8fafc;
 }
 
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus {
-    border-color: var(--primary-color);
+    border-color: var(--hp-primary-blue);
+    background-color: var(--hp-white);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
     outline: none;
 }
 
 .form-group textarea {
     min-height: 150px;
     resize: vertical;
+    line-height: 1.6;
 }
 
 .form-actions {
-    margin-top: 1rem;
+    margin-top: 20px;
     display: flex;
     justify-content: flex-end;
+    align-items: center;
+    gap: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--hp-border-color);
+}
+
+.form-actions .nav-link {
+    color: var(--hp-text-light);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    transition: color 0.3s;
+}
+
+.form-actions .nav-link:hover {
+    color: var(--hp-primary-blue);
 }
 
 .input-error {
-    border-color: var(--danger-color);
+    border-color: #ef4444 !important;
+    background-color: #fef2f2 !important;
 }
 
 .error-message {
-    color: var(--danger-color);
+    color: #ef4444;
     font-size: 0.875rem;
-    margin-top: 0.25rem;
+    margin-top: 4px;
+    font-weight: 500;
 }
 
 .modification-error {
     text-align: center;
-    margin-bottom: 1rem;
+    padding: 15px;
+    background-color: #fef2f2;
+    border-radius: 8px;
+    border: 1px solid #fee2e2;
+    color: #991b1b;
+}
+
+/* Button overrides to match home page style */
+.modify-company-infos-form button[type="submit"] {
+    background: linear-gradient(135deg, var(--hp-primary-blue), var(--hp-secondary-blue));
+    border: none;
+    padding: 14px 32px;
+    font-weight: 600;
+    border-radius: 50px;
+    transition: transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+}
+
+.modify-company-infos-form button[type="submit"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+    background-color: transparent; /* Reset because of gradient */
+}
+
+@media (max-width: 768px) {
+    .modify-company-infos-container {
+        padding: 30px 20px;
+        margin: 20px;
+    }
+
+    .modify-company-infos-title {
+        font-size: 24px;
+    }
 }
