@@ -73,6 +73,7 @@ public class ApplicationController {
     @Operation(summary = "Supprimer une candidature", description = "Permet de supprimer une candidature à une offre de stage")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Candidature supprimée avec succès"),
+            @ApiResponse(responseCode = "204", description = "Aucune candidature à supprimée"),
             @ApiResponse(responseCode = "400", description = "Données invalides fournies"),
             @ApiResponse(responseCode = "403", description = "Accès refusé - permissions insuffisantes")
     })
