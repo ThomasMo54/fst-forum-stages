@@ -4,6 +4,7 @@ import fr.fst.forumstages.backend.company.CompanyEntity;
 import fr.fst.forumstages.backend.company.CompanyRepository;
 import fr.fst.forumstages.backend.offer.dto.CreateOfferDto;
 import fr.fst.forumstages.backend.offer.dto.OfferDto;
+import fr.fst.forumstages.backend.offer.dto.OfferSearchFilter;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,11 +13,13 @@ import java.util.NoSuchElementException;
 @Service
 public class OfferService {
     private final OfferRepository offerRepository;
+    private final OfferSearchRepository offerSearchRepository;
 
     private final CompanyRepository companyRepository;
 
-    public OfferService(OfferRepository offerRepository, CompanyRepository companyRepository) {
+    public OfferService(OfferRepository offerRepository, OfferSearchRepository offerSearchRepository, CompanyRepository companyRepository) {
         this.offerRepository = offerRepository;
+        this.offerSearchRepository = offerSearchRepository;
         this.companyRepository = companyRepository;
     }
 
@@ -59,5 +62,9 @@ public class OfferService {
 
     public List<OfferEntity> getAllOffers() {
         return offerRepository.findAll();
+    }
+
+    public List<OfferEntity> searchOffers(OfferSearchFilter filter) {
+        return offerSearchRepository.findByFilter(filter);
     }
 }

@@ -2,6 +2,7 @@ package fr.fst.forumstages.backend.offer;
 
 import fr.fst.forumstages.backend.offer.dto.CreateOfferDto;
 import fr.fst.forumstages.backend.offer.dto.OfferDto;
+import fr.fst.forumstages.backend.offer.dto.OfferSearchFilter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -9,7 +10,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -53,5 +56,36 @@ public class OfferController {
     public List<OfferDto> findAllOffers() {
         List<OfferEntity> offers = offerService.getAllOffers();
         return offers.stream().map(OfferDto::fromEntity).toList();
+    }
+
+    @Operation(summary = "Rechercher des offres de stage", description = "Permet de filtrer les offres par critères.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Offres filtrées récupérées avec succès")
+    })
+    @GetMapping("/search")
+    public List<OfferDto> searchOffers(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) List<String> tags,
+            @RequestParam(required = false) String studyLevel,
+            @RequestParam(required = false) String remotePolicy,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDateTo,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate limitDateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate limitDateTo,
+            @RequestParam(required = false) String companyId
+    ) {
+        OfferSearchFilter filter = new OfferSearchFilter(
+                query,
+                tags,
+                studyLevel,
+                remotePolicy,
+                startDateFrom,
+                startDateTo,
+                limitDateFrom,
+                limitDateTo,
+                companyId
+        );
+
+        return offerService.searchOffers(filter).stream().map(OfferDto::fromEntity).toList();
     }
 }

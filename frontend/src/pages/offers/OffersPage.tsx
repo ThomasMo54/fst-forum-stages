@@ -26,6 +26,14 @@ const OffersPage: React.FC = () => {
   const [listError, setListError] = useState<string>('');
 
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [tagFilter, setTagFilter] = useState<string>('');
+  const [studyLevelFilter, setStudyLevelFilter] = useState<string>('');
+  const [remotePolicyFilter, setRemotePolicyFilter] = useState<string>('any');
+  const [startDateFrom, setStartDateFrom] = useState<string>('');
+  const [startDateTo, setStartDateTo] = useState<string>('');
+  const [limitDateFrom, setLimitDateFrom] = useState<string>('');
+  const [limitDateTo, setLimitDateTo] = useState<string>('');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
   const [selectedOffer, setSelectedOffer] = useState<OfferDto | null>(null);
   const [studentApplications, setStudentApplications] = useState<ApplicationDto[]>([]);
   const { user } = useAuth();
@@ -56,7 +64,7 @@ const OffersPage: React.FC = () => {
       }));
       setCompanyNames(names);
       setCompanyCities(cities);
-      if(user){
+      if (user?.entityId) {
         const applications = await ApplicationService.getAllApplicationForStudent(user.entityId);
         setStudentApplications(applications);
       }
@@ -68,20 +76,76 @@ const OffersPage: React.FC = () => {
   };
 
 
+  const parseDate = (value?: string | null) => {
+    if (!value) return null;
+    const parsed = new Date(`${value}T00:00:00`);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
+
+  const resetFilters = () => {
+    setSearchTerm('');
+    setTagFilter('');
+    setStudyLevelFilter('');
+    setRemotePolicyFilter('any');
+    setStartDateFrom('');
+    setStartDateTo('');
+    setLimitDateFrom('');
+    setLimitDateTo('');
+  };
+
   const filteredOffers = useMemo(() => {
-    if (!searchTerm.trim()) return offers;
     const term = searchTerm.toLowerCase();
+    const tagTerm = tagFilter.toLowerCase();
+    const startFromDate = parseDate(startDateFrom);
+    const startToDate = parseDate(startDateTo);
+    const limitFromDate = parseDate(limitDateFrom);
+    const limitToDate = parseDate(limitDateTo);
+
     return offers.filter((offer) => {
-      const hasTextMatch =
-        offer.title.toLowerCase().includes(term) ||
-        offer.description.toLowerCase().includes(term) ||
-        (companyNames[offer.companyId] || '').toLowerCase().includes(term);
-      const hasTagMatch = (offer.tags ?? []).some((tag) =>
-        tag.toLowerCase().includes(term)
-      );
-      return hasTextMatch || hasTagMatch;
+      const hasTextMatch = !term
+        || offer.title.toLowerCase().includes(term)
+        || offer.description.toLowerCase().includes(term)
+        || (companyNames[offer.companyId] || '').toLowerCase().includes(term)
+        || (offer.tags ?? []).some((tag) => tag.toLowerCase().includes(term));
+
+      const hasTagFilterMatch = !tagTerm
+        || (offer.tags ?? []).some((tag) => tag.toLowerCase().includes(tagTerm));
+
+      const hasStudyLevelMatch = !studyLevelFilter
+        || (offer.studyLevel || '').toLowerCase().includes(studyLevelFilter.toLowerCase());
+
+      const hasRemotePolicyMatch =
+        remotePolicyFilter === 'any'
+        || (remotePolicyFilter === 'remote' && !!offer.remoteWorkPolicy)
+        || (remotePolicyFilter === 'onsite' && !offer.remoteWorkPolicy);
+
+      const offerStartDate = parseDate(offer.internshipStartDate);
+      const hasStartDateMatch = (!startFromDate || (offerStartDate && offerStartDate >= startFromDate))
+        && (!startToDate || (offerStartDate && offerStartDate <= startToDate));
+
+      const offerLimitDate = parseDate(offer.limitApplicationDate);
+      const hasLimitDateMatch = (!limitFromDate || (offerLimitDate && offerLimitDate >= limitFromDate))
+        && (!limitToDate || (offerLimitDate && offerLimitDate <= limitToDate));
+
+      return hasTextMatch
+        && hasTagFilterMatch
+        && hasStudyLevelMatch
+        && hasRemotePolicyMatch
+        && hasStartDateMatch
+        && hasLimitDateMatch;
     });
-  }, [offers, searchTerm, companyNames]);
+  }, [
+    offers,
+    searchTerm,
+    tagFilter,
+    studyLevelFilter,
+    remotePolicyFilter,
+    startDateFrom,
+    startDateTo,
+    limitDateFrom,
+    limitDateTo,
+    companyNames
+  ]);
 
   const handleApplyRedirect = (offer: OfferDto) => {
     setSelectedOffer(null);
@@ -141,6 +205,131 @@ const OffersPage: React.FC = () => {
               </div>
             </div>
 
+            <div className="filter-bar">
+              <div className="filter-bar-main">
+                <div className="filter-pill">
+                  <span className="filter-pill-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" role="img" focusable="false">
+                      <path d="M15.5 14h-.79l-.28-.27a6 6 0 1 0-.71.71l.27.28v.79L20 20.5 21.5 19l-6-5zM10 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10z" />
+                    </svg>
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Rechercher par offre, entreprise ou tag..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+
+                <div className="filter-pill">
+                  <span className="filter-pill-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" role="img" focusable="false">
+                      <path d="M20 10v4a2 2 0 0 1-2 2h-7l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2" />
+                      <path d="M12 8h6" />
+                      <path d="M12 12h4" />
+                    </svg>
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Mots-clés"
+                    value={tagFilter}
+                    onChange={(e) => setTagFilter(e.target.value)}
+                  />
+                </div>
+
+                <div className="filter-pill">
+                  <span className="filter-pill-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" role="img" focusable="false">
+                      <path d="M3 21h18" />
+                      <path d="M5 21V7l7-4 7 4v14" />
+                      <path d="M9 21v-6h6v6" />
+                    </svg>
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Niveau d'étude"
+                    value={studyLevelFilter}
+                    onChange={(e) => setStudyLevelFilter(e.target.value)}
+                  />
+                </div>
+
+                <div className="filter-pill">
+                  <span className="filter-pill-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" role="img" focusable="false">
+                      <path d="M4 5h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-6l-4 4v-4H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" />
+                    </svg>
+                  </span>
+                  <select value={remotePolicyFilter} onChange={(e) => setRemotePolicyFilter(e.target.value)}>
+                    <option value="any">T&eacute;l&eacute;travail</option>
+                    <option value="remote">Avec t&eacute;l&eacute;travail</option>
+                    <option value="onsite">Sans t&eacute;l&eacute;travail</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="filter-bar-actions">
+                <button
+                  type="button"
+                  className="filter-pill-action"
+                  onClick={() => setShowAdvancedFilters(true)}
+                >
+                  <span className="filter-pill-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" role="img" focusable="false">
+                      <path d="M3 5h18" />
+                      <path d="M6 12h12" />
+                      <path d="M10 19h4" />
+                    </svg>
+                  </span>
+                  Tous les filtres
+                </button>
+                <button type="button" className="filter-reset" onClick={resetFilters}>
+                  R&eacute;initialiser
+                </button>
+              </div>
+            </div>
+
+            {showAdvancedFilters && (
+              <div className="filter-modal-overlay" onClick={() => setShowAdvancedFilters(false)}>
+                <div className="filter-modal" onClick={(e) => e.stopPropagation()}>
+                  <div className="filter-modal-header">
+                    <div>
+                      <p className="eyebrow">Plus de critères</p>
+                      <h3>Affinez votre recherche</h3>
+                    </div>
+                    <button type="button" className="filter-modal-close" onClick={() => setShowAdvancedFilters(false)}>
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="filter-modal-grid">
+                    <div className="filter-field">
+                      <label>D&eacute;but (du / au)</label>
+                      <div className="filter-range">
+                        <input type="date" value={startDateFrom} onChange={(e) => setStartDateFrom(e.target.value)} />
+                        <input type="date" value={startDateTo} onChange={(e) => setStartDateTo(e.target.value)} />
+                      </div>
+                    </div>
+                    <div className="filter-field">
+                      <label>Date limite (du / au)</label>
+                      <div className="filter-range">
+                        <input type="date" value={limitDateFrom} onChange={(e) => setLimitDateFrom(e.target.value)} />
+                        <input type="date" value={limitDateTo} onChange={(e) => setLimitDateTo(e.target.value)} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="filter-modal-actions">
+                    <button type="button" className="filter-reset" onClick={resetFilters}>
+                      Tout effacer
+                    </button>
+                    <Button size="small" onClick={() => setShowAdvancedFilters(false)}>
+                      Appliquer
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {listError && (
               <div className="error-message inline-error">
                 {listError}
@@ -173,12 +362,12 @@ const OffersPage: React.FC = () => {
                                     <h3 className="offer-title">{offer.title}</h3>
                                     <span className="offer-company">{companyNames[offer.companyId] || `Entreprise #${offer.companyId}`}</span>
                                 </div>
-                                
+
                                 <div className="offer-location">
                                     <i className="fa-solid fa-location-dot"></i>
                                     <span>{companyCities[offer.companyId] || 'Non renseigné'}</span>
                                 </div>
-                                
+
                                 <div className="detail-pill date">
                                     <i className="fa-regular fa-calendar"></i>
                                     <span>{formatDate(offer.internshipStartDate)}</span>
