@@ -16,6 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/companies")
@@ -61,6 +62,9 @@ public class CompanyController {
     @GetMapping("/{id}/offers")
     public Page<OfferDto> getAllOffers(@PathVariable("id") String companyId, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "12") int size) {
         Page<OfferEntity> offersEntity = companyService.getCompanyOffers(companyId, page, size);
+        if (offersEntity == null) {
+            return Page.empty();
+        }
         return offersEntity.map(OfferDto::fromEntity);
     }
 }

@@ -55,7 +55,7 @@ public class OfferController {
             @ApiResponse(responseCode = "200", description = "Offres de stage récupérées avec succès")
     })
     @GetMapping
-    public Page<OfferDto> findAllOffers(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "15") int size) {
+    public Page<OfferDto> findAllOffers(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "12") int size) {
         Page<OfferEntity> offers = offerService.getAllOffers(page, size);
         return offers.map(OfferDto::fromEntity);
     }
