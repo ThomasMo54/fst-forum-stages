@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Header from '../../../components/header/Header';
-import Footer from '../../../components/footer/Footer';
-import Button from '../../../components/button/Button';
-import './CreateOfferPage.css';
-import { useAuth } from '../../../context/AuthContext';
-import OfferService, { type CreateOfferDto } from '../../../services/offer.service';
+import React, { useState, useEffect } from 'react';
+import Header from "../../../components/header/Header";
+import Footer from "../../../components/footer/Footer";
+import Button from "../../../components/button/Button";
+import './OfferFormPage.css';
+import { useAuth } from "../../../context/AuthContext.tsx";
+import OfferService, { type CreateOfferDto } from "../../../services/offer.service.ts";
+import { useNavigate, useParams } from "react-router-dom";
 
-interface CreateOfferForm {
+interface OfferForm {
   title: string;
   description: string;
   tags: string;
@@ -19,10 +19,16 @@ interface CreateOfferForm {
   remoteWorkPolicy: string;
 }
 
-const CreateOfferPage: React.FC = () => {
+interface OfferFormPageProps {
+  mode: 'create' | 'edit';
+}
+
+const OfferFormPage: React.FC<OfferFormPageProps> = ({ mode }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<CreateOfferForm>({
+  const { offerId } = useParams<{ offerId: string }>();
+
+  const [formData, setFormData] = useState<OfferForm>({
     title: '',
     description: '',
     tags: '',
@@ -33,10 +39,41 @@ const CreateOfferPage: React.FC = () => {
     studyLevel: '',
     remoteWorkPolicy: ''
   });
-  const [errors, setErrors] = useState<Partial<CreateOfferForm>>({});
+  const [errors, setErrors] = useState<Partial<OfferForm>>({});
   const [creationError, setCreationError] = useState<string | null>(null);
   const [creationSuccess, setCreationSuccess] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(mode === 'edit');
+
+  // Load existing offer data when in edit mode
+  useEffect(() => {
+    if (mode === 'edit' && offerId) {
+      loadOfferData(offerId);
+    }
+  }, [mode, offerId]);
+
+  const loadOfferData = async (id: string) => {
+    try {
+      setLoading(true);
+      const offer = await OfferService.getOfferById(id);
+
+      setFormData({
+        title: offer.title || '',
+        description: offer.description || '',
+        tags: Array.isArray(offer.tags) ? offer.tags.join(', ') : '',
+        salary: offer.salary || '',
+        internshipStartDate: offer.internshipStartDate || '',
+        internshipDuration: offer.internshipDuration || '',
+        limitApplicationDate: offer.limitApplicationDate || '',
+        studyLevel: offer.studyLevel || '',
+        remoteWorkPolicy: offer.remoteWorkPolicy || ''
+      });
+    } catch (error) {
+      setCreationError("Erreur lors du chargement de l'offre. Veuillez réessayer.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -47,22 +84,22 @@ const CreateOfferPage: React.FC = () => {
   };
 
   const validate = (): boolean => {
-    const newErrors: Partial<CreateOfferForm> = {};
+    const newErrors: Partial<OfferForm> = {};
     if (!formData.title) newErrors.title = "Le titre de l'offre est requis.";
-    if (formData.title.length > 100) newErrors.title = "Le titre ne doit pas depasser 100 caracteres.";
+    if (formData.title.length > 100) newErrors.title = "Le titre ne doit pas dépasser 100 caractères.";
     if (!formData.description) newErrors.description = "La description de l'offre est requise.";
-    if (!formData.internshipStartDate) newErrors.internshipStartDate = "La date de debut du stage est requise.";
+    if (!formData.internshipStartDate) newErrors.internshipStartDate = "La date de début du stage est requise.";
     if (!formData.limitApplicationDate) newErrors.limitApplicationDate = "La date limite de candidature est requise.";
 
     const today = new Date().toISOString().split('T')[0];
     if (formData.internshipStartDate && formData.internshipStartDate < today) {
-      newErrors.internshipStartDate = "La date de debut du stage ne peut pas etre dans le passe.";
+      newErrors.internshipStartDate = "La date de début du stage ne peut pas être dans le passé.";
     }
     if (formData.limitApplicationDate && formData.limitApplicationDate < today) {
-      newErrors.limitApplicationDate = "La date limite de candidature ne peut pas etre dans le passe.";
+      newErrors.limitApplicationDate = "La date limite de candidature ne peut pas être dans le passé.";
     }
     if (formData.internshipStartDate && formData.limitApplicationDate && formData.limitApplicationDate > formData.internshipStartDate) {
-      newErrors.limitApplicationDate = "La date limite de candidature ne peut pas etre apres la date de debut du stage.";
+      newErrors.limitApplicationDate = "La date limite de candidature ne peut pas être après la date de début du stage.";
     }
 
     setErrors(newErrors);
@@ -80,7 +117,7 @@ const CreateOfferPage: React.FC = () => {
 
     const companyId = user?.entityId;
     if (!companyId) {
-      setCreationError("Erreur : L'identifiant de l'entreprise n'a pas pu etre recupere.");
+      setCreationError("Erreur : L'identifiant de l'entreprise n'a pas pu être récupéré.");
       setSubmitting(false);
       return;
     }
@@ -99,21 +136,42 @@ const CreateOfferPage: React.FC = () => {
     };
 
     try {
-      await OfferService.createOffer(offerData);
+      if (mode === 'edit' && offerId) {
+        await OfferService.updateOffer(offerId, offerData);
+      } else {
+        await OfferService.createOffer(offerData);
+      }
       setCreationSuccess("Offre publiee avec succes.");
       navigate('/company/my-offers');
     } catch (error) {
-      setCreationError("Une erreur est survenue lors de la publication de l'offre. Veuillez reessayer.");
+      const errorMessage = mode === 'edit'
+        ? "Une erreur est survenue lors de la modification de l'offre. Veuillez réessayer."
+        : "Une erreur est survenue lors de la publication de l'offre. Veuillez réessayer.";
+      setCreationError(errorMessage);
     } finally {
       setSubmitting(false);
     }
   };
 
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <div className="create-offer-container">
+          <p>Chargement...</p>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
   return (
     <>
       <Header />
       <div className="create-offer-container">
-        <h1 className="create-offer-title">Creer une offre de stage</h1>
+        <h1 className="create-offer-title">
+          {mode === 'edit' ? "Modifier l'offre de stage" : "Créer une offre de stage"}
+        </h1>
 
         <form className="create-offer-form" onSubmit={handleSubmit}>
 
@@ -125,7 +183,7 @@ const CreateOfferPage: React.FC = () => {
               name="title"
               value={formData.title}
               onChange={handleChange}
-              placeholder="Ex: Developpeur Fullstack React/Java"
+              placeholder="Ex: Développeur Fullstack React/Java"
               className={errors.title ? 'input-error' : ''}
             />
             {errors.title && <p className="error-message">{errors.title}</p>}
@@ -138,14 +196,14 @@ const CreateOfferPage: React.FC = () => {
               name="description"
               value={formData.description}
               onChange={handleChange}
-              placeholder="Detaillez les missions, le profil recherche..."
+              placeholder="Détaillez les missions, le profil recherché..."
               className={errors.description ? 'input-error' : ''}
             />
             {errors.description && <p className="error-message">{errors.description}</p>}
           </div>
 
           <div className="form-group">
-            <label htmlFor="tags">Tags (separes par des virgules)</label>
+            <label htmlFor="tags">Tags (séparés par des virgules)</label>
             <input
               type="text"
               id="tags"
@@ -169,7 +227,7 @@ const CreateOfferPage: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="internshipStartDate">Date de debut du stage</label>
+            <label htmlFor="internshipStartDate">Date de début du stage</label>
             <input
               type="date"
               id="internshipStartDate"
@@ -182,7 +240,7 @@ const CreateOfferPage: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="internshipDuration">Duree du stage</label>
+            <label htmlFor="internshipDuration">Durée du stage</label>
             <input
               type="text"
               id="internshipDuration"
@@ -207,7 +265,7 @@ const CreateOfferPage: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="studyLevel">Niveau d'etude minimum</label>
+            <label htmlFor="studyLevel">Niveau d'étude minimum</label>
             <input
               type="text"
               id="studyLevel"
@@ -219,7 +277,7 @@ const CreateOfferPage: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="remoteWorkPolicy">Politique de teletravail</label>
+            <label htmlFor="remoteWorkPolicy">Politique de télétravail</label>
             <input
               type="text"
               id="remoteWorkPolicy"
@@ -235,7 +293,7 @@ const CreateOfferPage: React.FC = () => {
 
           <div className="form-actions">
             <Button type="submit" variant="primary" disabled={submitting}>
-              {submitting ? "Publication..." : "Publier l'offre"}
+              {mode === 'edit' ? "Enregistrer les modifications" : "Publier l'offre"}
             </Button>
           </div>
 
@@ -246,4 +304,4 @@ const CreateOfferPage: React.FC = () => {
   );
 };
 
-export default CreateOfferPage;
+export default OfferFormPage;

@@ -57,6 +57,10 @@ const getOffersByCompany = async (companyId: string): Promise<OfferDto[]> => {
   return response.data;
 };
 
+const updateOffer = async (offerId: string, offerData: CreateOfferDto): Promise<void> => {
+  await api.put(`/offers/${offerId}`, offerData);
+}
+
 const deleteOffer = async (offerId: string): Promise<void> => {
   await api.delete(`/offers/${offerId}`);
 };
@@ -70,6 +74,7 @@ const OfferService = {
   getAllOffers,
   getOfferById,
   getOffersByCompany,
+  updateOffer,
   deleteOffer,
   applyToOffer
 };

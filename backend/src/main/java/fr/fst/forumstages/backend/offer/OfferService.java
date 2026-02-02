@@ -23,8 +23,8 @@ public class OfferService {
     public OfferEntity createOffer(CreateOfferDto createOfferDto) {
         CompanyEntity companyEntity = companyRepository.findById(createOfferDto.companyId())
                 .orElseThrow(
-                        () -> new NoSuchElementException(("Company with id " + createOfferDto.companyId() + " not found"))
-        );
+                        () -> new NoSuchElementException(
+                                ("Company with id " + createOfferDto.companyId() + " not found")));
 
         OfferDto offerDto = new OfferDto(
                 null,
@@ -38,8 +38,7 @@ public class OfferService {
                 (createOfferDto.limitApplicationDate() != null) ? createOfferDto.limitApplicationDate() : null,
                 (createOfferDto.studyLevel() != null) ? createOfferDto.studyLevel() : null,
                 (createOfferDto.remoteWorkPolicy() != null) ? createOfferDto.remoteWorkPolicy() : null,
-                createOfferDto.companyId()
-        );
+                createOfferDto.companyId());
 
         OfferEntity offerEntity = OfferEntity.fromDto(offerDto);
         offerEntity.setCompany(companyEntity);
@@ -59,5 +58,35 @@ public class OfferService {
 
     public List<OfferEntity> getAllOffers() {
         return offerRepository.findAll();
+    }
+
+    public void updateOffer(String offerId, CreateOfferDto createOfferDto) {
+        OfferEntity existingOffer = offerRepository.findById(offerId)
+                .orElseThrow(() -> new NoSuchElementException(("Offer with id " + offerId + " not found")));
+
+        CompanyEntity companyEntity = companyRepository.findById(createOfferDto.companyId())
+                .orElseThrow(
+                        () -> new NoSuchElementException(
+                                ("Company with id " + createOfferDto.companyId() + " not found")));
+        existingOffer.setCompany(companyEntity);
+        existingOffer.setTitle(createOfferDto.title());
+        existingOffer.setDescription(createOfferDto.description());
+        existingOffer.setTags(createOfferDto.tags());
+        existingOffer.setSalary(createOfferDto.salary());
+        existingOffer.setInternshipStartDate(createOfferDto.internshipStartDate());
+        existingOffer.setInternshipDuration(createOfferDto.internshipDuration());
+        existingOffer.setLimitApplicationDate(createOfferDto.limitApplicationDate());
+        existingOffer.setStudyLevel(createOfferDto.studyLevel());
+        existingOffer.setRemoteWorkPolicy(createOfferDto.remoteWorkPolicy());
+
+        offerRepository.save(existingOffer);
+    }
+
+    public void deleteOfferById(String id) {
+        if (this.offerRepository.existsById(id)) {
+            this.offerRepository.deleteById(id);
+        } else {
+            throw new NoSuchElementException(("Offer with id " + id + " not found"));
+        }
     }
 }
