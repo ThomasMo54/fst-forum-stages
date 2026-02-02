@@ -94,7 +94,7 @@ const Header: React.FC = () => {
 
             {isAuthenticated && user?.roles.includes(user_roles.STUDENT) && (
               <li>
-                <Link to="/student/my-offers" className={isActive('/student/my-offers')}>Mes postulations</Link>
+                <Link to="/student/my-applications" className={isActive('/student/my-offers')}>Mes postulations</Link>
               </li>
             )}
 
