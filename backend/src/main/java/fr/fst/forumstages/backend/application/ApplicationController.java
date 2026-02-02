@@ -70,6 +70,20 @@ public class ApplicationController {
         return applications.stream().map(ApplicationDto::fromEntity).toList();
     }
 
+    @Operation(summary = "Supprimer une candidature", description = "Permet de supprimer une candidature à une offre de stage")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Candidature supprimée avec succès"),
+            @ApiResponse(responseCode = "204", description = "Aucune candidature à supprimée"),
+            @ApiResponse(responseCode = "400", description = "Données invalides fournies"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - permissions insuffisantes")
+    })
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApplicationDto deleteApplication(@PathVariable String id) {
+        var application = applicationService.deleteApplication(id);
+        return ApplicationDto.fromEntity(application);
+    }
+
     @Operation(summary = "Récupérer l'URL de téléversement de la lettre de motivation pour une offre", description = "Permet de récupérer l'URL pré-signée pour téléverser la lettre de motivation d'un étudiant à une offre.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "URL de téléversement récupérée avec succès"),
@@ -95,6 +109,20 @@ public class ApplicationController {
     public String getCoverLetterUrl(@PathVariable String id){
         try {
             return fileStorageService.getCoverLetterDownloadUrl(id + "_cover_letter.pdf");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Operation(summary = "Récupérer l'URL de suppression de la lettre de motivation d'un étudiant pour une offre", description = "Permet de récupérer l'URL pré-signée pour supprimer la lettre de motivation d'un étudiant à une offre.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "URL de suppression récupérée avec succès"),
+            @ApiResponse(responseCode = "404", description = "Candidature non trouvée")
+    })
+    @DeleteMapping("/{id}/coverLetter")
+    public String getCoverLetterDeleteUrl(@PathVariable String id){
+        try {
+            return fileStorageService.getCoverLetterDeleteUrl(id + "_cover_letter.pdf");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

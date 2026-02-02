@@ -51,6 +51,10 @@ public class FileStorageService {
         return getDownloadUrl(coverLetterBucket, objectName);
     }
 
+    public String getCoverLetterDeleteUrl(String objectName) throws Exception {
+        return getDeleteUrl(coverLetterBucket, objectName);
+    }
+
     private String getUploadUrl(String bucketName, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         return minioClient.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
@@ -66,6 +70,17 @@ public class FileStorageService {
         return minioClient.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
                         .method(Method.GET)
+                        .bucket(bucketName)
+                        .object(objectName)
+                        .expiry(1, TimeUnit.HOURS)
+                        .build()
+        );
+    }
+
+    private String getDeleteUrl(String bucketName, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        return minioClient.getPresignedObjectUrl(
+                GetPresignedObjectUrlArgs.builder()
+                        .method(Method.DELETE)
                         .bucket(bucketName)
                         .object(objectName)
                         .expiry(1, TimeUnit.HOURS)
