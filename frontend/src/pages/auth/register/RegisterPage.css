@@ -64,6 +64,15 @@
     margin-bottom: 30px;
 }
 
+.register-options .btn-primary {
+    background-color: #2563eb;
+    color: #ffffff;
+}
+
+.register-options .btn-primary:hover {
+    background-color: #1e40af;
+}
+
 /* Utility class for full-width buttons if Button component doesn't handle it by default */
 .register-options .btn {
     width: 100%;
