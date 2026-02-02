@@ -5,12 +5,13 @@ import './OffersPage.css';
 import Header from '../../components/header/Header';
 import Footer from '../../components/footer/Footer';
 import Button from '../../components/button/Button';
-import OfferService, { type OfferDto } from '../../services/offer.service';
+import OfferService, { type PaginatedOffers, type OfferDto } from '../../services/offer.service';
 import CompanyService from '../../services/company.service';
 import type { ApplicationDto } from '../../services/application.service';
 import ApplicationService from '../../services/application.service';
 import { useAuth } from '../../context/AuthContext';
 import user_roles from "../../constants/user_roles.ts";
+import {Pagination} from "../../components/pagination/Pagination.tsx";
 
 const formatDate = (date?: string | null) => {
   if (!date) return 'Non renseignée';
@@ -19,7 +20,7 @@ const formatDate = (date?: string | null) => {
 };
 
 const OffersPage: React.FC = () => {
-  const [offers, setOffers] = useState<OfferDto[]>([]);
+  const [offers, setOffers] = useState<PaginatedOffers>({content: [], page: {size: 0, number: 0, totalElements: 0, totalPages: 0}});
   const [companyNames, setCompanyNames] = useState<Record<string, string>>({});
   const [companyCities, setCompanyCities] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState<boolean>(true);
@@ -35,13 +36,16 @@ const OffersPage: React.FC = () => {
     void  fetchOffersAndApplications();
   }, []);
 
+  const searchParams = new URLSearchParams(window.location.search);
+  const currentPage = Number(searchParams.get('page')) || 1;
+
   const fetchOffersAndApplications = async () => {
     setLoading(true);
     setListError('');
     try {
       const data = await OfferService.getAllOffers();
       setOffers(data);
-      const companyIds = [...new Set(data.map(offer => offer.companyId))];
+      const companyIds = [...new Set(data.content.map(offer => offer.companyId))];
       const names: Record<string, string> = {};
       const cities: Record<string, string> = {};
       await Promise.all(companyIds.map(async id => {
@@ -67,11 +71,10 @@ const OffersPage: React.FC = () => {
     }
   };
 
-
-  const filteredOffers = useMemo(() => {
-    if (!searchTerm.trim()) return offers;
+  const filteredOffers  = useMemo(() => {
+    if (!searchTerm.trim()) return offers.content;
     const term = searchTerm.toLowerCase();
-    return offers.filter((offer) => {
+    return offers.content.filter((offer) => {
       const hasTextMatch =
         offer.title.toLowerCase().includes(term) ||
         offer.description.toLowerCase().includes(term) ||
@@ -110,12 +113,12 @@ const OffersPage: React.FC = () => {
 
             <div className="hero-metrics">
               <div className="metric-card">
-                <span className="metric-number">{offers.length}</span>
+                <span className="metric-number">{offers.page.totalElements}</span>
                 <span className="metric-label">Offres disponibles</span>
               </div>
               <div className="metric-card">
                 <span className="metric-number">
-                  {(offers.filter((offer) => !!offer.remoteWorkPolicy).length || 0)}
+                  {(offers.content.filter((offer) => !!offer.remoteWorkPolicy).length || 0)}
                 </span>
                 <span className="metric-label">Offres avec télétravail</span>
               </div>
@@ -288,6 +291,13 @@ const OffersPage: React.FC = () => {
               </>
             )}
           </section>
+
+          {offers.page.totalPages > 1 && (
+              <Pagination
+                  currentPage={currentPage}
+                  totalPages={offers.page.totalPages}
+              />
+          )}
         </div>
       </main>
 

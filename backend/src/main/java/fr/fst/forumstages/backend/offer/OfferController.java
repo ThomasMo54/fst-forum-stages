@@ -8,15 +8,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
+import org.springframework.data.domain.Page;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.PathVariable;
-
 
 @RestController
 @RequestMapping("/offers")
@@ -57,9 +55,9 @@ public class OfferController {
             @ApiResponse(responseCode = "200", description = "Offres de stage récupérées avec succès")
     })
     @GetMapping
-    public List<OfferDto> findAllOffers() {
-        List<OfferEntity> offers = offerService.getAllOffers();
-        return offers.stream().map(OfferDto::fromEntity).toList();
+    public Page<OfferDto> findAllOffers(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "12") int size) {
+        Page<OfferEntity> offers = offerService.getAllOffers(page, size);
+        return offers.map(OfferDto::fromEntity);
     }
 
     @Operation(summary = "Mettre à jour une offre de stage", description = "Permet de mettre à jour les informations d'une offre de stage existante.")
