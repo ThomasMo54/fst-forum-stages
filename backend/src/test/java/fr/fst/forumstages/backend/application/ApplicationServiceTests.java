@@ -3,6 +3,7 @@ package fr.fst.forumstages.backend.application;
 import fr.fst.forumstages.backend.application.ApplicationEntity;
 import fr.fst.forumstages.backend.application.ApplicationRepository;
 import fr.fst.forumstages.backend.application.dto.CreateApplicationDto;
+import fr.fst.forumstages.backend.notification.NotificationService;
 import fr.fst.forumstages.backend.offer.OfferEntity;
 import fr.fst.forumstages.backend.offer.OfferRepository;
 import fr.fst.forumstages.backend.student.StudentEntity;
@@ -37,6 +38,9 @@ public class ApplicationServiceTests {
 
     @Mock
     private StudentRepository studentRepository;
+
+    @Mock
+    private NotificationService notificationService;
 
     @Test
     public void testCreateApplication_success() {

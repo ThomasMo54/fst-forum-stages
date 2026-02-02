@@ -79,12 +79,28 @@ const MyOffersPage: React.FC = () => {
           <div className="offers-list">
             {offers.map(offer => (
               <div key={offer.id} className="offer-card">
-                <h2>{offer.title}</h2>
-                <p>{offer.description.substring(0, 100)}...</p>
-                <p><strong>Salaire:</strong> {offer.salary || 'Non spécifié'}</p>
-                <p><strong>Date de création:</strong> {new Date(offer.creationDate).toLocaleDateString()}</p>
-                <p><strong>Début:</strong> {new Date(offer.internshipStartDate).toLocaleDateString()}</p>
-                <p><strong>Date limite:</strong> {new Date(offer.limitApplicationDate).toLocaleDateString()}</p>
+                <div className="offer-card-header">
+                    <h2>{offer.title}</h2>
+                    <span className="creation-date">Publié le {new Date(offer.creationDate).toLocaleDateString()}</span>
+                </div>
+                
+                <p className="offer-description">{offer.description.substring(0, 100)}...</p>
+                
+                <div className="offer-details-grid">
+                    <div className="detail-item">
+                        <i className="fa-solid fa-euro-sign"></i>
+                        <span>{offer.salary || 'Non spécifié'}</span>
+                    </div>
+                    <div className="detail-item">
+                        <i className="fa-regular fa-calendar"></i>
+                        <span>Début: {new Date(offer.internshipStartDate).toLocaleDateString()}</span>
+                    </div>
+                    <div className="detail-item">
+                        <i className="fa-regular fa-hourglass-half"></i>
+                        <span>Limite: {new Date(offer.limitApplicationDate).toLocaleDateString()}</span>
+                    </div>
+                </div>
+
                 <div className="offer-actions">
                   <Link to={`/offers/${offer.id}/applications`}>
                     <Button variant='icon'><i className="fas fa-list"></i></Button>

@@ -1,114 +1,318 @@
 .header {
-    background-color: var(--primary-color);
-    color: var(--white);
-    padding: 1rem 0;
-    box-shadow: var(--shadow);
-    position: sticky;
+    --hdr-primary-blue: #2563eb;
+    --hdr-secondary-blue: #1e40af;
+    --hdr-light-blue: #3b82f6;
+    --hdr-white: #ffffff;
+    --hdr-text-dark: #1e293b;
+    --hdr-text-light: #64748b;
+    --hdr-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+
+    background: var(--hdr-white);
+    box-shadow: var(--hdr-shadow);
+    position: fixed;
     top: 0;
-    z-index: 100;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    padding: 0; /* Remove default padding, let nav handle it */
 }
 
 .header .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.header nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
+    padding: 20px 0; /* Adjusted padding to match container usage */
 }
 
-.logo {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-right: 2rem;
-}
-
-.nav {
+/* Logo Styles */
+.header .logo {
     display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
     align-items: center;
-    flex: 1;
-    justify-content: flex-end;
-}
-
-.nav-link {
-    color: var(--white);
+    gap: 12px;
     text-decoration: none;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    transition: background-color 0.3s;
+    transition: transform 0.3s;
+    margin-right: auto; /* Push nav to right if needed, though justify-between handles it */
 }
 
-.nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+.header .logo:hover {
+    transform: scale(1.05);
 }
 
-.nav-link.active {
-    background-color: var(--secondary-color);
-}
-
-.auth-section {
-    margin-left: 0;
+.header .logo-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--hdr-primary-blue), var(--hdr-light-blue));
+    border-radius: 12px;
     display: flex;
     align-items: center;
-}
-
-.user-menu {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 0.25rem 0.5rem 0.25rem 1rem;
-    border-radius: 20px;
-}
-
-.user-email {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--white);
-}
-
-.logout-btn {
-    background-color: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: var(--white);
-    cursor: pointer;
-    padding: 0.25rem 0.75rem;
-    border-radius: 15px;
-    font-size: 0.85rem;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
     transition: all 0.3s;
 }
 
-.logout-btn:hover {
-    background-color: var(--danger-color);
-    border-color: var(--danger-color);
+.header .logo:hover .logo-icon {
+    transform: rotate(5deg) scale(1.1);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
 }
 
-.btn-login {
-    border: 1px solid var(--white);
+.header .logo-icon::before {
+    content: '';
+    position: absolute;
+    width: 35px;
+    height: 35px;
+    background: var(--hdr-white);
+    border-radius: 8px;
+    opacity: 0.2;
 }
 
+.header .logo-icon i { /* Fallback if FontAwesome is used, but we might inline SVG */
+    font-size: 24px;
+    color: var(--hdr-white);
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.header .logo-text {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 4px;
+}
+
+.header .logo-main {
+    font-size: 22px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--hdr-primary-blue), var(--hdr-light-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.25;
+    letter-spacing: -0.5px;
+}
+
+.header .logo-sub {
+    font-size: 11px;
+    color: var(--hdr-text-light);
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+
+/* Nav Menu Styles */
+.header .nav-menu {
+    display: flex;
+    list-style: none;
+    gap: 30px;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+.header .nav-menu a {
+    text-decoration: none;
+    color: var(--hdr-text-dark);
+    font-weight: 500;
+    font-size: 15px;
+    transition: color 0.3s;
+    position: relative;
+    white-space: nowrap;
+}
+
+.header .nav-menu a:hover,
+.header .nav-menu a.active {
+    color: var(--hdr-primary-blue);
+}
+
+.header .nav-menu a.active::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--hdr-primary-blue);
+}
+
+/* Login Button in Header */
+.header .btn-login {
+    background: var(--hdr-primary-blue);
+    color: var(--hdr-white) !important; /* Force text color */
+    padding: 10px 24px;
+    border-radius: 5px;
+    transition: all 0.3s;
+    display: inline-block;
+}
+
+.header .btn-login:hover {
+    background: var(--hdr-secondary-blue);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+    color: var(--hdr-white) !important;
+}
+
+.header .btn-login::after {
+    display: none; /* No underline for button */
+}
+
+/* User Menu / Auth Section Adaptation */
+.header .auth-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.header .user-menu {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header .user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.header .user-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--hdr-text-dark);
+}
+
+.header .user-role {
+    font-size: 11px;
+    color: var(--hdr-text-light);
+    text-transform: uppercase;
+}
+
+/* ... existing styles ... */
+
+.header .user-profile-container {
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 10px;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.header .user-profile-container:hover {
+    background-color: var(--hp-light-bg); /* Use a light bg variable or rgba */
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.header .profile-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--hdr-light-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--hdr-white);
+}
+
+.header .profile-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 10px;
+    background: var(--hdr-white);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    width: 220px;
+    padding: 8px 0;
+    z-index: 1000;
+    border: 1px solid var(--hp-border-color); /* fallback or defined var */
+    border: 1px solid #e2e8f0;
+}
+
+.header .profile-dropdown::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 15px;
+    width: 12px;
+    height: 12px;
+    background: var(--hdr-white);
+    transform: rotate(45deg);
+    border-left: 1px solid #e2e8f0;
+    border-top: 1px solid #e2e8f0;
+}
+
+.header .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    color: var(--hdr-text-dark);
+    text-decoration: none;
+    font-size: 14px;
+    transition: background-color 0.2s;
+    cursor: pointer;
+    width: 100%;
+    border: none;
+    background: none;
+    text-align: left;
+}
+
+.header .dropdown-item:hover {
+    background-color: #f1f5f9;
+    color: var(--hdr-primary-blue);
+}
+
+.header .dropdown-item.danger {
+    color: #ef4444;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 5px;
+    padding-top: 12px;
+}
+
+.header .dropdown-item.danger:hover {
+    background-color: #fef2f2;
+}
+
+/* Hide old elements if they still exist or conflict */
+.header .btn-logout {
+    display: none; 
+}
+
+
+/* Responsive */
 @media (max-width: 768px) {
-    .header .container {
-        flex-direction: column;
-        align-items: flex-start;
+    .header .logo-icon {
+        width: 45px;
+        height: 45px;
     }
 
-    .nav {
-        width: 100%;
-        margin-top: 1rem;
-        flex-direction: column;
-        align-items: stretch;
-        justify-content: flex-start;
+    .header .logo-main {
+        font-size: 18px;
     }
 
-    .nav-link, .auth-section {
+    .header .logo-sub {
+        font-size: 9px;
+    }
+
+    .header nav {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .header .nav-menu {
+        flex-direction: column;
+        gap: 15px;
         width: 100%;
         text-align: center;
-        justify-content: center;
-    }
-
-    .user-menu {
-        justify-content: center;
-        margin-top: 0.5rem;
     }
 }

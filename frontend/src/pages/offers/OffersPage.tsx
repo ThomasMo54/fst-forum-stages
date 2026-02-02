@@ -21,6 +21,7 @@ const formatDate = (date?: string | null) => {
 const OffersPage: React.FC = () => {
   const [offers, setOffers] = useState<OfferDto[]>([]);
   const [companyNames, setCompanyNames] = useState<Record<string, string>>({});
+  const [companyCities, setCompanyCities] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [listError, setListError] = useState<string>('');
 
@@ -42,16 +43,19 @@ const OffersPage: React.FC = () => {
       setOffers(data);
       const companyIds = [...new Set(data.map(offer => offer.companyId))];
       const names: Record<string, string> = {};
+      const cities: Record<string, string> = {};
       await Promise.all(companyIds.map(async id => {
         try {
           const company = await CompanyService.getCompanyById(id);
           names[id] = company.name;
+          cities[id] = company.city || 'Non renseigné';
         } catch (e) {
           console.error(`Could not fetch company name for ID ${id}`, e);
           names[id] = `Entreprise #${id}`;
         }
       }));
       setCompanyNames(names);
+      setCompanyCities(cities);
       if(user){
         const applications = await ApplicationService.getAllApplicationForStudent(user.entityId);
         setStudentApplications(applications);
@@ -144,33 +148,13 @@ const OffersPage: React.FC = () => {
             )}
 
             {loading ? (
-              <div className="table-wrapper">
-                <table className="offers-table loading">
-                  <thead>
-                  <tr>
-                    <th>Titre</th>
-                    <th>Entreprise</th>
-                    <th>Tags</th>
-                    <th>Début</th>
-                    <th>Durée</th>
-                    <th>Salaire</th>
-                    <th>Actions</th>
-                  </tr>
-                  </thead>
-                  <tbody>
-                  {[1, 2, 3].map((item) => (
-                    <tr key={item}>
-                      <td><div className="skeleton-line short"/></td>
-                      <td><div className="skeleton-line"/></td>
-                      <td><div className="skeleton-line"/></td>
-                      <td><div className="skeleton-line short"/></td>
-                      <td><div className="skeleton-line short"/></td>
-                      <td><div className="skeleton-line short"/></td>
-                      <td><div className="skeleton-line short"/></td>
-                    </tr>
-                  ))}
-                  </tbody>
-                </table>
+              <div className="offers-linear-list loading">
+                {[1, 2, 3].map((item) => (
+                    <div key={item} className="offer-list-item skeleton-item">
+                        <div className="skeleton-line"/>
+                        <div className="skeleton-line short"/>
+                    </div>
+                ))}
               </div>
             ) : filteredOffers.length === 0 ? (
               <div className="empty-state">
@@ -181,56 +165,44 @@ const OffersPage: React.FC = () => {
               </div>
             ) : (
               <>
-                <div className="table-wrapper">
-                  <table className="offers-table">
-                    <thead>
-                    <tr>
-                      <th>Titre</th>
-                      <th>Entreprise</th>
-                      <th>Tags</th>
-                      <th>Début</th>
-                      <th>Durée</th>
-                      <th>Salaire</th>
-                      <th></th>
-                    </tr>
-                    </thead>
-                    <tbody>
+                <div className="offers-linear-list">
                     {filteredOffers.map((offer) => (
-                      <tr key={offer.id}>
-                        <td>
-                          <div className="table-title">{offer.title}</div>
-                        </td>
-                        <td>{companyNames[offer.companyId] || `Entreprise #${offer.companyId}`}</td>
-                        <td>
-                          <div className="table-tags">
-                            {(offer.tags ?? []).length === 0 ? (
-                              <span className="tag muted">Aucun</span>
-                            ) : (
-                              (offer.tags ?? []).slice(0, 3).map((tag) => (
-                                <span key={tag} className="tag">{tag}</span>
-                              ))
-                            )}
-                            {(offer.tags ?? []).length > 3 && (
-                              <span className="tag more">+{(offer.tags ?? []).length - 3}</span>
-                            )}
-                          </div>
-                        </td>
-                        <td>{formatDate(offer.internshipStartDate)}</td>
-                        <td>{offer.internshipDuration || 'Non renseignée'}</td>
-                        <td>{offer.salary || 'Non renseigné'}</td>
-                        <td className="table-actions">
-                          <Button
-                            size="small"
-                            variant="secondary"
-                            onClick={() => setSelectedOffer(offer)}
-                          >
-                            Voir le détail
-                          </Button>
-                        </td>
-                      </tr>
+                        <div key={offer.id} className="offer-list-item" onClick={() => setSelectedOffer(offer)}>
+                            <div className="offer-item-content">
+                                <div className="offer-item-primary">
+                                    <h3 className="offer-title">{offer.title}</h3>
+                                    <span className="offer-company">{companyNames[offer.companyId] || `Entreprise #${offer.companyId}`}</span>
+                                </div>
+                                
+                                <div className="offer-location">
+                                    <i className="fa-solid fa-location-dot"></i>
+                                    <span>{companyCities[offer.companyId] || 'Non renseigné'}</span>
+                                </div>
+                                
+                                <div className="detail-pill date">
+                                    <i className="fa-regular fa-calendar"></i>
+                                    <span>{formatDate(offer.internshipStartDate)}</span>
+                                </div>
+                                <div className="detail-pill duration">
+                                    <i className="fa-regular fa-clock"></i>
+                                    <span>{offer.internshipDuration || 'N/A'}</span>
+                                </div>
+                                <div className="detail-pill salary">
+                                    <i className="fa-solid fa-euro-sign"></i>
+                                    <span>{offer.salary || 'N/A'}</span>
+                                </div>
+
+                                <div className="offer-item-tags">
+                                    {(offer.tags ?? []).slice(0, 3).map((tag) => (
+                                        <span key={tag} className="tag">{tag}</span>
+                                    ))}
+                                    {(offer.tags ?? []).length > 3 && (
+                                        <span className="tag-more">+{(offer.tags ?? []).length - 3}</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     ))}
-                    </tbody>
-                  </table>
                 </div>
 
                 {selectedOffer && (
@@ -238,9 +210,15 @@ const OffersPage: React.FC = () => {
                     <div className="offer-modal" onClick={(e) => e.stopPropagation()}>
                       <div className="modal-header">
                         <div>
-                          <p className="eyebrow">Offre {selectedOffer.id}</p>
-                          <h3>{selectedOffer.title}</h3>
-                          <p className="detail-company">{companyNames[selectedOffer.companyId] || `Entreprise #${selectedOffer.companyId}`}</p>
+                          <div className="modal-top-info">
+                              <h3 className="modal-title">{selectedOffer.title}</h3>
+                              <span className="offer-company">
+                                  {companyNames[selectedOffer.companyId] || `Entreprise #${selectedOffer.companyId}`}
+                              </span>
+                          </div>
+                          <div className="modal-location">
+                             <i className="fa-solid fa-location-dot"></i> {companyCities[selectedOffer.companyId] || 'Non renseigné'}
+                          </div>
                         </div>
                         <div className="modal-actions">
                           <Button size="small" variant="secondary" onClick={() => setSelectedOffer(null)}>
@@ -249,7 +227,9 @@ const OffersPage: React.FC = () => {
                           {user && user.roles.includes(user_roles.STUDENT) ? (
                             <>
                               {studentApplications.find(app => app.offerId === selectedOffer.id) ? (
-                                <span className="applied-badge">Candidature envoyée</span>
+                                <span className="applied-badge">
+                                    <i className="fa-solid fa-circle-check"></i> Candidature envoyée
+                                </span>
                               ) : (
                                 <Button size="small" onClick={() => handleApplyRedirect(selectedOffer)}>
                                   Je postule
@@ -260,47 +240,46 @@ const OffersPage: React.FC = () => {
                         </div>
                       </div>
 
-                      <p className="offer-description">{selectedOffer.description}</p>
-
-                      <div className="offer-meta">
+                      <div className="offer-meta-grid">
                         <div className="meta-item">
-                          <span>Début</span>
+                          <span><i className="fa-regular fa-calendar"></i> Début</span>
                           <strong>{formatDate(selectedOffer.internshipStartDate)}</strong>
                         </div>
                         <div className="meta-item">
-                          <span>Durée</span>
+                          <span><i className="fa-regular fa-clock"></i> Durée</span>
                           <strong>{selectedOffer.internshipDuration || 'Non renseignée'}</strong>
                         </div>
                         <div className="meta-item">
-                          <span>Limite</span>
-                          <strong>{selectedOffer.limitApplicationDate ? formatDate(selectedOffer.limitApplicationDate) : 'Sans limite'}</strong>
-                        </div>
-                        <div className="meta-item">
-                          <span>Salaire</span>
+                          <span><i className="fa-solid fa-euro-sign"></i> Salaire</span>
                           <strong>{selectedOffer.salary || 'Non renseigné'}</strong>
                         </div>
-                      </div>
-
-                      <div className="offer-meta secondary">
-                        <div className="meta-item">
-                          <span>Niveau</span>
-                          <strong>{selectedOffer.studyLevel || 'Ouvert'}</strong>
-                        </div>
-                        <div className="meta-item">
-                          <span>Télétravail</span>
+                         <div className="meta-item">
+                          <span><i className="fa-solid fa-house-laptop"></i> Télétravail</span>
                           <strong>{selectedOffer.remoteWorkPolicy || 'À définir'}</strong>
                         </div>
                         <div className="meta-item">
-                          <span>Créée le</span>
-                          <strong>{formatDate(selectedOffer.creationDate)}</strong>
+                          <span><i className="fa-solid fa-graduation-cap"></i> Niveau</span>
+                          <strong>{selectedOffer.studyLevel || 'Ouvert'}</strong>
+                        </div>
+                         <div className="meta-item">
+                          <span><i className="fa-regular fa-hourglass-half"></i> Limite</span>
+                          <strong>{selectedOffer.limitApplicationDate ? formatDate(selectedOffer.limitApplicationDate) : 'Sans limite'}</strong>
                         </div>
                       </div>
 
+                      <div className="modal-description-section">
+                          <h4>Description de l'offre</h4>
+                          <p className="offer-description">{selectedOffer.description}</p>
+                      </div>
+
                       {(selectedOffer.tags ?? []).length > 0 && (
-                        <div className="tags">
-                          {(selectedOffer.tags ?? []).map((tag) => (
-                            <span key={tag} className="tag">{tag}</span>
-                          ))}
+                        <div className="modal-tags-section">
+                          <h4>Compétences recherchées</h4>
+                          <div className="tags">
+                            {(selectedOffer.tags ?? []).map((tag) => (
+                              <span key={tag} className="tag">{tag}</span>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
