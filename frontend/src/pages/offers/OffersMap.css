@@ -1,4 +1,7 @@
-/* OffersMap.css */
+:root {
+    --error-color: #e74c3c;
+    --primary-dark: #1a4d7a;
+}
 
 .map-container {
     position: relative;
@@ -6,7 +9,7 @@
     height: 500px;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
     background: var(--white);
 }
 
@@ -33,8 +36,7 @@
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    to { transform: rotate(360deg); }
 }
 
 .map-loading-spinner p {
@@ -44,7 +46,7 @@
 
 .map-error {
     text-align: center;
-    color: var(--error-color, #e74c3c);
+    color: var(--error-color);
 }
 
 .map-error i {
@@ -58,7 +60,50 @@
     max-width: 400px;
 }
 
-/* Map info badge */
+.custom-cluster-icon {
+    background: transparent;
+    border: none;
+}
+
+.custom-cluster-marker {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cluster-inner {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(44, 62, 80, 0.3);
+    border: 3px solid white;
+    position: relative;
+}
+
+.cluster-inner::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-top-color: var(--primary-color);
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+}
+
+.cluster-inner span {
+    color: white;
+    font-weight: 800;
+    font-size: 0.95rem;
+    z-index: 1;
+}
+
 .map-info-badge {
     position: absolute;
     top: 10px;
@@ -66,7 +111,7 @@
     background: var(--white);
     padding: 0.5rem 1rem;
     border-radius: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--text-dark);
@@ -80,122 +125,216 @@
     color: var(--secondary-color);
 }
 
-/* Popup styling */
-:root {
-    --error-color: #e74c3c;
-    --primary-dark: #1a4d7a;
-}
-.map-popup {
-    min-width: 200px;
+.popup-offer-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    border: 2px solid transparent;
 }
 
-.map-popup h4 {
-    margin: 0 0 0.75rem 0;
+.popup-offer-item:hover {
+    background: #e8f4f8;
+    border-color: var(--secondary-color);
+    transform: translateX(2px);
+}
+
+.popup-offer-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.popup-offer-company {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--secondary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 0.25rem;
+}
+
+.popup-offer-company i {
+    font-size: 0.7rem;
+}
+
+.popup-offer-title {
+    margin: 0 0 0.5rem;
     color: var(--primary-color);
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 700;
     line-height: 1.3;
 }
 
-.map-popup p {
-    margin: 0.5rem 0;
-    color: var(--text-dark);
-    font-size: 0.9rem;
+.popup-offer-details {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
 }
 
-.map-popup p i {
+.popup-detail {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+.popup-detail i {
     color: var(--secondary-color);
-    width: 16px;
+    font-size: 0.75rem;
+    width: 12px;
 }
 
-.popup-company {
+.popup-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+}
+
+.popup-tag {
+    background: #e2e8f0;
+    color: #475569;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
     font-weight: 600;
 }
 
-.popup-location {
+.popup-tag-more {
+    font-size: 0.7rem;
     color: var(--text-light);
+    font-weight: 700;
+    align-self: center;
+    padding: 0.2rem 0.3rem;
 }
 
-.popup-button {
-    margin-top: 0.75rem;
-    width: 100%;
-    padding: 0.5rem 1rem;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
+.popup-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--secondary-color);
+    font-size: 1rem;
+    opacity: 0.6;
+    transition: opacity 0.2s, transform 0.2s;
 }
 
-.popup-button:hover {
-    background: var(--primary-dark, #1a4d7a);
+.popup-offer-item:hover .popup-arrow {
+    opacity: 1;
+    transform: translateX(2px);
 }
 
-/* Leaflet overrides */
-.leaflet-container {
-    font-family: inherit;
+.group-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+    padding: 1rem;
 }
 
-.leaflet-popup-content-wrapper {
-    border-radius: 8px;
-    padding: 0;
-}
-
-.leaflet-popup-content {
-    margin: 1rem;
-}
-
-.leaflet-popup-tip {
+.group-modal {
     background: white;
+    width: min(500px, 90vw);
+    max-height: 85vh;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
-/* View toggle section */
-.view-toggle-section {
-    margin-bottom: 2rem;
+.group-modal-header {
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, #f8fafc, #ffffff);
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
 }
 
-.view-toggle {
-    display: inline-flex;
-    background: var(--white);
-    border-radius: 8px;
-    padding: 0.25rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-.view-toggle-btn {
-    padding: 0.6rem 1.5rem;
-    border: none;
-    background: transparent;
-    color: var(--text-light);
-    font-weight: 600;
-    cursor: pointer;
-    border-radius: 6px;
-    transition: all 0.2s;
+.group-location {
+    margin: 0;
+    color: var(--text-dark);
+    font-size: 1.1rem;
+    font-weight: 700;
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
-.view-toggle-btn:hover {
-    color: var(--text-dark);
+.group-location i {
+    color: var(--secondary-color);
 }
 
-.view-toggle-btn.active {
+.group-offer-count {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    color: #999;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 50%;
+    transition: color 0.2s, background 0.2s;
+}
+
+.close-btn:hover {
+    color: #333;
+    background: #f0f0f0;
+}
+
+.group-offers-list {
+    padding: 1rem;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.group-offers-list .popup-offer-item:hover {
+    transform: translateY(-2px) translateX(0);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.group-offers-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.group-offers-list::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.group-offers-list::-webkit-scrollbar-thumb {
+    background: var(--secondary-color);
+    border-radius: 3px;
+}
+
+.group-offers-list::-webkit-scrollbar-thumb:hover {
     background: var(--primary-color);
-    color: white;
-    box-shadow: 0 2px 5px rgba(44, 62, 80, 0.15);
 }
 
-.view-toggle-btn i {
-    font-size: 1rem;
-}
-
-/* Responsive */
 @media (max-width: 768px) {
     .map-container {
         height: 400px;
@@ -207,8 +346,13 @@
         padding: 0.4rem 0.8rem;
     }
 
-    .view-toggle-btn {
-        padding: 0.5rem 1rem;
+    .popup-offer-title {
         font-size: 0.9rem;
+    }
+
+    .cluster-inner,
+    .custom-cluster-marker {
+        width: 36px;
+        height: 36px;
     }
 }

@@ -1,159 +1,149 @@
-
 export interface GeocodingResult {
     lat: number;
     lon: number;
     displayName: string;
 }
 
+interface AddressInput {
+    id: string;
+    address?: string;
+    city?: string;
+    postalCode?: string;
+}
+
+/**
+ * GeocodingService
+ * - Geocode via Nominatim with rate limiting (1 req/sec)
+ * - Cache results to avoid redundant API calls
+ * - Fallback strategy: full address → city only → null
+ */
 class GeocodingService {
     private readonly baseURL = 'https://nominatim.openstreetmap.org';
     private readonly cache = new Map<string, GeocodingResult | null>();
-    private readonly requestQueue: Array<() => Promise<void>> = [];
-    private isProcessing = false;
+    private lastRequestTime = 0;
 
     /**
-     * Geocode an address with rate limiting and caching
-     * @param address - Full address string
-     * @param city - City name
-     * @param postalCode - Postal code
-     * @returns Coordinates or null if not found
+     * Geocode a single address with automatic fallback.
+     * Tries: "address, postalCode, city, France" → "city, France" → null
      */
     async geocodeAddress(
         address?: string,
         city?: string,
         postalCode?: string
     ): Promise<GeocodingResult | null> {
-        // Build search query
-        const query = this.buildQuery(address, city, postalCode);
-        if (!query) return null;
+        const fullQuery = this.buildQuery(address, postalCode, city);
+        if (!fullQuery) return null;
 
-        // Check cache
-        const cached = this.cache.get(query);
-        if (cached !== undefined) return cached;
+        // Try full address first
+        const fullResult = await this.cachedFetch(fullQuery);
+        if (fullResult) return fullResult;
 
-        // Queue the request to respect rate limits (1 req/sec for Nominatim)
-        return new Promise((resolve) => {
-            this.requestQueue.push(async () => {
-                try {
-                    const result = await this.fetchGeocode(query);
-                    this.cache.set(query, result);
-                    resolve(result);
-                } catch (error) {
-                    console.error(`Geocoding failed for "${query}":`, error);
-                    this.cache.set(query, null);
-                    resolve(null);
-                }
-            });
-
-            this.processQueue();
-        });
-    }
-
-    /**
-     * Build search query from address components
-     */
-    private buildQuery(
-        address?: string,
-        city?: string,
-        postalCode?: string
-    ): string {
-        const parts: string[] = [];
-
-        if (address?.trim()) parts.push(address.trim());
-        if (postalCode?.trim()) parts.push(postalCode.trim());
-        if (city?.trim()) parts.push(city.trim());
-        parts.push('France');
-
-        return parts.join(', ');
-    }
-
-    /**
-     * Fetch coordinates from Nominatim API
-     */
-    private async fetchGeocode(query: string): Promise<GeocodingResult | null> {
-        const params = new URLSearchParams({
-            q: query,
-            format: 'json',
-            limit: '1',
-            countrycodes: 'fr', // Restrict to France
-            addressdetails: '1'
-        });
-
-        const response = await fetch(`${this.baseURL}/search?${params}`, {
-            headers: {
-                'User-Agent': 'InternshipPlatform/1.0'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Nominatim API error: ${response.status}`);
+        // Fallback: city only (if we had more than just the city in the first attempt)
+        const cityOnlyQuery = this.buildCityOnlyQuery(city);
+        if (cityOnlyQuery && cityOnlyQuery !== fullQuery) {
+            return await this.cachedFetch(cityOnlyQuery);
         }
 
-        const data = await response.json();
-
-        if (!data || data.length === 0) {
-            return null;
-        }
-
-        const result = data[0];
-        return {
-            lat: parseFloat(result.lat),
-            lon: parseFloat(result.lon),
-            displayName: result.display_name
-        };
+        return null;
     }
 
     /**
-     * Process geocoding queue with rate limiting
+     * Batch geocode multiple addresses sequentially (respects rate limits).
      */
-    private async processQueue(): Promise<void> {
-        if (this.isProcessing || this.requestQueue.length === 0) return;
-
-        this.isProcessing = true;
-
-        while (this.requestQueue.length > 0) {
-            const task = this.requestQueue.shift();
-            if (task) {
-                await task();
-                // Wait 1 second between requests (Nominatim rate limit)
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-        }
-
-        this.isProcessing = false;
-    }
-
-    /**
-     * Batch geocode multiple addresses
-     */
-    async geocodeBatch(
-        addresses: Array<{
-            id: string;
-            address?: string;
-            city?: string;
-            postalCode?: string;
-        }>
-    ): Promise<Map<string, GeocodingResult | null>> {
+    async geocodeBatch(addresses: AddressInput[]): Promise<Map<string, GeocodingResult | null>> {
         const results = new Map<string, GeocodingResult | null>();
 
-        // Process sequentially to respect rate limits
         for (const item of addresses) {
-            const result = await this.geocodeAddress(
-                item.address,
-                item.city,
-                item.postalCode
-            );
+            const result = await this.geocodeAddress(item.address, item.city, item.postalCode);
             results.set(item.id, result);
         }
 
         return results;
     }
 
-    /**
-     * Clear the cache
-     */
+    /** Clear the internal cache. */
     clearCache(): void {
         this.cache.clear();
+    }
+
+    /**
+     * Full query: address + postalCode + city + France
+     */
+    private buildQuery(address?: string, postalCode?: string, city?: string): string | null {
+        const parts: string[] = [];
+
+        if (address?.trim())    parts.push(address.trim());
+        if (postalCode?.trim()) parts.push(postalCode.trim());
+        if (city?.trim())       parts.push(city.trim());
+
+        if (parts.length === 0) return null;
+
+        parts.push('France');
+        return parts.join(', ');
+    }
+
+    /**
+     * City-only fallback query: city + France
+     */
+    private buildCityOnlyQuery(city?: string): string | null {
+        if (!city?.trim()) return null;
+        return `${city.trim()}, France`;
+    }
+
+    /**
+     * Returns cached result if available, otherwise fetches & caches.
+     */
+    private async cachedFetch(query: string): Promise<GeocodingResult | null> {
+        if (this.cache.has(query)) return this.cache.get(query) ?? null;
+
+        const result = await this.rateLimitedFetch(query);
+        this.cache.set(query, result);
+        return result;
+    }
+
+    /**
+     * Enforces Nominatim's 1 request/second rate limit.
+     */
+    private async rateLimitedFetch(query: string): Promise<GeocodingResult | null> {
+        const now = Date.now();
+        const elapsed = now - this.lastRequestTime;
+
+        if (elapsed < 1000) {
+            await new Promise(resolve => setTimeout(resolve, 1000 - elapsed));
+        }
+
+        this.lastRequestTime = Date.now();
+        return await this.fetchGeocode(query);
+    }
+
+    /**
+     * Calls Nominatim search endpoint.
+     */
+    private async fetchGeocode(query: string): Promise<GeocodingResult | null> {
+        const params = new URLSearchParams({
+            q: query,
+            format: 'json',
+            limit: '1',
+            countrycodes: 'fr',
+        });
+
+        const response = await fetch(`${this.baseURL}/search?${params}`, {
+            headers: { 'User-Agent': 'InternshipPlatform/1.0' },
+        });
+
+        if (!response.ok) {
+            console.error(`Nominatim error: ${response.status} for "${query}"`);
+            return null;
+        }
+
+        const data = await response.json();
+        if (!data?.length) return null;
+
+        return {
+            lat: parseFloat(data[0].lat),
+            lon: parseFloat(data[0].lon),
+            displayName: data[0].display_name,
+        };
     }
 }
 

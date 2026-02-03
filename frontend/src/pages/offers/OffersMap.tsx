@@ -1,36 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { OfferDto } from '../../services/offer.service';
 import GeocodingService, { type GeocodingResult } from '../../services/geocoding.service';
 import './OffersMap.css';
 
-// Fix for default markers in React-Leaflet
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import iconRetina from 'leaflet/dist/images/marker-icon-2x.png';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: iconRetina,
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-});
+L.Icon.Default.mergeOptions({ iconRetinaUrl: iconRetina, iconUrl: icon, shadowUrl: iconShadow });
 
-// Custom marker icon for offers
-const offerIcon = new L.Icon({
-    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="32" height="48">
-      <path fill="#2c3e50" d="M12 0C7.58 0 4 3.58 4 8c0 5.5 8 16 8 16s8-10.5 8-16c0-4.42-3.58-8-8-8z"/>
-      <circle fill="#3498db" cx="12" cy="8" r="5"/>
-      <path fill="#fff" d="M12 4.5c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-3.5zm0 5.5c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
-    </svg>
-  `),
-    iconSize: [32, 48],
-    iconAnchor: [16, 48],
-    popupAnchor: [0, -48],
-});
+const createMarkerIcon = (count: number) =>
+    new L.DivIcon({
+        html: `<div class="custom-cluster-marker"><div class="cluster-inner"><span>${count}</span></div></div>`,
+        className: 'custom-cluster-icon',
+        iconSize: [40, 40],
+        iconAnchor: [20, 40],
+    });
 
 interface OffersMapProps {
     offers: OfferDto[];
@@ -41,30 +30,147 @@ interface OffersMapProps {
     onOfferClick: (offer: OfferDto) => void;
 }
 
-interface OfferMarker {
+interface OfferWithMeta {
     offer: OfferDto;
-    coordinates: GeocodingResult;
+    companyName: string;
 }
 
-// Component to fit map bounds to markers
-const MapBoundsUpdater: React.FC<{ markers: OfferMarker[] }> = ({ markers }) => {
+interface LocationGroup {
+    key: string;
+    coordinates: GeocodingResult;
+    city: string;
+    items: OfferWithMeta[];
+}
+
+const SNAP_PRECISION = 0.005;
+
+const snap = (value: number) => Math.round(value / SNAP_PRECISION) * SNAP_PRECISION;
+
+const snapKey = (lat: number, lon: number) => `${snap(lat).toFixed(3)},${snap(lon).toFixed(3)}`;
+
+
+/**
+ * Groups every geocoded offer by snapped geographic position.
+ * Offers from *different* companies that land on the same grid cell
+ * end up in the same group — no overlapping markers.
+ */
+function buildLocationGroups(
+    offers: OfferDto[],
+    geocoded: Map<string, GeocodingResult | null>,
+    companyNames: Record<string, string>,
+    companyCities: Record<string, string>
+): LocationGroup[] {
+    const map = new Map<string, LocationGroup>();
+
+    for (const offer of offers) {
+        const coords = geocoded.get(offer.id);
+        if (!coords) continue;
+
+        const key = snapKey(coords.lat, coords.lon);
+        const existing = map.get(key);
+
+        const item: OfferWithMeta = {
+            offer,
+            companyName: companyNames[offer.companyId] ?? `Entreprise #${offer.companyId}`,
+        };
+
+        if (existing) {
+            existing.items.push(item);
+        } else {
+            map.set(key, {
+                key,
+                coordinates: coords,
+                city: companyCities[offer.companyId] ?? 'Non renseigné',
+                items: [item],
+            });
+        }
+    }
+
+    return Array.from(map.values());
+}
+
+const MapBoundsUpdater: React.FC<{ groups: LocationGroup[] }> = ({ groups }) => {
     const map = useMap();
 
     useEffect(() => {
-        if (markers.length === 0) return;
-
-        const bounds = L.latLngBounds(
-            markers.map(m => [m.coordinates.lat, m.coordinates.lon])
-        );
-
-        map.fitBounds(bounds, {
-            padding: [50, 50],
-            maxZoom: 13
-        });
-    }, [markers, map]);
+        if (groups.length === 0) return;
+        const bounds = L.latLngBounds(groups.map(g => [g.coordinates.lat, g.coordinates.lon]));
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
+    }, [groups, map]);
 
     return null;
 };
+
+const OfferCard: React.FC<{ item: OfferWithMeta; onClick: () => void }> = ({ item, onClick }) => (
+    <div className="popup-offer-item" onClick={onClick}>
+        <div className="popup-offer-content">
+            <span className="popup-offer-company">
+                <i className="fa-solid fa-building"></i> {item.companyName}
+            </span>
+            <h5 className="popup-offer-title">{item.offer.title}</h5>
+            <div className="popup-offer-details">
+                {item.offer.internshipDuration && (
+                    <span className="popup-detail">
+                        <i className="fa-regular fa-clock"></i> {item.offer.internshipDuration}
+                    </span>
+                )}
+                {item.offer.salary && (
+                    <span className="popup-detail">
+                        <i className="fa-solid fa-euro-sign"></i> {item.offer.salary}
+                    </span>
+                )}
+            </div>
+            {item.offer.tags && item.offer.tags.length > 0 && (
+                <div className="popup-tags">
+                    {item.offer.tags.slice(0, 3).map(tag => (
+                        <span key={tag} className="popup-tag">{tag}</span>
+                    ))}
+                    {item.offer.tags.length > 3 && (
+                        <span className="popup-tag-more">+{item.offer.tags.length - 3}</span>
+                    )}
+                </div>
+            )}
+        </div>
+        <div className="popup-arrow">
+            <i className="fa-solid fa-chevron-right"></i>
+        </div>
+    </div>
+);
+
+const GroupModal: React.FC<{
+    group: LocationGroup;
+    onOfferClick: (offer: OfferDto) => void;
+    onClose: () => void;
+}> = ({ group, onOfferClick, onClose }) => (
+    <div className="group-modal-overlay" onClick={onClose}>
+        <div className="group-modal" onClick={e => e.stopPropagation()}>
+            <div className="group-modal-header">
+                <div>
+                    <p className="group-location">
+                        <i className="fa-solid fa-location-dot"></i> {group.city}
+                    </p>
+                    <span className="group-offer-count">
+                        {group.items.length} offre{group.items.length > 1 ? 's' : ''}
+                    </span>
+                </div>
+                <button className="close-btn" onClick={onClose}>
+                    <i className="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <div className="group-offers-list">
+                {group.items.map(item => (
+                    <OfferCard
+                        key={item.offer.id}
+                        item={item}
+                        onClick={() => { onOfferClick(item.offer); onClose(); }}
+                    />
+                ))}
+            </div>
+        </div>
+    </div>
+);
+
+const DEFAULT_CENTER: [number, number] = [46.603354, 1.888334];
 
 const OffersMap: React.FC<OffersMapProps> = ({
                                                  offers,
@@ -72,79 +178,55 @@ const OffersMap: React.FC<OffersMapProps> = ({
                                                  companyCities,
                                                  companyAddresses,
                                                  companyPostalCodes,
-                                                 onOfferClick
+                                                 onOfferClick,
                                              }) => {
-    const [markers, setMarkers] = useState<OfferMarker[]>([]);
+    const [locationGroups, setLocationGroups] = useState<LocationGroup[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
+    const [selectedGroup, setSelectedGroup] = useState<LocationGroup | null>(null);
 
-    // Geocode all offers
     useEffect(() => {
-        let isMounted = true;
+        let cancelled = false;
 
-        const geocodeOffers = async () => {
+        const run = async () => {
             setLoading(true);
             setError('');
 
             try {
-                // Prepare addresses for batch geocoding
-                const addressesToGeocode = offers.map(offer => ({
+                const input = offers.map(offer => ({
                     id: offer.id,
                     address: companyAddresses[offer.companyId],
                     city: companyCities[offer.companyId],
-                    postalCode: companyPostalCodes[offer.companyId]
+                    postalCode: companyPostalCodes[offer.companyId],
                 }));
 
-                // Geocode all addresses
-                const results = await GeocodingService.geocodeBatch(addressesToGeocode);
+                const results = await GeocodingService.geocodeBatch(input);
+                if (cancelled) return;
 
-                if (!isMounted) return;
+                const groups = buildLocationGroups(offers, results, companyNames, companyCities);
+                setLocationGroups(groups);
 
-                // Build markers array
-                const newMarkers: OfferMarker[] = [];
-                offers.forEach(offer => {
-                    const coords = results.get(offer.id);
-                    if (coords) {
-                        newMarkers.push({
-                            offer,
-                            coordinates: coords
-                        });
-                    }
-                });
-
-                setMarkers(newMarkers);
-
-                if (newMarkers.length === 0) {
-                    setError('Aucune offre n\'a pu être géolocalisée. Vérifiez les adresses des entreprises.');
+                if (groups.length === 0) {
+                    setError('Aucune offre n\'a pu être géolocalisée. Vérifiez les adresses.');
                 }
-            } catch (err) {
-                console.error('Geocoding error:', err);
-                if (isMounted) {
-                    setError('Erreur lors de la géolocalisation des offres.');
-                }
+            } catch {
+                if (!cancelled) setError('Erreur lors de la géolocalisation des offres.');
             } finally {
-                if (isMounted) {
-                    setLoading(false);
-                }
+                if (!cancelled) setLoading(false);
             }
         };
 
-        void geocodeOffers();
+        void run();
+        return () => { cancelled = true; };
+    }, [offers, companyAddresses, companyCities, companyPostalCodes, companyNames]);
 
-        return () => {
-            isMounted = false;
-        };
-    }, [offers, companyAddresses, companyCities, companyPostalCodes]);
-
-    // Default center (France)
-    const defaultCenter: [number, number] = [46.603354, 1.888334];
 
     if (loading) {
         return (
             <div className="map-container loading">
                 <div className="map-loading-spinner">
                     <div className="spinner"></div>
-                    <p>Géolocalisation des offres en cours...</p>
+                    <p>Géolocalisation des offres en cours…</p>
                 </div>
             </div>
         );
@@ -161,57 +243,36 @@ const OffersMap: React.FC<OffersMapProps> = ({
         );
     }
 
+    const totalOffers = locationGroups.reduce((sum, g) => sum + g.items.length, 0);
+
     return (
         <div className="map-container">
-            <MapContainer
-                center={defaultCenter}
-                zoom={6}
-                style={{ height: '100%', width: '100%' }}
-                scrollWheelZoom={true}
-            >
+            <MapContainer center={DEFAULT_CENTER} zoom={6} style={{ height: '100%', width: '100%' }} scrollWheelZoom>
                 <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
 
-                {markers.map(({ offer, coordinates }) => (
+                {locationGroups.map(group => (
                     <Marker
-                        key={offer.id}
-                        position={[coordinates.lat, coordinates.lon]}
-                        icon={offerIcon}
-                        eventHandlers={{
-                            click: () => onOfferClick(offer)
-                        }}
-                    >
-                        <Popup>
-                            <div className="map-popup">
-                                <h4>{offer.title}</h4>
-                                <p className="popup-company">
-                                    <i className="fa-solid fa-building"></i>
-                                    {companyNames[offer.companyId] || `Entreprise #${offer.companyId}`}
-                                </p>
-                                <p className="popup-location">
-                                    <i className="fa-solid fa-location-dot"></i>
-                                    {companyCities[offer.companyId]}
-                                </p>
-                                <button
-                                    className="popup-button"
-                                    onClick={() => onOfferClick(offer)}
-                                >
-                                    Voir les détails
-                                </button>
-                            </div>
-                        </Popup>
-                    </Marker>
+                        key={group.key}
+                        position={[group.coordinates.lat, group.coordinates.lon]}
+                        icon={createMarkerIcon(group.items.length)}
+                        eventHandlers={{ click: () => setSelectedGroup(group) }}
+                    />
                 ))}
 
-                <MapBoundsUpdater markers={markers} />
+                <MapBoundsUpdater groups={locationGroups} />
             </MapContainer>
 
             <div className="map-info-badge">
                 <i className="fa-solid fa-map-pin"></i>
-                {markers.length} offre{markers.length > 1 ? 's' : ''} géolocalisée{markers.length > 1 ? 's' : ''}
+                {totalOffers} offre{totalOffers > 1 ? 's' : ''} sur {locationGroups.length} emplacement{locationGroups.length > 1 ? 's' : ''}
             </div>
+
+            {selectedGroup && (
+                <GroupModal group={selectedGroup} onOfferClick={onOfferClick} onClose={() => setSelectedGroup(null)} />
+            )}
         </div>
     );
 };
