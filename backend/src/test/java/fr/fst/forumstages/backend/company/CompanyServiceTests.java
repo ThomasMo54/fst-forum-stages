@@ -138,7 +138,7 @@ public class CompanyServiceTests {
 
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(mockCompany));
 
-        List<OfferEntity> results = companyService.getCompanyOffers(companyId);
+        List<OfferEntity> results = companyService.getCompanyOffers(companyId, 0, 15).getContent();
 
         assertEquals(2, results.size());
         verify(companyRepository, times(1)).findById(companyId);

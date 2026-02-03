@@ -3,14 +3,17 @@ import '../../styles/global.css';
 import './HomePage.css';
 import Header from '../../components/header/Header';
 import Footer from '../../components/footer/Footer';
-import OfferService, { type OfferDto } from '../../services/offer.service';
+import OfferService, {type PaginatedOffers} from '../../services/offer.service';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import user_roles from '../../constants/user_roles';
 
+
 const HomePage: React.FC = () => {
+  const [offers, setOffers] = useState<PaginatedOffers>(
+      {content: [], page: {size: 0, number: 0, totalElements: 0, totalPages: 0}}
+  );
   const { isAuthenticated, user } = useAuth();
-  const [offers, setOffers] = useState<OfferDto[]>([]);
   const [loadingStats, setLoadingStats] = useState<boolean>(true);
   const [statsError, setStatsError] = useState<boolean>(false);
 
@@ -32,9 +35,10 @@ const HomePage: React.FC = () => {
   }, []);
 
   const stats = useMemo(() => {
-    const offersCount = offers.length;
-    const companyCount = new Set(offers.map((o) => o.companyId)).size;
-    return { offersCount, companyCount };
+    const offersCount = offers.page.totalElements;
+    const companyCount = new Set(offers.content.map((o) => o.companyId)).size;
+    const remoteCount = offers.content.filter((o) => !!o.remoteWorkPolicy).length;
+    return { offersCount, companyCount, remoteCount };
   }, [offers]);
 
   const displayValue = (value: number) => {
@@ -175,7 +179,7 @@ const HomePage: React.FC = () => {
                         <h2>Nous aidons les étudiants à trouver<br/>leur stage idéal.</h2>
                         <p>Notre plateforme facilite la mise en relation entre les étudiants de l'Université de Lorraine et les entreprises. Toutes les offres sont validées par l'administration pour garantir leur qualité et leur conformité.</p>
                         <a href="#stats" className="read-more">En savoir plus</a>
-                        
+
                         <div className="experience-box">
                             <h3>Années d'expérience</h3>
                             <p>Une plateforme éprouvée pour la gestion des stages universitaires. Accédez à toutes les fonctionnalités pour faciliter votre recherche ou votre gestion de stages.</p>

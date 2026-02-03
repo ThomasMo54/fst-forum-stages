@@ -10,11 +10,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/companies")
@@ -58,8 +60,11 @@ public class CompanyController {
             @ApiResponse(responseCode = "404", description = "Entreprise non trouvée")
     })
     @GetMapping("/{id}/offers")
-    public List<OfferDto> getAllOffers(@PathVariable("id") String companyId) {
-        List<OfferEntity> offersEntity = companyService.getCompanyOffers(companyId);
-        return offersEntity.stream().map(OfferDto::fromEntity).toList();
+    public Page<OfferDto> getAllOffers(@PathVariable("id") String companyId, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "12") int size) {
+        Page<OfferEntity> offersEntity = companyService.getCompanyOffers(companyId, page, size);
+        if (offersEntity == null) {
+            return Page.empty();
+        }
+        return offersEntity.map(OfferDto::fromEntity);
     }
 }

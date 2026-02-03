@@ -7,7 +7,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+
+import org.springframework.data.domain.Page;
+
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,6 +33,7 @@ public class OfferController {
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN, COMPANY')")
     public OfferDto createOffer(@Valid @RequestBody CreateOfferDto createOfferDto) {
         OfferEntity offerEntity = offerService.createOffer(createOfferDto);
         return OfferDto.fromEntity(offerEntity);
@@ -50,8 +55,33 @@ public class OfferController {
             @ApiResponse(responseCode = "200", description = "Offres de stage récupérées avec succès")
     })
     @GetMapping
-    public List<OfferDto> findAllOffers() {
-        List<OfferEntity> offers = offerService.getAllOffers();
-        return offers.stream().map(OfferDto::fromEntity).toList();
+    public Page<OfferDto> findAllOffers(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "12") int size) {
+        Page<OfferEntity> offers = offerService.getAllOffers(page, size);
+        return offers.map(OfferDto::fromEntity);
+    }
+
+    @Operation(summary = "Mettre à jour une offre de stage", description = "Permet de mettre à jour les informations d'une offre de stage existante.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Offre de stage mise à jour avec succès"),
+            @ApiResponse(responseCode = "400", description = "Données invalides fournies"),
+            @ApiResponse(responseCode = "404", description = "Offre de stage non trouvée")
+    })
+    @PutMapping("/{offerId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN, COMPANY')")
+    public void updateOffer(@PathVariable String offerId, @Valid @RequestBody CreateOfferDto createOfferDto) {
+        offerService.updateOffer(offerId, createOfferDto);
+    }
+
+    @Operation(summary = "Supprimer une offre de stage par son ID", description = "Permet de supprimer une offre de stage en utilisant son identifiant unique.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Offre de stage supprimée avec succès"),
+            @ApiResponse(responseCode = "404", description = "Offre de stage non trouvée")
+    })
+    @DeleteMapping("/{offerId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN, COMPANY')")
+    public void deleteOffer(@PathVariable String offerId) {
+        offerService.deleteOfferById(offerId);
     }
 }

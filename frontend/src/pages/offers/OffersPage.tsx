@@ -5,13 +5,14 @@ import './OffersPage.css';
 import Header from '../../components/header/Header';
 import Footer from '../../components/footer/Footer';
 import Button from '../../components/button/Button';
-import OfferService, { type OfferDto } from '../../services/offer.service';
+import OfferService, { type PaginatedOffers, type OfferDto } from '../../services/offer.service';
 import CompanyService from '../../services/company.service';
 import type { ApplicationDto } from '../../services/application.service';
 import ApplicationService from '../../services/application.service';
 import { useAuth } from '../../context/AuthContext';
 import user_roles from "../../constants/user_roles.ts";
 import OffersMap from './OffersMap';
+import {Pagination} from "../../components/pagination/Pagination.tsx";
 
 const formatDate = (date?: string | null) => {
   if (!date) return 'Non renseignée';
@@ -22,7 +23,7 @@ const formatDate = (date?: string | null) => {
 type ViewMode = 'list' | 'map';
 
 const OffersPage: React.FC = () => {
-  const [offers, setOffers] = useState<OfferDto[]>([]);
+  const [offers, setOffers] = useState<PaginatedOffers>({content: [], page: {size: 0, number: 0, totalElements: 0, totalPages: 0}});
   const [companyNames, setCompanyNames] = useState<Record<string, string>>({});
   const [companyCities, setCompanyCities] = useState<Record<string, string>>({});
   const [companyAddresses, setCompanyAddresses] = useState<Record<string, string>>({});
@@ -42,14 +43,16 @@ const OffersPage: React.FC = () => {
     void fetchOffersAndApplications();
   }, []);
 
+  const searchParams = new URLSearchParams(window.location.search);
+  const currentPage = Number(searchParams.get('page')) || 1;
+
   const fetchOffersAndApplications = async () => {
     setLoading(true);
     setListError('');
     try {
       const data = await OfferService.getAllOffers();
       setOffers(data);
-
-      const companyIds = [...new Set(data.map(offer => offer.companyId))];
+      const companyIds = [...new Set(data.content.map(offer => offer.companyId))];
       const names: Record<string, string> = {};
       const cities: Record<string, string> = {};
       const addresses: Record<string, string> = {};
@@ -85,10 +88,10 @@ const OffersPage: React.FC = () => {
     }
   };
 
-  const filteredOffers = useMemo(() => {
-    if (!searchTerm.trim()) return offers;
+  const filteredOffers  = useMemo(() => {
+    if (!searchTerm.trim()) return offers.content;
     const term = searchTerm.toLowerCase();
-    return offers.filter((offer) => {
+    return offers.content.filter((offer) => {
       const hasTextMatch =
           offer.title.toLowerCase().includes(term) ||
           offer.description.toLowerCase().includes(term) ||
@@ -118,15 +121,10 @@ const OffersPage: React.FC = () => {
       <div className="page-wrapper">
         <Header/>
 
-        <main className="offers-main">
-          <div className="container">
-            <section className="offers-hero">
-              <div>
-                <p className="eyebrow">Offres de stage</p>
-                <h1>Explorez et publiez des opportunités</h1>
-                <p className="lead">
-                  Retrouvez les offres validées par l&apos;équipe FST.
-                </p>
+            <div className="hero-metrics">
+              <div className="metric-card">
+                <span className="metric-number">{offers.page.totalElements}</span>
+                <span className="metric-label">Offres disponibles</span>
               </div>
 
               <div className="hero-metrics">
@@ -136,7 +134,7 @@ const OffersPage: React.FC = () => {
                 </div>
                 <div className="metric-card">
                 <span className="metric-number">
-                  {(offers.filter((offer) => !!offer.remoteWorkPolicy).length || 0)}
+                  {(offers.content.filter((offer) => !!offer.remoteWorkPolicy).length || 0)}
                 </span>
                   <span className="metric-label">Offres avec télétravail</span>
                 </div>
@@ -341,12 +339,22 @@ const OffersPage: React.FC = () => {
                             )}
                           </div>
                         </div>
-                    )}
-                  </>
-              )}
-            </section>
-          </div>
-        </main>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </section>
+
+          {offers.page.totalPages > 1 && (
+              <Pagination
+                  currentPage={currentPage}
+                  totalPages={offers.page.totalPages}
+              />
+          )}
+        </div>
+      </main>
 
         <Footer/>
       </div>
