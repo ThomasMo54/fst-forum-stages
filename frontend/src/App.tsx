@@ -16,7 +16,6 @@ import ModifyStudentInfosPage from "./pages/student/ModifyStudentInfos.tsx";
 import StudentRoute from "./components/route/StudentRoute.tsx";
 import ModifyCompanyInfosPage from "./pages/company/ModifyCompanyInfos.tsx";
 import OfferFormPage from "./pages/company/offer/OfferFormPage.tsx";
-import StudentMyOffersPage from "./pages/student/offer/MyOffersPage.tsx";
 import ApplicationPage from "./pages/offers/ApplicationPage.tsx";
 import StudentMyApplicationsPage from "./pages/student/applications/MyApplicationsPage.tsx";
 
