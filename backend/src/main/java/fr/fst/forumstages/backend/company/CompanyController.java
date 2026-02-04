@@ -60,11 +60,14 @@ public class CompanyController {
             @ApiResponse(responseCode = "404", description = "Entreprise non trouvée")
     })
     @GetMapping("/{id}/offers")
-    public Page<OfferDto> getAllOffers(@PathVariable("id") String companyId, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "12") int size) {
+    public Page<OfferDto> getAllOffers(@PathVariable("id") String companyId, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "15") int size) {
         Page<OfferEntity> offersEntity = companyService.getCompanyOffers(companyId, page, size);
-        if (offersEntity == null) {
-            return Page.empty();
-        }
         return offersEntity.map(OfferDto::fromEntity);
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public void handleNotFound() {
+        // This will automatically return a 404 status when NoSuchElementException is thrown
     }
 }

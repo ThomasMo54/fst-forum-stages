@@ -187,13 +187,13 @@ public class CompanyControllerTests {
 
         mockMvc.perform(get("/companies/{id}/offers", companyId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].id").value("id1"))
-                .andExpect(jsonPath("$[0].title").value("Title 1"))
-                .andExpect(jsonPath("$[0].description").value("Description 1"))
-                .andExpect(jsonPath("$[1].id").value("id2"))
-                .andExpect(jsonPath("$[1].title").value("Title 2"))
-                .andExpect(jsonPath("$[1].description").value("Description 2"));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].id").value("id1"))
+                .andExpect(jsonPath("$.content[0].title").value("Title 1"))
+                .andExpect(jsonPath("$.content[0].description").value("Description 1"))
+                .andExpect(jsonPath("$.content[1].id").value("id2"))
+                .andExpect(jsonPath("$.content[1].title").value("Title 2"))
+                .andExpect(jsonPath("$.content[1].description").value("Description 2"));
     }
 
     @Test
@@ -216,7 +216,7 @@ public class CompanyControllerTests {
 
         mockMvc.perform(get("/companies/{id}/offers", companyId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.content.length()").value(0));
     }
 
     @TestConfiguration
