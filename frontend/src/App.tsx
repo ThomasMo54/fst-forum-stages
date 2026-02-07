@@ -18,6 +18,8 @@ import ModifyCompanyInfosPage from "./pages/company/ModifyCompanyInfos.tsx";
 import OfferFormPage from "./pages/company/offer/OfferFormPage.tsx";
 import ApplicationPage from "./pages/offers/ApplicationPage.tsx";
 import StudentMyApplicationsPage from "./pages/student/applications/MyApplicationsPage.tsx";
+import AdminRoute from "./components/route/AdminRoute.tsx";
+import StatsPage from "./pages/admin/stats/StatsPage.tsx";
 
 function App() {
   return (
@@ -47,7 +49,9 @@ function App() {
           <Route element={<StudentRoute />}>
             <Route path="/student/modify-infos" element={<ModifyStudentInfosPage />} />
             <Route path="/student/my-applications" element={<StudentMyApplicationsPage />} />
-
+          </Route>
+          <Route element={<AdminRoute />}>
+            <Route path="/admin/stats" element={<StatsPage />} />
           </Route>
         </Routes>
       </AuthProvider>
