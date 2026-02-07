@@ -9,11 +9,15 @@ import fr.fst.forumstages.backend.offer.OfferEntity;
 import fr.fst.forumstages.backend.student.StudentEntity;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 @Document(collection = "applications")
 public class ApplicationEntity {
     @Id
     public String id;
+
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @DBRef
     private StudentEntity student;

@@ -1,5 +1,6 @@
 package fr.fst.forumstages.backend.application;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -11,4 +12,6 @@ public interface ApplicationRepository extends MongoRepository<ApplicationEntity
 
     @Query("{ 'studentId' : ?0 }")
     List<ApplicationEntity> findByStudentId(String offerId);
+
+    Long countByCreatedAtBefore(LocalDateTime date);
 }
