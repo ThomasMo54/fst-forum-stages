@@ -99,13 +99,6 @@
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
-/* Offers List & Items */
-.offers-linear-list {
-    display: flex;
-    flex-direction: column; /* Force vertical stacking */
-    width: 100%; /* Ensure full width */
-}
-
 .filter-bar {
     margin-top: 1rem;
     background: linear-gradient(180deg, #223042 0%, #1a2532 100%);
@@ -284,6 +277,17 @@
 
 .table-wrapper {
     overflow-x: auto;
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    border: 1px solid #eef1f4;
+}
+
+/* Offers List & Items */
+.offers-linear-list {
+    display: flex;
+    flex-direction: column; /* Force vertical stacking */
+    width: 100%; /* Ensure full width */
     background: var(--white);
     border-radius: 12px;
     box-shadow: 0 2px 15px rgba(0,0,0,0.05);
