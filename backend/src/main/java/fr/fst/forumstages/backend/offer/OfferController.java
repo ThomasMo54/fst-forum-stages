@@ -35,7 +35,7 @@ public class OfferController {
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN, COMPANY')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COMPANY')")
     public OfferDto createOffer(@Valid @RequestBody CreateOfferDto createOfferDto) {
         OfferEntity offerEntity = offerService.createOffer(createOfferDto);
         return OfferDto.fromEntity(offerEntity);
@@ -70,7 +70,7 @@ public class OfferController {
     })
     @PutMapping("/{offerId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN, COMPANY')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COMPANY')")
     public void updateOffer(@PathVariable String offerId, @Valid @RequestBody CreateOfferDto createOfferDto) {
         offerService.updateOffer(offerId, createOfferDto);
     }
@@ -82,7 +82,7 @@ public class OfferController {
     })
     @DeleteMapping("/{offerId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN, COMPANY')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COMPANY')")
     public void deleteOffer(@PathVariable String offerId) {
         offerService.deleteOfferById(offerId);
     }
