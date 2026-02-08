@@ -60,9 +60,13 @@ const OffersPage: React.FC = () => {
       }));
       setCompanyNames(names);
       setCompanyCities(cities);
-      if(user){
-        const applications = await ApplicationService.getAllApplicationForStudent(user.entityId);
-        setStudentApplications(applications);
+      if(user) {
+        if (user.roles.includes(user_roles.STUDENT)) {
+          const applications = await ApplicationService.getAllApplicationForStudent(user.entityId);
+          setStudentApplications(applications);
+        } else {
+          setStudentApplications([]);
+        }
       }
     } catch (err) {
       setListError("Impossible de récupérer les offres pour le moment.");
