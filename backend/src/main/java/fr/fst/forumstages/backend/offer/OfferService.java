@@ -63,7 +63,7 @@ public class OfferService {
 
     public Page<OfferEntity> getAllOffers(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("creationDate").descending());
-        return offerRepository.findAll(pageable);
+        return offerRepository.findByOfferOpenTrue(pageable);
     }
 
     public void updateOffer(String offerId, CreateOfferDto createOfferDto) {

@@ -82,9 +82,12 @@ const MyOffersPage: React.FC = () => {
         ) : (
           <div className="offers-list">
             {offers.content?.map(offer => (
-              <div key={offer.id} className="offer-card">
+              <div key={offer.id} className={`offer-card ${offer.offerOpen === false ? 'offer-closed' : ''}`}>
                 <div className="offer-card-header">
-                    <h2>{offer.title}</h2>
+                    <div className="offer-title-row">
+                      <h2>{offer.title}</h2>
+                      {offer.offerOpen === false && <span className="offer-closed-badge">Offre clôturée</span>}
+                    </div>
                     <span className="creation-date">Publié le {new Date(offer.creationDate).toLocaleDateString()}</span>
                 </div>
 

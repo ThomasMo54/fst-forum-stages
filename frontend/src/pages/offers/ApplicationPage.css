@@ -223,6 +223,77 @@
   color: #7f8c8d;
 }
 
+.application-card.accepted {
+  background-color: #d4edda;
+  border-color: #28a745;
+}
+
+.application-card.accepted::before {
+  content: '';
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 2rem;
+  color: #28a745;
+}
+
+.application-card.rejected {
+  background-color: #f8d7da;
+  border-color: #dc3545;
+}
+
+.application-card.rejected::before {
+  content: '';
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 2rem;
+  color: #dc3545;
+}
+
+.application-status-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  justify-content: flex-end;
+}
+
+.application-status-actions .status-button {
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 1.25rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.application-status-actions .accept-button {
+  background-color: #27ae60;
+  color: white;
+}
+
+.application-status-actions .accept-button:hover:not(:disabled) {
+  background-color: #229954;
+  transform: scale(1.1);
+}
+
+.application-status-actions .reject-button {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.application-status-actions .reject-button:hover:not(:disabled) {
+  background-color: #c0392b;
+  transform: scale(1.1);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .application-container {

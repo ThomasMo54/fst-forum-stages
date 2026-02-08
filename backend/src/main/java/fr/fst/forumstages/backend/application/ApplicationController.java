@@ -92,7 +92,7 @@ public class ApplicationController {
             @ApiResponse(responseCode = "400", description = "Impossible de rejeter une candidature acceptée")
     })
 //    @IsAdminOrOfferOwner
-    @GetMapping("/{applicationId}/reject")
+    @PutMapping("/{applicationId}/reject")
     public ApplicationDto rejectApplication(@PathVariable String applicationId) {
         var application = applicationService.rejectApplication(applicationId);
         return ApplicationDto.fromEntity(application);
@@ -105,7 +105,7 @@ public class ApplicationController {
             @ApiResponse(responseCode = "404", description = "Candidature non trouvée")
     })
 //    @IsAdminOrOfferOwner
-    @GetMapping("/{applicationId}/reset")
+    @PutMapping("/{applicationId}/reset")
     public ApplicationDto resetApplicationStatus(@PathVariable String applicationId) {
         var application = applicationService.resetApplicationStatus(applicationId);
         return ApplicationDto.fromEntity(application);
