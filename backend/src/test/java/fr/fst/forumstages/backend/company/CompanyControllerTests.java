@@ -2,12 +2,13 @@ package fr.fst.forumstages.backend.company;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.fst.forumstages.backend.company.dto.UpdateCompanyDto;
-import fr.fst.forumstages.backend.user.UserSecurity;
 import fr.fst.forumstages.backend.offer.OfferEntity;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -51,9 +52,9 @@ public class CompanyControllerTests {
         when(companyService.findCompanyById(companyId)).thenReturn(mockCompany);
 
         mockMvc.perform(get("/companies/{id}", companyId))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(companyId))
-            .andExpect(jsonPath("$.name").value("Test Company"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(companyId))
+                .andExpect(jsonPath("$.name").value("Test Company"));
     }
 
     @Test
@@ -80,12 +81,12 @@ public class CompanyControllerTests {
     public void updateCompany_admin_success() throws Exception {
         String companyId = "123";
         UpdateCompanyDto updateCompanyDto = new UpdateCompanyDto(
-            "Updated Company",
-            null,
-            null,
-            null,
-            null,
-            null
+                "Updated Company",
+                null,
+                null,
+                null,
+                null,
+                null
         );
         CompanyEntity updatedCompany = new CompanyEntity();
         updatedCompany.setId(companyId);
@@ -94,9 +95,9 @@ public class CompanyControllerTests {
         when(companyService.updateCompany(any(String.class), any(UpdateCompanyDto.class))).thenReturn(updatedCompany);
 
         mockMvc.perform(put("/companies/{id}", companyId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateCompanyDto))
-                .with(csrf()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateCompanyDto))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(companyId))
                 .andExpect(jsonPath("$.name").value("Updated Company"));
@@ -122,9 +123,9 @@ public class CompanyControllerTests {
         when(companyService.updateCompany(any(String.class), any(UpdateCompanyDto.class))).thenReturn(updatedCompany);
 
         mockMvc.perform(put("/companies/{id}", companyId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateCompanyDto))
-                .with(csrf()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateCompanyDto))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(companyId))
                 .andExpect(jsonPath("$.name").value("Updated Company"));
@@ -134,8 +135,8 @@ public class CompanyControllerTests {
     public void updateCompany_unauthenticated_fail() throws Exception {
         String companyId = "123";
         mockMvc.perform(put("/companies/{id}", companyId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf()))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -155,9 +156,9 @@ public class CompanyControllerTests {
         when(companySecurity.isOwner(any(), eq(companyId))).thenReturn(false);
 
         mockMvc.perform(put("/companies/{id}", companyId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateCompanyDto))
-                .with(csrf()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateCompanyDto))
+                        .with(csrf()))
                 .andExpect(status().isForbidden());
     }
 
@@ -182,17 +183,17 @@ public class CompanyControllerTests {
         offer1.setCompany(companyEntity);
         offer2.setCompany(companyEntity);
 
-        when(companyService.getCompanyOffers(companyId)).thenReturn(Arrays.asList(offer1, offer2));
+        when(companyService.getCompanyOffers(companyId, 0, 15)).thenReturn(new PageImpl<>(Arrays.asList(offer1, offer2)));
 
         mockMvc.perform(get("/companies/{id}/offers", companyId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].id").value("id1"))
-                .andExpect(jsonPath("$[0].title").value("Title 1"))
-                .andExpect(jsonPath("$[0].description").value("Description 1"))
-                .andExpect(jsonPath("$[1].id").value("id2"))
-                .andExpect(jsonPath("$[1].title").value("Title 2"))
-                .andExpect(jsonPath("$[1].description").value("Description 2"));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].id").value("id1"))
+                .andExpect(jsonPath("$.content[0].title").value("Title 1"))
+                .andExpect(jsonPath("$.content[0].description").value("Description 1"))
+                .andExpect(jsonPath("$.content[1].id").value("id2"))
+                .andExpect(jsonPath("$.content[1].title").value("Title 2"))
+                .andExpect(jsonPath("$.content[1].description").value("Description 2"));
     }
 
     @Test
@@ -200,7 +201,7 @@ public class CompanyControllerTests {
     public void getAllOffers_notFound() throws Exception {
         String companyId = "nonexistent-id";
 
-        when(companyService.getCompanyOffers(companyId)).thenThrow(new NoSuchElementException("Company with id " + companyId + " not found"));
+        when(companyService.getCompanyOffers(companyId, 0, 15)).thenThrow(new NoSuchElementException("Company with id " + companyId + " not found"));
 
         mockMvc.perform(get("/companies/{id}/offers", companyId))
                 .andExpect(status().isNotFound());
@@ -211,11 +212,11 @@ public class CompanyControllerTests {
     public void getAllOffers_empty() throws Exception {
         String companyId = "123";
 
-        when(companyService.getCompanyOffers(companyId)).thenReturn(Collections.emptyList());
+        when(companyService.getCompanyOffers(companyId, 0, 15)).thenReturn(Page.empty());
 
         mockMvc.perform(get("/companies/{id}/offers", companyId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.content.length()").value(0));
     }
 
     @TestConfiguration
