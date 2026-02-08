@@ -99,11 +99,54 @@
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
+/* View Toggle */
+.view-toggle-section {
+    margin-bottom: 2rem;
+}
+
+.view-toggle {
+    display: inline-flex;
+    background: var(--white);
+    border-radius: 8px;
+    padding: 0.25rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: 1px solid #e2e8f0;
+}
+
+.view-toggle-btn {
+    padding: 0.6rem 1.5rem;
+    border: none;
+    background: transparent;
+    color: var(--text-light);
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.view-toggle-btn:hover {
+    color: var(--text-dark);
+}
+
+.view-toggle-btn.active {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 2px 5px rgba(44, 62, 80, 0.15);
+}
+
+.view-toggle-btn i {
+    font-size: 1rem;
+}
+
 /* Offers List & Items */
 .offers-linear-list {
     display: flex;
-    flex-direction: column; /* Force vertical stacking */
-    width: 100%; /* Ensure full width */
+    flex-direction: column;
+    width: 100%;
     background: var(--white);
     border-radius: 12px;
     box-shadow: 0 2px 15px rgba(0,0,0,0.05);
@@ -113,14 +156,14 @@
 
 .offer-list-item {
     display: flex;
-    width: 100%; /* Ensure item takes full width of container */
+    width: 100%;
     justify-content: space-between;
     align-items: center;
     padding: 1.75rem 2rem;
     border-bottom: 1px solid #f1f5f9;
     transition: background-color 0.2s;
     cursor: pointer;
-    box-sizing: border-box; /* Prevent padding from causing overflow */
+    box-sizing: border-box;
 }
 
 .offer-list-item:last-child {
@@ -351,6 +394,21 @@
     gap: 0.5rem;
 }
 
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+}
+
+.empty-state p {
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+}
+
 /* Responsive */
 @media (max-width: 1100px) {
     .offer-item-content {
@@ -395,5 +453,14 @@
         align-items: flex-start;
         gap: 1.5rem;
         padding: 1.5rem;
+    }
+
+    .view-toggle {
+        width: 100%;
+    }
+
+    .view-toggle-btn {
+        flex: 1;
+        justify-content: center;
     }
 }
