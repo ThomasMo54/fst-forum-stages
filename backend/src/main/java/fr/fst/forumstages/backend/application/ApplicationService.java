@@ -58,6 +58,14 @@ public class ApplicationService {
         return applicationRepository.findByStudentId(studentId);
     }
 
+    public ApplicationEntity deleteApplication(String applicationId) {
+        ApplicationEntity applicationEntity = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new NoSuchElementException("application with id " + applicationId + " not found"));
+
+        applicationRepository.delete(applicationEntity);
+        return applicationEntity;
+    }
+
     public ApplicationEntity acceptApplication(String applicationId) {
         ApplicationEntity application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new NoSuchElementException("Application with id " + applicationId + " not found"));

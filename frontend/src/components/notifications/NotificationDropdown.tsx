@@ -67,7 +67,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onClose, on
             // Navigation selon le rôle de l'utilisateur
             if (user?.roles.includes(user_roles.STUDENT)) {
                 // Étudiant -> Ses candidatures
-                navigate(`/student/my-offers`);
+                navigate(`/student/my-applications`);
             } else if (user?.roles.includes(user_roles.COMPANY)) {
                 // Entreprise -> Candidatures de l'offre
                 if (notification.offerId) {
