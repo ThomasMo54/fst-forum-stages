@@ -1,5 +1,20 @@
 import api from "./api.ts";
 
+export interface UserDto {
+  id: string;
+  email: string;
+  role: string;
+  createdAt: string;
+}
+
+export interface PageResponse<T> {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number;
+}
+
 export interface CreateCompanyDto {
   email: string;
   password: string;
@@ -45,6 +60,15 @@ const refreshVerificationCode = async (email: string): Promise<void> => {
   await api.post(`/users/refresh-verification`, { email });
 };
 
+const getUsers = async (page: number, size: number, role: string | undefined): Promise<PageResponse<UserDto>> => {
+  const params: any = { page, size };
+  if (role) {
+    params.role = role;
+  }
+  const response = await api.get('/users', { params });
+  return response.data;
+}
+
 const getDisplayName = async (entityId: string, roles: string[]): Promise<string> => {
   if (roles.includes('COMPANY')) {
     const response = await api.get(`/companies/${entityId}`);
@@ -58,12 +82,18 @@ const getDisplayName = async (entityId: string, roles: string[]): Promise<string
   return 'User';
 }
 
+const deleteUser = async (userId: string): Promise<void> => {
+  await api.delete(`/users/${userId}`);
+}
+
 const UserService = {
   registerCompany,
   registerStudent,
   verifyUser,
   refreshVerificationCode,
+  getUsers,
   getDisplayName,
+  deleteUser
 };
 
 export default UserService;

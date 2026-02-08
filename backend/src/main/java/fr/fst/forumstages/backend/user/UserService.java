@@ -14,6 +14,8 @@ import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
 import fr.fst.forumstages.backend.user.exception.TooManyRequestsException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -151,6 +153,14 @@ public class UserService {
         userRepository.save(userEntity);
         verificationCodeRequestTimestamps.put(email, System.currentTimeMillis());
         return code;
+    }
+
+    public Page<UserEntity> getAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable);
+    }
+
+    public Page<UserEntity> getUsersByRole(UserRole role, Pageable pageable) {
+        return userRepository.findAllByRole(role, pageable);
     }
 
     public UserEntity findById(String id) {

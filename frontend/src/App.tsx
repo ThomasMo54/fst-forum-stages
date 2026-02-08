@@ -20,6 +20,7 @@ import ApplicationPage from "./pages/offers/ApplicationPage.tsx";
 import StudentMyApplicationsPage from "./pages/student/applications/MyApplicationsPage.tsx";
 import AdminRoute from "./components/route/AdminRoute.tsx";
 import StatsPage from "./pages/admin/stats/StatsPage.tsx";
+import UserManagementPage from "./pages/admin/users/UserManagementPage.tsx";
 
 function App() {
   return (
@@ -52,6 +53,7 @@ function App() {
           </Route>
           <Route element={<AdminRoute />}>
             <Route path="/admin/stats" element={<StatsPage />} />
+            <Route path="/admin/users" element={<UserManagementPage />} />
           </Route>
         </Routes>
       </AuthProvider>
