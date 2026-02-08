@@ -26,6 +26,7 @@ export interface OfferDto {
   studyLevel?: string | null;
   remoteWorkPolicy?: string | null;
   companyId: string;
+  offerOpen: boolean;
 }
 
 export interface PaginatedOffers {
@@ -79,6 +80,12 @@ const applyToOffer = async (offerId: string, application: ApplyOfferDto): Promis
   await api.post(`/offers/${offerId}/apply`, application);
 };
 
+const changeOfferStatus = async (offerId: string): Promise<OfferDto> => {
+  const response = await api.put(`/offers/${offerId}/change-status`);
+  console.log("API response for changeOfferStatus:", response);
+  return response.data;
+};
+
 const OfferService = {
   createOffer,
   getAllOffers,
@@ -86,7 +93,8 @@ const OfferService = {
   getOffersByCompany,
   updateOffer,
   deleteOffer,
-  applyToOffer
+  applyToOffer,
+  changeOfferStatus
 };
 
 export default OfferService;

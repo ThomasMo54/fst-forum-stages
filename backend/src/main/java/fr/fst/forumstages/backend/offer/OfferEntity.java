@@ -36,6 +36,8 @@ public class OfferEntity {
 
     private String remoteWorkPolicy;
 
+    private boolean offerOpen;
+
     @DBRef
     private CompanyEntity company;
 
@@ -52,6 +54,7 @@ public class OfferEntity {
         offerEntity.limitApplicationDate = offerDto.limitApplicationDate();
         offerEntity.studyLevel = offerDto.studyLevel();
         offerEntity.remoteWorkPolicy = offerDto.remoteWorkPolicy();
+        offerEntity.offerOpen = offerDto.offerOpen();
 
         return offerEntity;
     }

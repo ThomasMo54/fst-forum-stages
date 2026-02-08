@@ -19,6 +19,12 @@ const ApplicationPage: React.FC = () => {
   const [applications, setApplications] = useState<ApplicationWithStudent[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [closing, setClosing] = useState<boolean>(false);
+
+  const isOfferClosed = (currentOffer: OfferDto | null) => {
+    if (!currentOffer) return false;
+    return currentOffer.offerOpen === false;
+  };
 
   useEffect(() => {
     const fetchApplicationsAndOffer = async () => {
@@ -82,6 +88,31 @@ const ApplicationPage: React.FC = () => {
     }
   };
 
+  const handleChangeOfferStatus = async () => {
+    if (!offerId) {
+      setError("ID de l'offre manquant.");
+      return;
+    }
+
+    const confirmMessage = isOfferClosed(offer)
+      ? "Êtes-vous sûr de vouloir rouvrir cette offre ? Les candidatures seront à nouveau acceptées."
+      : "Êtes-vous sûr de vouloir clôturer cette offre ? Les candidatures ne seront plus acceptées mais vous pourrez toujours consulter les candidatures déjà reçues.";
+    const confirmClose = window.confirm(confirmMessage);
+    if (!confirmClose) return;
+
+    try {
+      setClosing(true);
+      const updatedOffer = await OfferService.changeOfferStatus(offerId);
+      console.log("Offer status updated:", updatedOffer);
+      setOffer(updatedOffer);
+    } catch (err) {
+      console.error("Error closing offer:", err);
+      setError("Erreur lors de la clôture de l'offre. Veuillez réessayer.");
+    } finally {
+      setClosing(false);
+    }
+  };
+
   const renderContent = () => {
     if (loading) {
       return <p>Chargement des candidatures...</p>;
@@ -109,6 +140,23 @@ const ApplicationPage: React.FC = () => {
               <span><strong>Date limite:</strong> {new Date(offer.limitApplicationDate).toLocaleDateString()}</span>
               <span><strong>Nombre de candidatures:</strong> {applications.length}</span>
             </div>
+          </div>
+          <div className="offer-actions">
+            <span className={`offer-status-text ${isOfferClosed(offer) ? 'closed' : 'open'}`}>
+              {isOfferClosed(offer) ? "Offre clôturée" : "Offre ouverte"}
+            </span>
+            <Button
+              variant={isOfferClosed(offer) ? "success" : "danger"}
+              onClick={handleChangeOfferStatus}
+              disabled={closing}
+            >
+              <i className={`fas ${isOfferClosed(offer) ? 'fa-unlock' : 'fa-lock'}`}></i>
+              {closing
+                ? 'Mise à jour...'
+                : isOfferClosed(offer)
+                ? "Rouvrir l'offre"
+                : "Clôturer l'offre"}
+            </Button>
           </div>
         </div>
 
