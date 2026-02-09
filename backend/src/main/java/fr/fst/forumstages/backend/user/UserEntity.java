@@ -35,6 +35,8 @@ public class UserEntity implements UserDetails {
 
     private LocalDateTime verificationCodeExpiry;
 
+    private LocalDateTime createdAt = LocalDateTime.now();
+
     @DBRef
     private CompanyEntity company;
 
