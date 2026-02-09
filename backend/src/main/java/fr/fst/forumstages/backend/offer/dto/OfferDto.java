@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Length;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Schema(description = "Données d'une offre.")
@@ -32,7 +33,7 @@ public record OfferDto(
 
         @Schema(description = "La date de création de l'offre")
         @NotNull  // Correction ici
-        LocalDate creationDate,
+        LocalDateTime creationDate,
 
         @Schema(description = "La date du début du stage")
         LocalDate internshipStartDate,

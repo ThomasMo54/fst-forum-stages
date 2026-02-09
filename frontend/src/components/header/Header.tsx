@@ -98,6 +98,17 @@ const Header: React.FC = () => {
               </li>
             )}
 
+            {isAuthenticated && user?.roles.includes(user_roles.ADMIN) && (
+              <>
+                <li>
+                  <Link to="/admin/stats" className={isActive('/admin/stats')}>Statistiques</Link>
+                </li>
+                <li>
+                  <Link to="/admin/users" className={isActive('/admin/users')}>Gestion</Link>
+                </li>
+              </>
+            )}
+
             {/* User / Auth Section */}
             {isAuthenticated && user ? (
               <li className="auth-section">

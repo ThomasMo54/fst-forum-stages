@@ -18,14 +18,19 @@ public record UserDto(
 
     @Schema(description = "Le rôle de l'utilisateur")
     @NotBlank
-    UserRole role
+    UserRole role,
+
+    @Schema(description = "La date de création de l'utilisateur")
+    @NotBlank
+    String createdAt
 ) {
 
     public static UserDto fromEntity(UserEntity userEntity) {
         return new UserDto(
                 userEntity.getId(),
                 userEntity.getEmail(),
-                userEntity.getRole()
+                userEntity.getRole(),
+                userEntity.getCreatedAt().toString()
         );
     }
 }
