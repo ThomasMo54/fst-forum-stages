@@ -70,6 +70,48 @@ public class ApplicationController {
         return applications.stream().map(ApplicationDto::fromEntity).toList();
     }
 
+    @Operation(summary = "Accepter une candidature à une offre", description = "Permet d'accepter une candidature")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Candidature acceptée avec succès"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - permissions insuffisantes"),
+            @ApiResponse(responseCode = "404", description = "Candidature non trouvée"),
+            @ApiResponse(responseCode = "400", description = "Impossible d'accepter une candidature rejetée")
+    })
+//    @IsAdminOrOfferOwner
+    @PutMapping("/{applicationId}/accept")
+    public ApplicationDto acceptApplication(@PathVariable String applicationId) {
+        var application = applicationService.acceptApplication(applicationId);
+        return ApplicationDto.fromEntity(application);
+    }
+
+    @Operation(summary = "Rejeter une candidature à une offre", description = "Permet de rejeter une candidature")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Candidature rejetée avec succès"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - permissions insuffisantes"),
+            @ApiResponse(responseCode = "404", description = "Candidature non trouvée"),
+            @ApiResponse(responseCode = "400", description = "Impossible de rejeter une candidature acceptée")
+    })
+//    @IsAdminOrOfferOwner
+    @PutMapping("/{applicationId}/reject")
+    public ApplicationDto rejectApplication(@PathVariable String applicationId) {
+        var application = applicationService.rejectApplication(applicationId);
+        return ApplicationDto.fromEntity(application);
+    }
+
+    @Operation(summary = "Réinitialiser le statut d'une candidature à une offre", description = "Permet de réinitialiser le statut d'une candidature : ni acceptée ni rejetée")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Statut réinitialisé avec succès"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - permissions insuffisantes"),
+            @ApiResponse(responseCode = "404", description = "Candidature non trouvée")
+    })
+//    @IsAdminOrOfferOwner
+    @PutMapping("/{applicationId}/reset")
+    public ApplicationDto resetApplicationStatus(@PathVariable String applicationId) {
+        var application = applicationService.resetApplicationStatus(applicationId);
+        return ApplicationDto.fromEntity(application);
+    }
+
+
     @Operation(summary = "Supprimer une candidature", description = "Permet de supprimer une candidature à une offre de stage")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Candidature supprimée avec succès"),

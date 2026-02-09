@@ -25,9 +25,15 @@ public class ApplicationEntity {
     @DBRef
     private OfferEntity offer;
 
+    private boolean accepted;
+
+    private boolean rejected;
+
     public static ApplicationEntity fromDto(ApplicationDto applicationDto) {
         var applicationEntity = new ApplicationEntity();
         applicationEntity.id = applicationDto.id();
+        applicationEntity.accepted = applicationDto.accepted();
+        applicationEntity.rejected = applicationDto.rejected();
 
         return applicationEntity;
     }

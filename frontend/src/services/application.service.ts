@@ -9,6 +9,8 @@ export interface ApplicationDto {
     id: string;
     studentId: string;
     offerId: string;
+    accepted: boolean;
+    rejected: boolean;
 }
 
 const createApplication = async (applicationData: CreateApplicationDto): Promise<ApplicationDto> => {
@@ -23,6 +25,21 @@ const getAllApplicationsForOffer = async (offerId: string): Promise<ApplicationD
 
 const getAllApplicationForStudent = async (studentId: string): Promise<ApplicationDto[]> => {
     const response = await api.get<ApplicationDto[]>(`/applications/student/${studentId}`);
+    return response.data;
+}
+
+const acceptApplication = async (applicationId: string): Promise<ApplicationDto> => {
+    const response = await api.put<ApplicationDto>(`/applications/${applicationId}/accept`);
+    return response.data;
+}
+
+const rejectApplication = async (applicationId: string): Promise<ApplicationDto> => {
+    const response = await api.put<ApplicationDto>(`/applications/${applicationId}/reject`);
+    return response.data;
+}
+
+const resetApplicationStatus = async (applicationId: string): Promise<ApplicationDto> => {
+    const response = await api.put<ApplicationDto>(`/applications/${applicationId}/reset`);
     return response.data;
 }
 
@@ -50,6 +67,9 @@ const ApplicationService = {
     createApplication,
     getAllApplicationsForOffer,
     getAllApplicationForStudent,
+    acceptApplication,
+    rejectApplication,
+    resetApplicationStatus,
     deleteApplication,
     uploadCoverLetter,
     getCoverLetterUrl,

@@ -52,7 +52,11 @@ public record OfferDto(
 
         @Schema(description = "L'identifiant de l'entreprise proposant l'offre")
         @NotBlank
-        String companyId
+        String companyId,
+
+        @Schema(description = "Indique si l'offre est toujours ouverte pour les candidatures")
+        @NotBlank
+        boolean offerOpen
 ) {
         public static OfferDto fromEntity(OfferEntity offerEntity){
                 return new OfferDto(
@@ -67,7 +71,8 @@ public record OfferDto(
                         offerEntity.getLimitApplicationDate(),
                         offerEntity.getStudyLevel(),
                         offerEntity.getRemoteWorkPolicy(),
-                        offerEntity.getCompany().getId()
+                        offerEntity.getCompany().getId(),
+                        offerEntity.isOfferOpen()
                 );
         }
 }

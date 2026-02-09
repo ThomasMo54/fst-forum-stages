@@ -84,4 +84,17 @@ public class OfferController {
     public void deleteOffer(@PathVariable String offerId) {
         offerService.deleteOfferById(offerId);
     }
+
+    @Operation(summary = "Mettre à jour le statut d'une offre de stage", description = "Permet de mettre à jour le statut d'une offre de stage existante.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Offre de stage mise à jour avec succès"),
+            @ApiResponse(responseCode = "400", description = "Données invalides fournies"),
+            @ApiResponse(responseCode = "404", description = "Offre de stage non trouvée")
+    })
+    @PutMapping("/{offerId}/change-status")
+    public OfferDto changeOfferStatus(@PathVariable String offerId) {
+        var offerEntity = offerService.changeOfferStatus(offerId);
+        var offerDto = OfferDto.fromEntity(offerEntity);
+        return OfferDto.fromEntity(offerEntity);
+    }
 }

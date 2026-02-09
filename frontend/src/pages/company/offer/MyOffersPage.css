@@ -118,3 +118,21 @@
     font-size: 1.1rem;
     margin-bottom: 1.5rem;
 }
+
+.offer-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.offer-closed-badge {
+    background-color: #f1f5f9;
+    color: #6b7280;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}

@@ -42,7 +42,8 @@ public class OfferService {
                 (createOfferDto.limitApplicationDate() != null) ? createOfferDto.limitApplicationDate() : null,
                 (createOfferDto.studyLevel() != null) ? createOfferDto.studyLevel() : null,
                 (createOfferDto.remoteWorkPolicy() != null) ? createOfferDto.remoteWorkPolicy() : null,
-                createOfferDto.companyId());
+                createOfferDto.companyId(),
+                true);
 
         OfferEntity offerEntity = OfferEntity.fromDto(offerDto);
         offerEntity.setCompany(companyEntity);
@@ -62,7 +63,7 @@ public class OfferService {
 
     public Page<OfferEntity> getAllOffers(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("creationDate").descending());
-        return offerRepository.findAll(pageable);
+        return offerRepository.findByOfferOpenTrue(pageable);
     }
 
     public void updateOffer(String offerId, CreateOfferDto createOfferDto) {
@@ -93,5 +94,13 @@ public class OfferService {
         } else {
             throw new NoSuchElementException(("Offer with id " + id + " not found"));
         }
+    }
+
+    public OfferEntity changeOfferStatus(String offerId) {
+        OfferEntity existingOffer = offerRepository.findById(offerId)
+                .orElseThrow(() -> new NoSuchElementException(("Offer with id " + offerId + " not found")));
+
+        existingOffer.setOfferOpen(!existingOffer.isOfferOpen());
+        return offerRepository.save(existingOffer);
     }
 }

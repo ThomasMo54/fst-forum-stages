@@ -11,4 +11,5 @@ public interface OfferRepository extends MongoRepository<OfferEntity, String> {
     Long countByCreationDateBefore(LocalDateTime date);
 
     Page<OfferEntity> findOfferEntitiesByCompany_Id(String companyId, Pageable pageable);
+    Page<OfferEntity> findByOfferOpenTrue(Pageable pageable);
 }
