@@ -5,12 +5,14 @@ import './OffersPage.css';
 import Header from '../../components/header/Header';
 import Footer from '../../components/footer/Footer';
 import Button from '../../components/button/Button';
-import OfferService, { type OfferDto } from '../../services/offer.service';
+import OfferService, { type PaginatedOffers, type OfferDto } from '../../services/offer.service';
 import CompanyService from '../../services/company.service';
 import type { ApplicationDto } from '../../services/application.service';
 import ApplicationService from '../../services/application.service';
 import { useAuth } from '../../context/AuthContext';
 import user_roles from "../../constants/user_roles.ts";
+import { Pagination } from "../../components/pagination/Pagination.tsx";
+import OffersMap from './OffersMap';
 
 const formatDate = (date?: string | null) => {
   if (!date) return 'Non renseignée';
@@ -18,21 +20,34 @@ const formatDate = (date?: string | null) => {
   return parsed.toLocaleDateString('fr-FR');
 };
 
+type ViewMode = 'list' | 'map';
+
 const OffersPage: React.FC = () => {
-  const [offers, setOffers] = useState<OfferDto[]>([]);
+  const [offers, setOffers] = useState<PaginatedOffers>({
+    content: [],
+    page: { size: 0, number: 0, totalElements: 0, totalPages: 0 }
+  });
   const [companyNames, setCompanyNames] = useState<Record<string, string>>({});
+  const [companyCities, setCompanyCities] = useState<Record<string, string>>({});
+  const [companyAddresses, setCompanyAddresses] = useState<Record<string, string>>({});
+  const [companyPostalCodes, setCompanyPostalCodes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [listError, setListError] = useState<string>('');
 
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedOffer, setSelectedOffer] = useState<OfferDto | null>(null);
   const [studentApplications, setStudentApplications] = useState<ApplicationDto[]>([]);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+
   const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    void  fetchOffersAndApplications();
+    void fetchOffersAndApplications();
   }, []);
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const currentPage = Number(searchParams.get('page')) || 1;
 
   const fetchOffersAndApplications = async () => {
     setLoading(true);
@@ -40,21 +55,42 @@ const OffersPage: React.FC = () => {
     try {
       const data = await OfferService.getAllOffers();
       setOffers(data);
-      const companyIds = [...new Set(data.map(offer => offer.companyId))];
+
+      const companyIds = [...new Set(data.content.map(offer => offer.companyId))];
+
       const names: Record<string, string> = {};
-      await Promise.all(companyIds.map(async id => {
-        try {
-          const company = await CompanyService.getCompanyById(id);
-          names[id] = company.name;
-        } catch (e) {
-          console.error(`Could not fetch company name for ID ${id}`, e);
-          names[id] = `Entreprise #${id}`;
-        }
-      }));
+      const cities: Record<string, string> = {};
+      const addresses: Record<string, string> = {};
+      const postalCodes: Record<string, string> = {};
+
+      await Promise.all(
+          companyIds.map(async id => {
+            try {
+              const company = await CompanyService.getCompanyById(id);
+              names[id] = company.name;
+              cities[id] = company.city || 'Non renseigné';
+              addresses[id] = company.streetAddress || '';
+              postalCodes[id] = company.postalCode || '';
+            } catch (e) {
+              console.error(`Could not fetch company for ID ${id}`, e);
+              names[id] = `Entreprise #${id}`;
+              cities[id] = 'Non renseigné';
+            }
+          })
+      );
+
       setCompanyNames(names);
-      if(user){
-        const applications = await ApplicationService.getAllApplicationForStudent(user.entityId);
-        setStudentApplications(applications);
+      setCompanyCities(cities);
+      setCompanyAddresses(addresses);
+      setCompanyPostalCodes(postalCodes);
+
+      if(user) {
+        if (user.roles.includes(user_roles.STUDENT)) {
+          const applications = await ApplicationService.getAllApplicationForStudent(user.entityId);
+          setStudentApplications(applications);
+        } else {
+          setStudentApplications([]);
+        }
       }
     } catch (err) {
       setListError("Impossible de récupérer les offres pour le moment.");
@@ -63,21 +99,23 @@ const OffersPage: React.FC = () => {
     }
   };
 
-
   const filteredOffers = useMemo(() => {
-    if (!searchTerm.trim()) return offers;
+    if (!searchTerm.trim()) return offers.content;
+
     const term = searchTerm.toLowerCase();
-    return offers.filter((offer) => {
+    return offers.content.filter((offer) => {
       const hasTextMatch =
-        offer.title.toLowerCase().includes(term) ||
-        offer.description.toLowerCase().includes(term) ||
-        (companyNames[offer.companyId] || '').toLowerCase().includes(term);
+          offer.title.toLowerCase().includes(term) ||
+          offer.description.toLowerCase().includes(term) ||
+          (companyNames[offer.companyId] || '').toLowerCase().includes(term);
+
       const hasTagMatch = (offer.tags ?? []).some((tag) =>
-        tag.toLowerCase().includes(term)
+          tag.toLowerCase().includes(term)
       );
+
       return hasTextMatch || hasTagMatch;
     });
-  }, [offers, searchTerm, companyNames]);
+  }, [offers.content, searchTerm, companyNames]);
 
   const handleApplyRedirect = (offer: OfferDto) => {
     setSelectedOffer(null);
@@ -90,230 +128,268 @@ const OffersPage: React.FC = () => {
   };
 
   return (
-    <div className="page-wrapper">
-      <Header/>
+      <div className="page-wrapper">
+        <Header />
 
-      <main className="offers-main">
-        <div className="container">
-          <section className="offers-hero">
-            <div>
-              <p className="eyebrow">Offres de stage</p>
-              <h1>Explorez et publiez des opportunités</h1>
-              <p className="lead">
-                Retrouvez les offres validées par l&apos;équipe FST.
-              </p>
-            </div>
-
-            <div className="hero-metrics">
-              <div className="metric-card">
-                <span className="metric-number">{offers.length}</span>
-                <span className="metric-label">Offres disponibles</span>
-              </div>
-              <div className="metric-card">
-                <span className="metric-number">
-                  {(offers.filter((offer) => !!offer.remoteWorkPolicy).length || 0)}
-                </span>
-                <span className="metric-label">Offres avec télétravail</span>
-              </div>
-            </div>
-          </section>
-
-          <section className="offers-section">
-            <div className="section-header">
+        <main className="offers-main">
+          <div className="container">
+            <section className="offers-hero">
               <div>
-                <p className="eyebrow">Catalogue</p>
-                <h2>Les dernières offres publiées</h2>
+                <p className="eyebrow">Offres de stage</p>
+                <h1>Explorez et publiez des opportunités</h1>
+                <p className="lead">
+                  Retrouvez les offres validées par l'équipe FST.
+                </p>
               </div>
-              <div className="filters">
-                <input
-                  type="text"
-                  placeholder="Rechercher une offre, une entreprise ou un tag..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <Button size="small" variant="secondary" onClick={() => void fetchOffersAndApplications()}>
-                  Actualiser
-                </Button>
-              </div>
-            </div>
 
-            {listError && (
-              <div className="error-message inline-error">
-                {listError}
+              <div className="hero-metrics">
+                <div className="metric-card">
+                  <span className="metric-number">{offers.page.totalElements}</span>
+                  <span className="metric-label">Offres disponibles</span>
+                </div>
+                <div className="metric-card">
+                <span className="metric-number">
+                  {offers.content.filter((offer) => !!offer.remoteWorkPolicy).length}
+                </span>
+                  <span className="metric-label">Offres avec télétravail</span>
+                </div>
               </div>
-            )}
+            </section>
 
-            {loading ? (
-              <div className="table-wrapper">
-                <table className="offers-table loading">
-                  <thead>
-                  <tr>
-                    <th>Titre</th>
-                    <th>Entreprise</th>
-                    <th>Tags</th>
-                    <th>Début</th>
-                    <th>Durée</th>
-                    <th>Salaire</th>
-                    <th>Actions</th>
-                  </tr>
-                  </thead>
-                  <tbody>
-                  {[1, 2, 3].map((item) => (
-                    <tr key={item}>
-                      <td><div className="skeleton-line short"/></td>
-                      <td><div className="skeleton-line"/></td>
-                      <td><div className="skeleton-line"/></td>
-                      <td><div className="skeleton-line short"/></td>
-                      <td><div className="skeleton-line short"/></td>
-                      <td><div className="skeleton-line short"/></td>
-                      <td><div className="skeleton-line short"/></td>
-                    </tr>
-                  ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : filteredOffers.length === 0 ? (
-              <div className="empty-state">
-                <p>Aucune offre ne correspond à votre recherche.</p>
-                <Button variant="secondary" onClick={() => setSearchTerm('')}>
-                  Réinitialiser la recherche
-                </Button>
-              </div>
-            ) : (
-              <>
-                <div className="table-wrapper">
-                  <table className="offers-table">
-                    <thead>
-                    <tr>
-                      <th>Titre</th>
-                      <th>Entreprise</th>
-                      <th>Tags</th>
-                      <th>Début</th>
-                      <th>Durée</th>
-                      <th>Salaire</th>
-                      <th></th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {filteredOffers.map((offer) => (
-                      <tr key={offer.id}>
-                        <td>
-                          <div className="table-title">{offer.title}</div>
-                        </td>
-                        <td>{companyNames[offer.companyId] || `Entreprise #${offer.companyId}`}</td>
-                        <td>
-                          <div className="table-tags">
-                            {(offer.tags ?? []).length === 0 ? (
-                              <span className="tag muted">Aucun</span>
-                            ) : (
-                              (offer.tags ?? []).slice(0, 3).map((tag) => (
-                                <span key={tag} className="tag">{tag}</span>
-                              ))
-                            )}
-                            {(offer.tags ?? []).length > 3 && (
-                              <span className="tag more">+{(offer.tags ?? []).length - 3}</span>
-                            )}
-                          </div>
-                        </td>
-                        <td>{formatDate(offer.internshipStartDate)}</td>
-                        <td>{offer.internshipDuration || 'Non renseignée'}</td>
-                        <td>{offer.salary || 'Non renseigné'}</td>
-                        <td className="table-actions">
-                          <Button
-                            size="small"
-                            variant="secondary"
-                            onClick={() => setSelectedOffer(offer)}
-                          >
-                            Voir le détail
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                    </tbody>
-                  </table>
+            <section className="offers-section">
+              <div className="section-header">
+                <div>
+                  <p className="eyebrow">Catalogue</p>
+                  <h2>Les dernières offres publiées</h2>
                 </div>
 
-                {selectedOffer && (
-                  <div className="offer-modal-overlay" onClick={() => setSelectedOffer(null)}>
-                    <div className="offer-modal" onClick={(e) => e.stopPropagation()}>
-                      <div className="modal-header">
-                        <div>
-                          <p className="eyebrow">Offre {selectedOffer.id}</p>
-                          <h3>{selectedOffer.title}</h3>
-                          <p className="detail-company">{companyNames[selectedOffer.companyId] || `Entreprise #${selectedOffer.companyId}`}</p>
-                        </div>
-                        <div className="modal-actions">
-                          <Button size="small" variant="secondary" onClick={() => setSelectedOffer(null)}>
-                            Fermer
-                          </Button>
-                          {user && user.roles.includes(user_roles.STUDENT) ? (
-                            <>
-                              {studentApplications.find(app => app.offerId === selectedOffer.id) ? (
-                                <span className="applied-badge">Candidature envoyée</span>
-                              ) : (
-                                <Button size="small" onClick={() => handleApplyRedirect(selectedOffer)}>
-                                  Je postule
-                                </Button>
-                              )}
-                            </>
-                          ) : null}
-                        </div>
-                      </div>
+                <div className="filters">
+                  <input
+                      type="text"
+                      placeholder="Rechercher une offre, une entreprise ou un tag..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <Button
+                      size="small"
+                      variant="secondary"
+                      onClick={() => void fetchOffersAndApplications()}
+                  >
+                    Actualiser
+                  </Button>
+                </div>
+              </div>
 
-                      <p className="offer-description">{selectedOffer.description}</p>
+              {/* Toggle Liste / Carte */}
+              <div className="view-toggle-section">
+                <div className="view-toggle">
+                  <button
+                      className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+                      onClick={() => setViewMode('list')}
+                  >
+                    <i className="fa-solid fa-list"></i>
+                    Liste
+                  </button>
+                  <button
+                      className={`view-toggle-btn ${viewMode === 'map' ? 'active' : ''}`}
+                      onClick={() => setViewMode('map')}
+                  >
+                    <i className="fa-solid fa-map"></i>
+                    Carte
+                  </button>
+                </div>
+              </div>
 
-                      <div className="offer-meta">
-                        <div className="meta-item">
-                          <span>Début</span>
-                          <strong>{formatDate(selectedOffer.internshipStartDate)}</strong>
-                        </div>
-                        <div className="meta-item">
-                          <span>Durée</span>
-                          <strong>{selectedOffer.internshipDuration || 'Non renseignée'}</strong>
-                        </div>
-                        <div className="meta-item">
-                          <span>Limite</span>
-                          <strong>{selectedOffer.limitApplicationDate ? formatDate(selectedOffer.limitApplicationDate) : 'Sans limite'}</strong>
-                        </div>
-                        <div className="meta-item">
-                          <span>Salaire</span>
-                          <strong>{selectedOffer.salary || 'Non renseigné'}</strong>
-                        </div>
-                      </div>
+              {listError && (
+                  <div className="error-message inline-error">{listError}</div>
+              )}
 
-                      <div className="offer-meta secondary">
-                        <div className="meta-item">
-                          <span>Niveau</span>
-                          <strong>{selectedOffer.studyLevel || 'Ouvert'}</strong>
+              {loading ? (
+                  <div className="offers-linear-list loading">
+                    {[1, 2, 3].map((item) => (
+                        <div key={item} className="offer-list-item skeleton-item">
+                          <div className="skeleton-line" />
+                          <div className="skeleton-line short" />
                         </div>
-                        <div className="meta-item">
-                          <span>Télétravail</span>
-                          <strong>{selectedOffer.remoteWorkPolicy || 'À définir'}</strong>
-                        </div>
-                        <div className="meta-item">
-                          <span>Créée le</span>
-                          <strong>{formatDate(selectedOffer.creationDate)}</strong>
-                        </div>
-                      </div>
+                    ))}
+                  </div>
+              ) : filteredOffers.length === 0 ? (
+                  <div className="empty-state">
+                    <p>Aucune offre ne correspond à votre recherche.</p>
+                    <Button variant="secondary" onClick={() => setSearchTerm('')}>
+                      Réinitialiser la recherche
+                    </Button>
+                  </div>
+              ) : (
+                  <>
+                    {/* Vue Carte */}
+                    {viewMode === 'map' && (
+                        <OffersMap
+                            offers={filteredOffers}
+                            companyNames={companyNames}
+                            companyCities={companyCities}
+                            companyAddresses={companyAddresses}
+                            companyPostalCodes={companyPostalCodes}
+                            onOfferClick={setSelectedOffer}
+                        />
+                    )}
 
-                      {(selectedOffer.tags ?? []).length > 0 && (
-                        <div className="tags">
-                          {(selectedOffer.tags ?? []).map((tag) => (
-                            <span key={tag} className="tag">{tag}</span>
+                    {/* Vue Liste */}
+                    {viewMode === 'list' && (
+                        <div className="offers-linear-list">
+                          {filteredOffers.map((offer) => (
+                              <div
+                                  key={offer.id}
+                                  className="offer-list-item"
+                                  onClick={() => setSelectedOffer(offer)}
+                              >
+                                <div className="offer-item-content">
+                                  <div className="offer-item-primary">
+                                    <h3 className="offer-title">{offer.title}</h3>
+                                    <span className="offer-company">
+                              {companyNames[offer.companyId] || `Entreprise #${offer.companyId}`}
+                            </span>
+                                  </div>
+
+                                  <div className="offer-location">
+                                    <i className="fa-solid fa-location-dot"></i>
+                                    <span>{companyCities[offer.companyId] || 'Non renseigné'}</span>
+                                  </div>
+
+                                  <div className="detail-pill date">
+                                    <i className="fa-regular fa-calendar"></i>
+                                    <span>{formatDate(offer.internshipStartDate)}</span>
+                                  </div>
+
+                                  <div className="detail-pill duration">
+                                    <i className="fa-regular fa-clock"></i>
+                                    <span>{offer.internshipDuration || 'N/A'}</span>
+                                  </div>
+
+                                  <div className="detail-pill salary">
+                                    <i className="fa-solid fa-euro-sign"></i>
+                                    <span>{offer.salary || 'N/A'}</span>
+                                  </div>
+
+                                  <div className="offer-item-tags">
+                                    {(offer.tags ?? []).slice(0, 3).map((tag) => (
+                                        <span key={tag} className="tag">
+                                {tag}
+                              </span>
+                                    ))}
+                                    {(offer.tags ?? []).length > 3 && (
+                                        <span className="tag-more">+{(offer.tags ?? []).length - 3}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
                           ))}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </section>
-        </div>
-      </main>
+                    )}
 
-      <Footer/>
-    </div>
+                    {/* Modal (commun aux deux vues) */}
+                    {selectedOffer && (
+                        <div className="offer-modal-overlay" onClick={() => setSelectedOffer(null)}>
+                          <div className="offer-modal" onClick={(e) => e.stopPropagation()}>
+                            <div className="modal-header">
+                              <div>
+                                <div className="modal-top-info">
+                                  <h3 className="modal-title">{selectedOffer.title}</h3>
+                                  <span className="offer-company">
+                              {companyNames[selectedOffer.companyId] ||
+                                  `Entreprise #${selectedOffer.companyId}`}
+                            </span>
+                                </div>
+                                <div className="modal-location">
+                                  <i className="fa-solid fa-location-dot"></i>{' '}
+                                  {companyCities[selectedOffer.companyId] || 'Non renseigné'}
+                                </div>
+                              </div>
+
+                              <div className="modal-actions">
+                                <Button size="small" variant="secondary" onClick={() => setSelectedOffer(null)}>
+                                  Fermer
+                                </Button>
+
+                                {user && user.roles.includes(user_roles.STUDENT) ? (
+                                    <>
+                                      {studentApplications.find((app) => app.offerId === selectedOffer.id) ? (
+                                          <span className="applied-badge">
+                                  <i className="fa-solid fa-circle-check"></i> Candidature envoyée
+                                </span>
+                                      ) : (
+                                          <Button size="small" onClick={() => handleApplyRedirect(selectedOffer)}>
+                                            Je postule
+                                          </Button>
+                                      )}
+                                    </>
+                                ) : null}
+                              </div>
+                            </div>
+
+                            <div className="offer-meta-grid">
+                              <div className="meta-item">
+                                <span><i className="fa-regular fa-calendar"></i> Début</span>
+                                <strong>{formatDate(selectedOffer.internshipStartDate)}</strong>
+                              </div>
+                              <div className="meta-item">
+                                <span><i className="fa-regular fa-clock"></i> Durée</span>
+                                <strong>{selectedOffer.internshipDuration || 'Non renseignée'}</strong>
+                              </div>
+                              <div className="meta-item">
+                                <span><i className="fa-solid fa-euro-sign"></i> Salaire</span>
+                                <strong>{selectedOffer.salary || 'Non renseigné'}</strong>
+                              </div>
+                              <div className="meta-item">
+                                <span><i className="fa-solid fa-house-laptop"></i> Télétravail</span>
+                                <strong>{selectedOffer.remoteWorkPolicy || 'À définir'}</strong>
+                              </div>
+                              <div className="meta-item">
+                                <span><i className="fa-solid fa-graduation-cap"></i> Niveau</span>
+                                <strong>{selectedOffer.studyLevel || 'Ouvert'}</strong>
+                              </div>
+                              <div className="meta-item">
+                                <span><i className="fa-regular fa-hourglass-half"></i> Limite</span>
+                                <strong>
+                                  {selectedOffer.limitApplicationDate
+                                      ? formatDate(selectedOffer.limitApplicationDate)
+                                      : 'Sans limite'}
+                                </strong>
+                              </div>
+                            </div>
+
+                            <div className="modal-description-section">
+                              <h4>Description de l'offre</h4>
+                              <p className="offer-description">{selectedOffer.description}</p>
+                            </div>
+
+                            {(selectedOffer.tags ?? []).length > 0 && (
+                                <div className="modal-tags-section">
+                                  <h4>Compétences recherchées</h4>
+                                  <div className="tags">
+                                    {(selectedOffer.tags ?? []).map((tag) => (
+                                        <span key={tag} className="tag">
+                                {tag}
+                              </span>
+                                    ))}
+                                  </div>
+                                </div>
+                            )}
+                          </div>
+                        </div>
+                    )}
+                  </>
+              )}
+            </section>
+
+            {offers.page.totalPages > 1 && (
+                <Pagination currentPage={currentPage} totalPages={offers.page.totalPages} />
+            )}
+          </div>
+        </main>
+
+        <Footer />
+      </div>
   );
 };
 

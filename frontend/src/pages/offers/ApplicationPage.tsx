@@ -19,6 +19,13 @@ const ApplicationPage: React.FC = () => {
   const [applications, setApplications] = useState<ApplicationWithStudent[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [closing, setClosing] = useState<boolean>(false);
+  const [processingApplications, setProcessingApplications] = useState<Set<string>>(new Set());
+
+  const isOfferClosed = (currentOffer: OfferDto | null) => {
+    if (!currentOffer) return false;
+    return currentOffer.offerOpen === false;
+  };
 
   useEffect(() => {
     const fetchApplicationsAndOffer = async () => {
@@ -82,6 +89,74 @@ const ApplicationPage: React.FC = () => {
     }
   };
 
+  const handleApplicationStatusChange = async (applicationId: string, action: 'accept' | 'reject' | 'reset') => {
+    setProcessingApplications(prev => new Set([...prev, applicationId]));
+    try {
+      let updatedApplication: ApplicationDto;
+      const currentApp = applications.find(app => app.id === applicationId);
+      const currentStatus = getApplicationStatus(currentApp!);
+
+      // If trying to accept but rejected, or reject but accepted, reset first
+      if ((action === 'accept' && currentStatus === 'rejected') || (action === 'reject' && currentStatus === 'accepted')) {
+        await ApplicationService.resetApplicationStatus(applicationId);
+      }
+
+      // Now perform the desired action
+      if (action === 'accept') {
+        updatedApplication = await ApplicationService.acceptApplication(applicationId);
+      } else if (action === 'reject') {
+        updatedApplication = await ApplicationService.rejectApplication(applicationId);
+      } else {
+        updatedApplication = await ApplicationService.resetApplicationStatus(applicationId);
+      }
+
+      // Update the applications list with the new status
+      setApplications(prev =>
+        prev.map(app => app.id === applicationId ? { ...app, ...updatedApplication } : app)
+      );
+    } catch (err) {
+      console.error(`Error ${action}ing application:`, err);
+      alert(`Erreur lors de la ${action === 'accept' ? 'validation' : action === 'reject' ? 'rejection' : 'réinitialisation'} de la candidature.`);
+    } finally {
+      setProcessingApplications(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(applicationId);
+        return newSet;
+      });
+    }
+  };
+
+  const getApplicationStatus = (app: ApplicationWithStudent) => {
+    if (app.accepted) return 'accepted';
+    if (app.rejected) return 'rejected';
+    return 'pending';
+  };
+
+  const handleChangeOfferStatus = async () => {
+    if (!offerId) {
+      setError("ID de l'offre manquant.");
+      return;
+    }
+
+    const confirmMessage = isOfferClosed(offer)
+      ? "Êtes-vous sûr de vouloir rouvrir cette offre ? Les candidatures seront à nouveau acceptées."
+      : "Êtes-vous sûr de vouloir clôturer cette offre ? Les candidatures ne seront plus acceptées mais vous pourrez toujours consulter les candidatures déjà reçues.";
+    const confirmClose = window.confirm(confirmMessage);
+    if (!confirmClose) return;
+
+    try {
+      setClosing(true);
+      const updatedOffer = await OfferService.changeOfferStatus(offerId);
+      console.log("Offer status updated:", updatedOffer);
+      setOffer(updatedOffer);
+    } catch (err) {
+      console.error("Error closing offer:", err);
+      setError("Erreur lors de la clôture de l'offre. Veuillez réessayer.");
+    } finally {
+      setClosing(false);
+    }
+  };
+
   const renderContent = () => {
     if (loading) {
       return <p>Chargement des candidatures...</p>;
@@ -110,6 +185,23 @@ const ApplicationPage: React.FC = () => {
               <span><strong>Nombre de candidatures:</strong> {applications.length}</span>
             </div>
           </div>
+          <div className="offer-actions">
+            <span className={`offer-status-text ${isOfferClosed(offer) ? 'closed' : 'open'}`}>
+              {isOfferClosed(offer) ? "Offre clôturée" : "Offre ouverte"}
+            </span>
+            <Button
+              variant={isOfferClosed(offer) ? "success" : "danger"}
+              onClick={handleChangeOfferStatus}
+              disabled={closing}
+            >
+              <i className={`fas ${isOfferClosed(offer) ? 'fa-unlock' : 'fa-lock'}`}></i>
+              {closing
+                ? 'Mise à jour...'
+                : isOfferClosed(offer)
+                ? "Rouvrir l'offre"
+                : "Clôturer l'offre"}
+            </Button>
+          </div>
         </div>
 
         {applications.length === 0 ? (
@@ -120,7 +212,7 @@ const ApplicationPage: React.FC = () => {
         ) : (
           <div className="applications-list">
             {applications.map((application) => (
-              <div key={application.id} className="application-card">
+              <div key={application.id} className={`application-card ${getApplicationStatus(application)}`}>
                 {application.student ? (
                   <>
                     <div className="application-header">
@@ -184,6 +276,24 @@ const ApplicationPage: React.FC = () => {
                           </div>
                         </div>
                       )}
+                    </div>
+                    <div className="application-status-actions">
+                      <Button
+                        variant={getApplicationStatus(application) === 'accepted' ? 'success' : 'secondary'}
+                        onClick={() => getApplicationStatus(application) === 'accepted' ? handleApplicationStatusChange(application.id, 'reset') : handleApplicationStatusChange(application.id, 'accept')}
+                        disabled={processingApplications.has(application.id)}
+                        className="status-button accept-button"
+                      >
+                        <i className={`fas ${getApplicationStatus(application) === 'accepted' ? 'fa-check-circle' : 'fa-check'}`}></i>
+                      </Button>
+                      <Button
+                        variant={getApplicationStatus(application) === 'rejected' ? 'danger' : 'secondary'}
+                        onClick={() => getApplicationStatus(application) === 'rejected' ? handleApplicationStatusChange(application.id, 'reset') : handleApplicationStatusChange(application.id, 'reject')}
+                        disabled={processingApplications.has(application.id)}
+                        className="status-button reject-button"
+                      >
+                        <i className={`fas ${getApplicationStatus(application) === 'rejected' ? 'fa-times-circle' : 'fa-times'}`}></i>
+                      </Button>
                     </div>
                   </>
                 ) : (

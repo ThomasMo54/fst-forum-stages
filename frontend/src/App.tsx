@@ -8,7 +8,6 @@ import { AuthProvider } from "./context/AuthContext.tsx";
 import PublicRoute from "./components/route/PublicRoute.tsx";
 import CompanyRoute from "./components/route/CompanyRoute.tsx";
 import { VerifyPage } from "./pages/auth/verify/VerifyPage.tsx";
-import CreateOfferPage from "./pages/company/offer/CreateOfferPage.tsx";
 import MyOffersPage from "./pages/company/offer/MyOffersPage.tsx";
 import OffersPage from "./pages/offers/OffersPage.tsx";
 import ApplyOfferPage from "./pages/offers/ApplyOfferPage.tsx";
@@ -16,8 +15,12 @@ import PrivateRoute from "./components/route/PrivateRoute.tsx";
 import ModifyStudentInfosPage from "./pages/student/ModifyStudentInfos.tsx";
 import StudentRoute from "./components/route/StudentRoute.tsx";
 import ModifyCompanyInfosPage from "./pages/company/ModifyCompanyInfos.tsx";
-import StudentMyOffersPage from "./pages/student/offer/MyOffersPage.tsx";
+import OfferFormPage from "./pages/company/offer/OfferFormPage.tsx";
 import ApplicationPage from "./pages/offers/ApplicationPage.tsx";
+import StudentMyApplicationsPage from "./pages/student/applications/MyApplicationsPage.tsx";
+import AdminRoute from "./components/route/AdminRoute.tsx";
+import StatsPage from "./pages/admin/stats/StatsPage.tsx";
+import UserManagementPage from "./pages/admin/users/UserManagementPage.tsx";
 
 function App() {
   return (
@@ -28,6 +31,7 @@ function App() {
           <Route element={<PrivateRoute />}>
             <Route path="/offers" element={<OffersPage />} />
             <Route path="/offers/:offerId/apply" element={<ApplyOfferPage />} />
+            <Route path="/offers/:offerId/apply/:applicationId" element={<ApplyOfferPage />} />
             <Route path="/offers/:offerId/applications" element={<ApplicationPage />} />
           </Route>
           <Route element={<PublicRoute />}>
@@ -38,14 +42,18 @@ function App() {
             <Route path="/register/verify" element={<VerifyPage />} />
           </Route>
           <Route element={<CompanyRoute />}>
-            <Route path="/company/create-offer" element={<CreateOfferPage />} />
+            <Route path="/company/create-offer" element={<OfferFormPage mode="create" />} />
+            <Route path="/company/edit-offer/:offerId" element={<OfferFormPage mode="edit" />}/>
             <Route path="/company/my-offers" element={<MyOffersPage />} />
             <Route path="/company/modify-infos" element={<ModifyCompanyInfosPage />} />
           </Route>
           <Route element={<StudentRoute />}>
             <Route path="/student/modify-infos" element={<ModifyStudentInfosPage />} />
-            <Route path="/student/my-offers" element={<StudentMyOffersPage />} />
-
+            <Route path="/student/my-applications" element={<StudentMyApplicationsPage />} />
+          </Route>
+          <Route element={<AdminRoute />}>
+            <Route path="/admin/stats" element={<StatsPage />} />
+            <Route path="/admin/users" element={<UserManagementPage />} />
           </Route>
         </Routes>
       </AuthProvider>

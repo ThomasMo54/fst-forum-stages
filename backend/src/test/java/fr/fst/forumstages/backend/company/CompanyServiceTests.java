@@ -2,11 +2,16 @@ package fr.fst.forumstages.backend.company;
 
 import fr.fst.forumstages.backend.company.dto.UpdateCompanyDto;
 import fr.fst.forumstages.backend.offer.OfferEntity;
+import fr.fst.forumstages.backend.offer.OfferRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -15,6 +20,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -25,6 +31,9 @@ public class CompanyServiceTests {
 
     @Mock
     private CompanyRepository companyRepository;
+
+    @Mock
+    private OfferRepository offerRepository;
 
     @Test
     public void findCompanyById_success() {
@@ -60,12 +69,12 @@ public class CompanyServiceTests {
         when(companyRepository.save(any(CompanyEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         var updateDto = new UpdateCompanyDto(
-            "New Name",
-            "a@b.fr",
-            "1 Main St",
-            "Cityville",
-            "12345",
-            "Countryland"
+                "New Name",
+                "a@b.fr",
+                "1 Main St",
+                "Cityville",
+                "12345",
+                "Countryland"
         );
 
         CompanyEntity result = companyService.updateCompany(companyId, updateDto);
@@ -96,12 +105,12 @@ public class CompanyServiceTests {
         when(companyRepository.save(any(CompanyEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         var updateDto = new UpdateCompanyDto(
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
         );
 
         CompanyEntity result = companyService.updateCompany(companyId, updateDto);
@@ -123,7 +132,6 @@ public class CompanyServiceTests {
         mockCompany.setId(companyId);
         mockCompany.setName("Test Company");
 
-
         String offerId = "1";
         OfferEntity offer = new OfferEntity();
         offer.setId(offerId);
@@ -134,13 +142,14 @@ public class CompanyServiceTests {
         offer2.setId(offerId2);
         offer2.setCompany(mockCompany);
 
-        mockCompany.setPublishedOffers(Arrays.asList(offer, offer2));
-
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(mockCompany));
+        when(offerRepository.findOfferEntitiesByCompany_Id(eq(companyId), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(Arrays.asList(offer, offer2)));
 
-        List<OfferEntity> results = companyService.getCompanyOffers(companyId);
+        Page<OfferEntity> results = companyService.getCompanyOffers(companyId, 0, 15);
 
-        assertEquals(2, results.size());
+        assertEquals(2, results.getContent().size());
         verify(companyRepository, times(1)).findById(companyId);
+        verify(offerRepository, times(1)).findOfferEntitiesByCompany_Id(eq(companyId), any(Pageable.class));
     }
 }

@@ -26,6 +26,17 @@ export interface OfferDto {
   studyLevel?: string | null;
   remoteWorkPolicy?: string | null;
   companyId: string;
+  offerOpen: boolean;
+}
+
+export interface PaginatedOffers {
+  content: OfferDto[];
+  page: {
+    size: number,
+    number: number,
+    totalElements: number,
+    totalPages: number
+  }
 }
 
 export interface ApplyOfferDto {
@@ -42,8 +53,8 @@ const createOffer = async (offerData: CreateOfferDto): Promise<void> => {
   await api.post('/offers', offerData);
 };
 
-const getAllOffers = async (): Promise<OfferDto[]> => {
-  const response = await api.get('/offers');
+const getAllOffers = async (page:number = 0): Promise<PaginatedOffers> => {
+  const response = await api.get('/offers?page=' + page);
   return response.data;
 };
 
@@ -52,10 +63,14 @@ const getOfferById = async (offerId: string): Promise<OfferDto> => {
   return response.data;
 };
 
-const getOffersByCompany = async (companyId: string): Promise<OfferDto[]> => {
-  const response = await api.get<OfferDto[]>(`/companies/${companyId}/offers`);
+const getOffersByCompany = async (companyId: string, page:number = 0): Promise<PaginatedOffers> => {
+  const response = await api.get<PaginatedOffers>(`/companies/${companyId}/offers?page=${page}`);
   return response.data;
 };
+
+const updateOffer = async (offerId: string, offerData: CreateOfferDto): Promise<void> => {
+  await api.put(`/offers/${offerId}`, offerData);
+}
 
 const deleteOffer = async (offerId: string): Promise<void> => {
   await api.delete(`/offers/${offerId}`);
@@ -65,13 +80,21 @@ const applyToOffer = async (offerId: string, application: ApplyOfferDto): Promis
   await api.post(`/offers/${offerId}/apply`, application);
 };
 
+const changeOfferStatus = async (offerId: string): Promise<OfferDto> => {
+  const response = await api.put(`/offers/${offerId}/change-status`);
+  console.log("API response for changeOfferStatus:", response);
+  return response.data;
+};
+
 const OfferService = {
   createOffer,
   getAllOffers,
   getOfferById,
   getOffersByCompany,
+  updateOffer,
   deleteOffer,
-  applyToOffer
+  applyToOffer,
+  changeOfferStatus
 };
 
 export default OfferService;

@@ -14,17 +14,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.NoSuchElementException;
 
@@ -108,6 +104,25 @@ public class UserController {
             emailService.sendVerificationEmail(refreshVerificationCodeDto.email(), code);
         } catch (IllegalStateException | NoSuchElementException ignored) {}
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Récupère tous les utilisateurs", description = "Permet de récupérer la liste de tous les utilisateurs du forum.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Utilisateurs récupérés avec succès"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - permissions insuffisantes")
+    })
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
+    public Page<UserDto> getAllUsers(@RequestParam(required = false) String role, @PageableDefault(size = 20) Pageable pageable) {
+        if (role != null) {
+            try {
+                UserRole userRole = UserRole.valueOf(role.toUpperCase());
+                return userService.getUsersByRole(userRole, pageable).map(UserDto::fromEntity);
+            } catch (IllegalArgumentException e) {
+                throw new NoSuchElementException("Invalid role: " + role);
+            }
+        }
+        return userService.getAllUsers(pageable).map(UserDto::fromEntity);
     }
 
     @Operation(summary = "Mettre à jour un utilisateur", description = "Permet de mettre à jour les informations d'un utilisateur existant.")

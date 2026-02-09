@@ -70,6 +70,62 @@ public class ApplicationController {
         return applications.stream().map(ApplicationDto::fromEntity).toList();
     }
 
+    @Operation(summary = "Accepter une candidature à une offre", description = "Permet d'accepter une candidature")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Candidature acceptée avec succès"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - permissions insuffisantes"),
+            @ApiResponse(responseCode = "404", description = "Candidature non trouvée"),
+            @ApiResponse(responseCode = "400", description = "Impossible d'accepter une candidature rejetée")
+    })
+//    @IsAdminOrOfferOwner
+    @PutMapping("/{applicationId}/accept")
+    public ApplicationDto acceptApplication(@PathVariable String applicationId) {
+        var application = applicationService.acceptApplication(applicationId);
+        return ApplicationDto.fromEntity(application);
+    }
+
+    @Operation(summary = "Rejeter une candidature à une offre", description = "Permet de rejeter une candidature")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Candidature rejetée avec succès"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - permissions insuffisantes"),
+            @ApiResponse(responseCode = "404", description = "Candidature non trouvée"),
+            @ApiResponse(responseCode = "400", description = "Impossible de rejeter une candidature acceptée")
+    })
+//    @IsAdminOrOfferOwner
+    @PutMapping("/{applicationId}/reject")
+    public ApplicationDto rejectApplication(@PathVariable String applicationId) {
+        var application = applicationService.rejectApplication(applicationId);
+        return ApplicationDto.fromEntity(application);
+    }
+
+    @Operation(summary = "Réinitialiser le statut d'une candidature à une offre", description = "Permet de réinitialiser le statut d'une candidature : ni acceptée ni rejetée")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Statut réinitialisé avec succès"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - permissions insuffisantes"),
+            @ApiResponse(responseCode = "404", description = "Candidature non trouvée")
+    })
+//    @IsAdminOrOfferOwner
+    @PutMapping("/{applicationId}/reset")
+    public ApplicationDto resetApplicationStatus(@PathVariable String applicationId) {
+        var application = applicationService.resetApplicationStatus(applicationId);
+        return ApplicationDto.fromEntity(application);
+    }
+
+
+    @Operation(summary = "Supprimer une candidature", description = "Permet de supprimer une candidature à une offre de stage")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Candidature supprimée avec succès"),
+            @ApiResponse(responseCode = "204", description = "Aucune candidature à supprimée"),
+            @ApiResponse(responseCode = "400", description = "Données invalides fournies"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - permissions insuffisantes")
+    })
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApplicationDto deleteApplication(@PathVariable String id) {
+        var application = applicationService.deleteApplication(id);
+        return ApplicationDto.fromEntity(application);
+    }
+
     @Operation(summary = "Récupérer l'URL de téléversement de la lettre de motivation pour une offre", description = "Permet de récupérer l'URL pré-signée pour téléverser la lettre de motivation d'un étudiant à une offre.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "URL de téléversement récupérée avec succès"),
@@ -95,6 +151,20 @@ public class ApplicationController {
     public String getCoverLetterUrl(@PathVariable String id){
         try {
             return fileStorageService.getCoverLetterDownloadUrl(id + "_cover_letter.pdf");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Operation(summary = "Récupérer l'URL de suppression de la lettre de motivation d'un étudiant pour une offre", description = "Permet de récupérer l'URL pré-signée pour supprimer la lettre de motivation d'un étudiant à une offre.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "URL de suppression récupérée avec succès"),
+            @ApiResponse(responseCode = "404", description = "Candidature non trouvée")
+    })
+    @DeleteMapping("/{id}/coverLetter")
+    public String getCoverLetterDeleteUrl(@PathVariable String id){
+        try {
+            return fileStorageService.getCoverLetterDeleteUrl(id + "_cover_letter.pdf");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

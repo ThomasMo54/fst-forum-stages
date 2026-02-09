@@ -9,11 +9,15 @@ import fr.fst.forumstages.backend.offer.OfferEntity;
 import fr.fst.forumstages.backend.student.StudentEntity;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 @Document(collection = "applications")
 public class ApplicationEntity {
     @Id
     public String id;
+
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @DBRef
     private StudentEntity student;
@@ -21,9 +25,15 @@ public class ApplicationEntity {
     @DBRef
     private OfferEntity offer;
 
+    private boolean accepted;
+
+    private boolean rejected;
+
     public static ApplicationEntity fromDto(ApplicationDto applicationDto) {
         var applicationEntity = new ApplicationEntity();
         applicationEntity.id = applicationDto.id();
+        applicationEntity.accepted = applicationDto.accepted();
+        applicationEntity.rejected = applicationDto.rejected();
 
         return applicationEntity;
     }

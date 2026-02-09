@@ -3,43 +3,56 @@ import Header from "../../../components/header/Header";
 import Footer from "../../../components/footer/Footer";
 import './MyOffersPage.css';
 import { useAuth } from "../../../context/AuthContext.tsx";
-import OfferService, { type OfferDto } from "../../../services/offer.service.ts";
-import { Link } from "react-router-dom";
+import OfferService, { type PaginatedOffers } from "../../../services/offer.service.ts";
+import { Link, useNavigate } from "react-router-dom";
 import Button from "../../../components/button/Button.tsx";
+import {Pagination} from "../../../components/pagination/Pagination.tsx";
 
 const MyOffersPage: React.FC = () => {
   const {user} = useAuth();
-  const [offers, setOffers] = useState<OfferDto[]>([]);
+  const [offers, setOffers] = useState<PaginatedOffers>({content: [], page: {size: 0, number: 0, totalElements: 0, totalPages: 0}});
+  const navigate = useNavigate();
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchMyOffers = async () => {
-      if (!user || !user.entityId) {
-        setError("Vous devez être connecté en tant qu'entreprise pour voir vos offres.");
-        setLoading(false);
-        return;
-      }
+  const searchParams = new URLSearchParams(window.location.search);
+  const currentPage = Number(searchParams.get('page')) || 1;
 
-      try {
-        const companyOffers = await OfferService.getOffersByCompany(user.entityId);
-        setOffers(companyOffers);
-      } catch (err) {
-        setError("Erreur lors du chargement de vos offres. Veuillez réessayer.");
-      } finally {
-        setLoading(false);
-      }
+    const fetchMyOffers = async () => {
+        if (!user || !user.entityId) {
+            setError("Vous devez être connecté en tant qu'entreprise pour voir vos offres.");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const companyOffers = await OfferService.getOffersByCompany(user.entityId);
+            setOffers(companyOffers);
+        } catch (err) {
+            setError("Erreur lors du chargement de vos offres. Veuillez réessayer.");
+        } finally {
+            setLoading(false);
+        }
     };
 
+  useEffect(() => {
     fetchMyOffers();
   }, [user]);
 
   const handleDelete = async (offerId: string) => {
-    console.log("Deleting offer with ID:", offerId);
+    const confirmDelete = window.confirm("Êtes-vous sûr de vouloir supprimer cette offre ? Cette action est irréversible.");
+    if (!confirmDelete) return;
+
+    try {
+      await OfferService.deleteOffer(offerId);
+      await fetchMyOffers();
+    } catch (err) {
+      setError("Erreur lors de la suppression de l'offre. Veuillez réessayer.");
+    }
   };
 
   const handleEdit = (offerId: string) => {
-    console.log("Editing offer with ID:", offerId);
+    navigate(`/company/edit-offer/${offerId}`);
   };
 
   const renderContent = () => {
@@ -59,7 +72,7 @@ const MyOffersPage: React.FC = () => {
             <Button variant="primary">Créer une nouvelle offre</Button>
           </Link>
         </div>
-        {offers.length === 0 ? (
+        {offers.content?.length === 0 ? (
           <div className="no-offers-container">
             <p className="no-offers-message">Vous n'avez pas encore publié d'offres.</p>
             <Link to="/company/create-offer">
@@ -68,14 +81,33 @@ const MyOffersPage: React.FC = () => {
           </div>
         ) : (
           <div className="offers-list">
-            {offers.map(offer => (
-              <div key={offer.id} className="offer-card">
-                <h2>{offer.title}</h2>
-                <p>{offer.description.substring(0, 100)}...</p>
-                <p><strong>Salaire:</strong> {offer.salary || 'Non spécifié'}</p>
-                <p><strong>Date de création:</strong> {new Date(offer.creationDate).toLocaleDateString()}</p>
-                <p><strong>Début:</strong> {new Date(offer.internshipStartDate).toLocaleDateString()}</p>
-                <p><strong>Date limite:</strong> {new Date(offer.limitApplicationDate).toLocaleDateString()}</p>
+            {offers.content?.map(offer => (
+              <div key={offer.id} className={`offer-card ${offer.offerOpen === false ? 'offer-closed' : ''}`}>
+                <div className="offer-card-header">
+                    <div className="offer-title-row">
+                      <h2>{offer.title}</h2>
+                      {offer.offerOpen === false && <span className="offer-closed-badge">Offre clôturée</span>}
+                    </div>
+                    <span className="creation-date">Publié le {new Date(offer.creationDate).toLocaleDateString()}</span>
+                </div>
+
+                <p className="offer-description">{offer.description.substring(0, 100)}...</p>
+
+                <div className="offer-details-grid">
+                    <div className="detail-item">
+                        <i className="fa-solid fa-euro-sign"></i>
+                        <span>{offer.salary || 'Non spécifié'}</span>
+                    </div>
+                    <div className="detail-item">
+                        <i className="fa-regular fa-calendar"></i>
+                        <span>Début: {new Date(offer.internshipStartDate).toLocaleDateString()}</span>
+                    </div>
+                    <div className="detail-item">
+                        <i className="fa-regular fa-hourglass-half"></i>
+                        <span>Limite: {new Date(offer.limitApplicationDate).toLocaleDateString()}</span>
+                    </div>
+                </div>
+
                 <div className="offer-actions">
                   <Link to={`/offers/${offer.id}/applications`}>
                     <Button variant='icon'><i className="fas fa-list"></i></Button>
@@ -89,6 +121,13 @@ const MyOffersPage: React.FC = () => {
                 </div>
               </div>
             ))}
+
+            {offers.page.totalPages > 1 && (
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={offers.page.totalPages}
+                />
+            )}
           </div>
         )}
       </>

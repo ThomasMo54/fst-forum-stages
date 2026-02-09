@@ -9,6 +9,8 @@ export interface ApplicationDto {
     id: string;
     studentId: string;
     offerId: string;
+    accepted: boolean;
+    rejected: boolean;
 }
 
 const createApplication = async (applicationData: CreateApplicationDto): Promise<ApplicationDto> => {
@@ -26,6 +28,26 @@ const getAllApplicationForStudent = async (studentId: string): Promise<Applicati
     return response.data;
 }
 
+const acceptApplication = async (applicationId: string): Promise<ApplicationDto> => {
+    const response = await api.put<ApplicationDto>(`/applications/${applicationId}/accept`);
+    return response.data;
+}
+
+const rejectApplication = async (applicationId: string): Promise<ApplicationDto> => {
+    const response = await api.put<ApplicationDto>(`/applications/${applicationId}/reject`);
+    return response.data;
+}
+
+const resetApplicationStatus = async (applicationId: string): Promise<ApplicationDto> => {
+    const response = await api.put<ApplicationDto>(`/applications/${applicationId}/reset`);
+    return response.data;
+}
+
+const deleteApplication = async (applicationId: string) : Promise<ApplicationDto> => {
+    const response = await api.delete<ApplicationDto>(`/applications/${applicationId}`);
+    return response.data;
+}
+
 const uploadCoverLetter = async (applicationId: string): Promise<string> => {
     const response = await api.put<string>(`/applications/${applicationId}/coverLetter`);
     return response.data;
@@ -36,12 +58,22 @@ const getCoverLetterUrl = async (applicationId: string): Promise<string> => {
     return response.data;
 }
 
+const getCoverLetterDeleteUrl = async (applicationId: string): Promise<string> => {
+    const response = await api.delete<string>(`/applications/${applicationId}/coverLetter`);
+    return response.data;
+}
+
 const ApplicationService = {
     createApplication,
     getAllApplicationsForOffer,
     getAllApplicationForStudent,
+    acceptApplication,
+    rejectApplication,
+    resetApplicationStatus,
+    deleteApplication,
     uploadCoverLetter,
-    getCoverLetterUrl
+    getCoverLetterUrl,
+    getCoverLetterDeleteUrl
 };
 
 export default ApplicationService;
