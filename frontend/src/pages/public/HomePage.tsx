@@ -4,8 +4,8 @@ import './HomePage.css';
 import Header from '../../components/header/Header';
 import Footer from '../../components/footer/Footer';
 import { Link } from 'react-router-dom';
-import OfferService, { type OfferDto } from '../../services/offer.service';
-import OfferService, {type PaginatedOffers} from '../../services/offer.service';
+import Button from '../../components/button/Button';
+import OfferService, { type PaginatedOffers } from '../../services/offer.service';
 import { useAuth } from '../../context/AuthContext';
 import roles from '../../constants/user_roles';
 
@@ -22,6 +22,14 @@ interface StatItemProps {
   number: string;
   label: string;
 }
+
+const StatItem: React.FC<StatItemProps> = ({ number, label }) => (
+  <div className="stat-item">
+    <span className="stat-number">{number}</span>
+    <span className="stat-label">{label}</span>
+  </div>
+);
+
 
 const DashboardCard: React.FC<DashboardCardProps> = ({
   icon,
@@ -59,11 +67,10 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
 
 const HomePage: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
-  const [offers, setOffers] = useState<OfferDto[]>([]);
-  const [offers, setOffers] = useState<PaginatedOffers>(
-      {content: [], page: {size: 0, number: 0, totalElements: 0, totalPages: 0}}
-  );
-  const { isAuthenticated, user } = useAuth();
+  const [offers, setOffers] = useState<PaginatedOffers>({
+    content: [],
+    page: { size: 0, number: 0, totalElements: 0, totalPages: 0 }
+  });
   const [loadingStats, setLoadingStats] = useState<boolean>(true);
   const [statsError, setStatsError] = useState<boolean>(false);
 
@@ -103,8 +110,8 @@ const HomePage: React.FC = () => {
       return `${value}+`;
   };
 
-  const isStudent = isAuthenticated && user?.roles.includes(user_roles.STUDENT);
-  const isCompany = isAuthenticated && user?.roles.includes(user_roles.COMPANY);
+  const isStudent = isAuthenticated && user?.roles.includes(roles.STUDENT);
+  const isCompany = isAuthenticated && user?.roles.includes(roles.COMPANY);
 
   return (
     <div className="home-page">
@@ -297,7 +304,8 @@ const HomePage: React.FC = () => {
               <StatItem number={displayValue(stats.offersCount)} label="Offres disponibles" />
               <StatItem number={displayValue(stats.companyCount)} label="Entreprises partenaires" />
               <StatItem number={displayValue(stats.remoteCount)} label="Offres avec teletravail" />
-        </section>
+            </div>
+          </section>
 
         {/* About Section with Stats */}
         <section className="about-section">
