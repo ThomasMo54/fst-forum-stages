@@ -17,10 +17,6 @@ public record UpdateStudentDto(
         @Size(min = 2, max = 50, message = "Le nom doit contenir entre 2 et 50 caractères")
         String lastName,
 
-        @NotBlank(message = "L'email est obligatoire")
-        @Email(message = "Format d'email invalide")
-        String email,
-
         @NotBlank(message = "Le numéro étudiant est obligatoire")
         @Pattern(regexp = "^[A-Z0-9]{6,20}$", message = "Numéro étudiant invalide (6-20 caractères alphanumériques)")
         String studentNumber,

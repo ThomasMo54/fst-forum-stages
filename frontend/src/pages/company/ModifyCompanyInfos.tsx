@@ -10,7 +10,6 @@ import './ModifyCompanyInfos.css';
 
 interface ModifyCompanyInfosForm {
     name: string;
-    contactEmail: string;
     streetAddress: string;
     city: string;
     postalCode: string;
@@ -24,7 +23,6 @@ const ModifyCompanyInfosPage: React.FC = () => {
     const [formData, setFormData] = useState<ModifyCompanyInfosForm>(
         {
             name: '',
-            contactEmail: '',
             streetAddress: '',
             city: '',
             postalCode: '',
@@ -45,7 +43,6 @@ const ModifyCompanyInfosPage: React.FC = () => {
             const data: CompanyDto = await CompanyService.getCompanyById(user!.entityId);
             setFormData({
                 name: data.name ?? '',
-                contactEmail: data.contactEmail ?? '',
                 streetAddress: data.streetAddress ?? '',
                 city: data.city ?? '',
                 postalCode: data.postalCode ?? '',
@@ -76,9 +73,6 @@ const ModifyCompanyInfosPage: React.FC = () => {
         if (!formData.name) newErrors.name = "Le nom de l'entreprise est requis.";
         if (formData.name.length > 100) newErrors.name = "Le nom de l'entreprise ne doit pas dépasser 100 caractères.";
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(formData.contactEmail)) newErrors.contactEmail = "L'email n'est pas valide.";
-
         if (formData.streetAddress.length > 200) newErrors.streetAddress = "L'adresse ne doit pas dépasser 200 caractères.";
         if (formData.city.length > 100) newErrors.city = "La ville ne doit pas dépasser 100 caractères.";
         if (formData.postalCode.length > 20) newErrors.postalCode = "Le code postal ne doit pas dépasser 20 caractères.";
@@ -99,7 +93,6 @@ const ModifyCompanyInfosPage: React.FC = () => {
 
         const updateCompanyData: UpdateCompanyDto = {
             name: formData.name,
-            contactEmail: formData.contactEmail,
             streetAddress: formData.streetAddress,
             city: formData.city,
             postalCode: formData.postalCode,
@@ -142,17 +135,6 @@ const ModifyCompanyInfosPage: React.FC = () => {
                             {errors.name && <p className="error-message">{errors.name}</p>}
                         </div>
 
-                        <div className='form-group'>
-                            <label>Email de contact</label>
-                            <input
-                                type="email"
-                                name="contactEmail"
-                                value={formData.contactEmail}
-                                onChange={handleChange}
-                                className={errors.contactEmail ? 'input-error' : ''}
-                            />
-                            {errors.contactEmail && <p className="error-message">{errors.contactEmail}</p>}
-                        </div>
                         <div className='form-group'>
                             <label>Adresse</label>
                             <input

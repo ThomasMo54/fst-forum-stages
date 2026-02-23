@@ -35,7 +35,6 @@ public class CompanyEntity {
         CompanyEntity companyEntity = new CompanyEntity();
         companyEntity.id = companyDto.id();
         companyEntity.name = companyDto.name();
-        companyEntity.contactEmail = companyDto.contactEmail();
         companyEntity.streetAddress = companyDto.streetAddress();
         companyEntity.city = companyDto.city();
         companyEntity.postalCode = companyDto.postalCode();

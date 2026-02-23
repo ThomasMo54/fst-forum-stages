@@ -12,7 +12,6 @@ import './ModifyStudentInfos.css';
 interface ModifyStudentInfosForm {
   firstName: string;
   lastName: string;
-  email: string;
   studentNumber: string;
   phone: string;
   educationLevel: string;
@@ -33,7 +32,6 @@ const ModifyStudentInfosPage: React.FC = () => {
     {
       firstName: '',
       lastName: '',
-      email: '',
       studentNumber: '',
       phone: '',
       educationLevel: '',
@@ -58,7 +56,6 @@ const ModifyStudentInfosPage: React.FC = () => {
       setFormData({
         firstName: data.firstName ?? '',
         lastName: data.lastName ?? '',
-        email: data.email ?? '',
         studentNumber: data.studentNumber ?? '',
         phone: data.phone ?? '',
         educationLevel: data.educationLevel ?? '',
@@ -111,10 +108,6 @@ const ModifyStudentInfosPage: React.FC = () => {
     if (formData.lastName.length > 50) newErrors.lastName = "Le nom de famille ne doit pas dépasser 50 caractères.";
     if (formData.lastName.length < 2) newErrors.lastName = "Le nom de famille doit contenir au moins 2 caractères.";
 
-    if (!formData.email) newErrors.email = "L'email est requis.";
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) newErrors.email = "L'email n'est pas valide.";
-
     if (!formData.studentNumber) newErrors.studentNumber = "Le numéro étudiant est requis.";
     const studentNumberRegex = /^[A-Z0-9]{6,20}$/;
     if (!studentNumberRegex.test(formData.studentNumber)) newErrors.studentNumber = "Le numéro étudiant n'est pas valide. (6-20 caractères alphanumériques)";
@@ -143,7 +136,6 @@ const ModifyStudentInfosPage: React.FC = () => {
     const studentData: UpdateStudentDto = {
       firstName: formData.firstName,
       lastName: formData.lastName,
-      email: formData.email,
       studentNumber: formData.studentNumber,
       phone: formData.phone,
       educationLevel: formData.educationLevel,
@@ -211,18 +203,6 @@ const ModifyStudentInfosPage: React.FC = () => {
                 className={errors.lastName ? 'input-error' : ''}
               />
               {errors.lastName && <p className="error-message">{errors.lastName}</p>}
-            </div>
-
-            <div className='form-group'>
-              <label>Email:</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={errors.email ? 'input-error' : ''}
-              />
-              {errors.email && <p className="error-message">{errors.email}</p>}
             </div>
 
             <div className='form-group'>
