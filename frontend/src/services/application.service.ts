@@ -23,6 +23,13 @@ const getAllApplicationsForOffer = async (offerId: string): Promise<ApplicationD
     return response.data;
 }
 
+
+const getNumberOfApplicationsForOffer = async (offerId: string): Promise<number> => {
+    const response = await api.get<number>(`/applications/offer/${offerId}/count`);
+    return response.data;
+}
+
+
 const getAllApplicationForStudent = async (studentId: string): Promise<ApplicationDto[]> => {
     const response = await api.get<ApplicationDto[]>(`/applications/student/${studentId}`);
     return response.data;
@@ -66,6 +73,7 @@ const getCoverLetterDeleteUrl = async (applicationId: string): Promise<string> =
 const ApplicationService = {
     createApplication,
     getAllApplicationsForOffer,
+    getNumberOfApplicationsForOffer,
     getAllApplicationForStudent,
     acceptApplication,
     rejectApplication,

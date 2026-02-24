@@ -57,6 +57,18 @@ public class ApplicationController {
         return applications.stream().map(ApplicationDto::fromEntity).toList();
     }
 
+    @Operation(summary = "Récupérer le nombre de candidatures d'une offre", description = "Permet de récupérer le nombre de candidatures d'une offre d'id fournies")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Nombre de candidatures récupérés avec succès"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - permissions insuffisantes"),
+            @ApiResponse(responseCode = "404", description = "Offre non trouvée")
+    })
+//    @IsAdminOrOfferOwner
+    @GetMapping("/offer/{offerId}/count")
+    public int getNumberOfApplicationsForOffer(@PathVariable String offerId) {
+        return applicationService.getNumberOfApplicationsForOffer(offerId);
+    }
+
     @Operation(summary = "Récupérer toutes les candidatures d'un étudiant", description = "Permet de récupérer toutes les candidatures d'un étudiant d'id fournies")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Candidatures récupérées avec succès"),

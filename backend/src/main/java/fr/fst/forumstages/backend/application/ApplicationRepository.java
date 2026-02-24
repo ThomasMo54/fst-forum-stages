@@ -13,5 +13,8 @@ public interface ApplicationRepository extends MongoRepository<ApplicationEntity
     @Query("{ 'studentId' : ?0 }")
     List<ApplicationEntity> findByStudentId(String offerId);
 
+    @Query(value = "{ 'offerId' : ?0 }", count = true)
+    int countByOfferId(String offerId);
+
     Long countByCreatedAtBefore(LocalDateTime date);
 }
