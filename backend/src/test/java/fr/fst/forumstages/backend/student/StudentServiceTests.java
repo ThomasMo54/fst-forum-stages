@@ -31,8 +31,15 @@ class StudentServiceTests {
     @Test
     void updateStudent_Success() {
         UpdateStudentDto request = new UpdateStudentDto(
-                "Jean", "Martin", "jean.martin@example.com", "STU123456",
-                "+33612345678", "Master", "Informatique", "Dev Web", 3, null
+                "Jean",
+                "Martin",
+                "STU123456",
+                "+33612345678",
+                "Master",
+                "Informatique",
+                "Dev Web",
+                3,
+                null
         );
 
         StudentEntity entity = new StudentEntity();
@@ -43,7 +50,6 @@ class StudentServiceTests {
         entity.setStudentNumber("STU123456");
 
         when(studentRepository.findById("123")).thenReturn(Optional.of(entity));
-        when(studentRepository.existsByEmail("jean.martin@example.com")).thenReturn(false);
         when(studentRepository.save(any(StudentEntity.class))).thenReturn(entity);
 
         StudentDto result = studentService.updateStudent("123", request);

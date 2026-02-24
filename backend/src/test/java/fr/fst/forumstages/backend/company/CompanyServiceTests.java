@@ -70,7 +70,6 @@ public class CompanyServiceTests {
 
         var updateDto = new UpdateCompanyDto(
                 "New Name",
-                "a@b.fr",
                 "1 Main St",
                 "Cityville",
                 "12345",
@@ -105,7 +104,6 @@ public class CompanyServiceTests {
         when(companyRepository.save(any(CompanyEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         var updateDto = new UpdateCompanyDto(
-                null,
                 null,
                 null,
                 null,

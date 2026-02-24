@@ -85,7 +85,6 @@ public class CompanyControllerTests {
                 null,
                 null,
                 null,
-                null,
                 null
         );
         CompanyEntity updatedCompany = new CompanyEntity();
@@ -109,7 +108,6 @@ public class CompanyControllerTests {
         String companyId = "123";
         UpdateCompanyDto updateCompanyDto = new UpdateCompanyDto(
                 "Updated Company",
-                null,
                 null,
                 null,
                 null,
@@ -146,7 +144,6 @@ public class CompanyControllerTests {
         String companyId = "123";
         UpdateCompanyDto updateCompanyDto = new UpdateCompanyDto(
                 "Updated Company",
-                null,
                 null,
                 null,
                 null,
