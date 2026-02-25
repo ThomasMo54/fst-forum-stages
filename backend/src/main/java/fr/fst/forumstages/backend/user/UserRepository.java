@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends MongoRepository<UserEntity, String> {
@@ -23,4 +24,6 @@ public interface UserRepository extends MongoRepository<UserEntity, String> {
     Long countByRole(UserRole role);
 
     Long countByRoleAndCreatedAtBefore(UserRole role, LocalDateTime date);
+
+    List<UserEntity> findByRole(UserRole role);
 }
