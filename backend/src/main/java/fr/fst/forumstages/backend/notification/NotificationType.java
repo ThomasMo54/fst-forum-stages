@@ -8,8 +8,11 @@ public enum NotificationType {
     OFFER_MATCH("Offre correspondante"),
 
     // Notifications entreprises
-    NEW_APPLICATION_RECEIVED("Nouvelle candidature");
+    NEW_APPLICATION_RECEIVED("Nouvelle candidature"),
 
+    // Notifications admin
+    NEW_STUDENT_REGISTERED("Nouvel étudiant inscrit"),
+    NEW_COMPANY_REGISTERED("Nouvelle entreprise inscrite");
 
     private final String displayName;
 
