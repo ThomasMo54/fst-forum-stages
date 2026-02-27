@@ -20,45 +20,47 @@ import ApplicationPage from "./pages/offers/ApplicationPage.tsx";
 import StudentMyApplicationsPage from "./pages/student/applications/MyApplicationsPage.tsx";
 import AdminRoute from "./components/route/AdminRoute.tsx";
 import StatsPage from "./pages/admin/stats/StatsPage.tsx";
-import UserManagementPage from "./pages/admin/users/UserManagementPage.tsx";
+import StudentManagementPage from "./pages/admin/students/StudentManagementPage.tsx";
+import CompanyManagementPage from "./pages/admin/companies/CompanyManagementPage.tsx";
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route element={<PrivateRoute />}>
-            <Route path="/offers" element={<OffersPage />} />
-            <Route path="/offers/:offerId/apply" element={<ApplyOfferPage />} />
-            <Route path="/offers/:offerId/apply/:applicationId" element={<ApplyOfferPage />} />
-            <Route path="/offers/:offerId/applications" element={<ApplicationPage />} />
-          </Route>
-          <Route element={<PublicRoute />}>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/register/student" element={<StudentRegisterPage />} />
-            <Route path="/register/company" element={<CompanyRegisterPage />} />
-            <Route path="/register/verify" element={<VerifyPage />} />
-          </Route>
-          <Route element={<CompanyRoute />}>
-            <Route path="/company/create-offer" element={<OfferFormPage mode="create" />} />
-            <Route path="/company/edit-offer/:offerId" element={<OfferFormPage mode="edit" />}/>
-            <Route path="/company/my-offers" element={<MyOffersPage />} />
-            <Route path="/company/modify-infos" element={<ModifyCompanyInfosPage />} />
-          </Route>
-          <Route element={<StudentRoute />}>
-            <Route path="/student/modify-infos" element={<ModifyStudentInfosPage />} />
-            <Route path="/student/my-applications" element={<StudentMyApplicationsPage />} />
-          </Route>
-          <Route element={<AdminRoute />}>
-            <Route path="/admin/stats" element={<StatsPage />} />
-            <Route path="/admin/users" element={<UserManagementPage />} />
-          </Route>
-        </Routes>
-      </AuthProvider>
-    </Router>
-  )
+      <Router>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route element={<PrivateRoute />}>
+              <Route path="/offers" element={<OffersPage />} />
+              <Route path="/offers/:offerId/apply" element={<ApplyOfferPage />} />
+              <Route path="/offers/:offerId/apply/:applicationId" element={<ApplyOfferPage />} />
+              <Route path="/offers/:offerId/applications" element={<ApplicationPage />} />
+            </Route>
+            <Route element={<PublicRoute />}>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/register/student" element={<StudentRegisterPage />} />
+              <Route path="/register/company" element={<CompanyRegisterPage />} />
+              <Route path="/register/verify" element={<VerifyPage />} />
+            </Route>
+            <Route element={<CompanyRoute />}>
+              <Route path="/company/create-offer" element={<OfferFormPage mode="create" />} />
+              <Route path="/company/edit-offer/:offerId" element={<OfferFormPage mode="edit" />} />
+              <Route path="/company/my-offers" element={<MyOffersPage />} />
+              <Route path="/company/modify-infos" element={<ModifyCompanyInfosPage />} />
+            </Route>
+            <Route element={<StudentRoute />}>
+              <Route path="/student/modify-infos" element={<ModifyStudentInfosPage />} />
+              <Route path="/student/my-applications" element={<StudentMyApplicationsPage />} />
+            </Route>
+            <Route element={<AdminRoute />}>
+              <Route path="/admin/stats" element={<StatsPage />} />
+              <Route path="/admin/students" element={<StudentManagementPage />} />
+              <Route path="/admin/companies" element={<CompanyManagementPage />} />
+            </Route>
+          </Routes>
+        </AuthProvider>
+      </Router>
+  );
 }
 
-export default App
+export default App;
