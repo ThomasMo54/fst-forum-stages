@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Header from '../../../components/header/Header';
 import Footer from '../../../components/footer/Footer';
 import Button from '../../../components/button/Button';
@@ -30,8 +30,41 @@ const CompanyManagementPage: React.FC = () => {
     const [openAccordions, setOpenAccordions] = useState<Set<string>>(new Set());
     const [accordionData, setAccordionData] = useState<Record<string, AccordionData>>({});
 
-    const totalPages = Math.ceil(allCompanies.length / PAGE_SIZE);
-    const pagedCompanies = allCompanies.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+    // Filtres
+    const [searchName, setSearchName] = useState('');
+    const [filterCity, setFilterCity] = useState('');
+    const [filterCountry, setFilterCountry] = useState('');
+
+    const uniqueCities = useMemo(() =>
+            [...new Set(allCompanies.map(c => c.company?.city).filter(Boolean))] as string[],
+        [allCompanies]
+    );
+    const uniqueCountries = useMemo(() =>
+            [...new Set(allCompanies.map(c => c.company?.country).filter(Boolean))] as string[],
+        [allCompanies]
+    );
+
+    const filteredCompanies = useMemo(() => {
+        return allCompanies.filter(item => {
+            const name = (item.company?.name || item.user.email).toLowerCase();
+            const matchName = !searchName || name.includes(searchName.toLowerCase());
+            const matchCity = !filterCity || item.company?.city === filterCity;
+            const matchCountry = !filterCountry || item.company?.country === filterCountry;
+            return matchName && matchCity && matchCountry;
+        });
+    }, [allCompanies, searchName, filterCity, filterCountry]);
+
+    const totalPages = Math.ceil(filteredCompanies.length / PAGE_SIZE);
+    const pagedCompanies = filteredCompanies.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+    const hasActiveFilters = searchName || filterCity || filterCountry;
+
+    const resetFilters = () => {
+        setSearchName('');
+        setFilterCity('');
+        setFilterCountry('');
+        setPage(0);
+    };
 
     const fetchCompanies = async () => {
         setLoading(true);
@@ -39,12 +72,11 @@ const CompanyManagementPage: React.FC = () => {
         setPage(0);
         setOpenAccordions(new Set());
         setAccordionData({});
+        resetFilters();
         try {
             const response = await UserService.getUsers(0, 1000, roles.COMPANY);
-            const users = response.content;
-
             const withDetails: CompanyWithDetails[] = await Promise.all(
-                users.map(async (user) => {
+                response.content.map(async (user) => {
                     if (!user.entityId) return { user };
                     try {
                         const company = await CompanyService.getCompanyById(user.entityId);
@@ -67,39 +99,24 @@ const CompanyManagementPage: React.FC = () => {
         fetchCompanies();
     }, []);
 
+    useEffect(() => {
+        setPage(0);
+    }, [searchName, filterCity, filterCountry]);
+
     const toggleAccordion = async (userId: string, entityId: string | null) => {
         const isOpen = openAccordions.has(userId);
-
         if (isOpen) {
-            setOpenAccordions(prev => {
-                const next = new Set(prev);
-                next.delete(userId);
-                return next;
-            });
+            setOpenAccordions(prev => { const next = new Set(prev); next.delete(userId); return next; });
             return;
         }
-
         setOpenAccordions(prev => new Set([...prev, userId]));
-
         if (!entityId) return;
-
-        setAccordionData(prev => ({
-            ...prev,
-            [userId]: { offers: [], loading: true, loaded: false }
-        }));
-
+        setAccordionData(prev => ({ ...prev, [userId]: { offers: [], loading: true, loaded: false } }));
         try {
             const data = await OfferService.getOffersByCompany(entityId, 0);
-            setAccordionData(prev => ({
-                ...prev,
-                [userId]: { offers: data.content, loading: false, loaded: true }
-            }));
-        } catch (err) {
-            console.error(err);
-            setAccordionData(prev => ({
-                ...prev,
-                [userId]: { offers: [], loading: false, loaded: true }
-            }));
+            setAccordionData(prev => ({ ...prev, [userId]: { offers: data.content, loading: false, loaded: true } }));
+        } catch {
+            setAccordionData(prev => ({ ...prev, [userId]: { offers: [], loading: false, loaded: true } }));
         }
     };
 
@@ -107,15 +124,10 @@ const CompanyManagementPage: React.FC = () => {
         if (!window.confirm(`Supprimer l'entreprise "${name}" ?`)) return;
         try {
             await UserService.deleteUser(userId);
-            setOpenAccordions(prev => {
-                const next = new Set(prev);
-                next.delete(userId);
-                return next;
-            });
+            setOpenAccordions(prev => { const next = new Set(prev); next.delete(userId); return next; });
             fetchCompanies();
-        } catch (err) {
+        } catch {
             alert("Erreur lors de la suppression.");
-            console.error(err);
         }
     };
 
@@ -124,18 +136,11 @@ const CompanyManagementPage: React.FC = () => {
         try {
             await OfferService.deleteOffer(offerId);
             if (!entityId) return;
-            setAccordionData(prev => ({
-                ...prev,
-                [userId]: { ...prev[userId], loading: true }
-            }));
+            setAccordionData(prev => ({ ...prev, [userId]: { ...prev[userId], loading: true } }));
             const data = await OfferService.getOffersByCompany(entityId, 0);
-            setAccordionData(prev => ({
-                ...prev,
-                [userId]: { offers: data.content, loading: false, loaded: true }
-            }));
-        } catch (err) {
+            setAccordionData(prev => ({ ...prev, [userId]: { offers: data.content, loading: false, loaded: true } }));
+        } catch {
             alert("Erreur lors de la suppression de l'offre.");
-            console.error(err);
         }
     };
 
@@ -148,18 +153,57 @@ const CompanyManagementPage: React.FC = () => {
                         <p className="eyebrow">Administration</p>
                         <h1>Gestion des entreprises</h1>
                         <p className="lead">
-                            {allCompanies.length} entreprise{allCompanies.length !== 1 ? 's' : ''} inscrite{allCompanies.length !== 1 ? 's' : ''}
+                            {loading ? '...' : `${filteredCompanies.length} entreprise${filteredCompanies.length !== 1 ? 's' : ''}${hasActiveFilters ? ' trouvée' + (filteredCompanies.length !== 1 ? 's' : '') : ' inscrite' + (filteredCompanies.length !== 1 ? 's' : '')}`}
                         </p>
                     </section>
 
                     <section className="admin-section">
-                        <div className="section-header">
-                            <div className="filters">
-                                <Button size="small" variant="secondary" onClick={fetchCompanies}>
-                                    <i className="fa-solid fa-rotate" style={{ marginRight: '6px' }}></i>
-                                    Actualiser
-                                </Button>
+                        <div className="admin-filters-bar">
+                            <div className="admin-filter-search">
+                                <i className="fa-solid fa-magnifying-glass admin-filter-icon"></i>
+                                <input
+                                    type="text"
+                                    placeholder="Rechercher par nom..."
+                                    value={searchName}
+                                    onChange={e => setSearchName(e.target.value)}
+                                    className="admin-filter-input"
+                                />
+                                {searchName && (
+                                    <button className="admin-filter-clear" onClick={() => setSearchName('')}>
+                                        <i className="fa-solid fa-xmark"></i>
+                                    </button>
+                                )}
                             </div>
+
+                            <select
+                                value={filterCity}
+                                onChange={e => setFilterCity(e.target.value)}
+                                className={`admin-filter-select ${filterCity ? 'active' : ''}`}
+                            >
+                                <option value="">Toutes les villes</option>
+                                {uniqueCities.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+
+                            <select
+                                value={filterCountry}
+                                onChange={e => setFilterCountry(e.target.value)}
+                                className={`admin-filter-select ${filterCountry ? 'active' : ''}`}
+                            >
+                                <option value="">Tous les pays</option>
+                                {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+
+                            {hasActiveFilters && (
+                                <button className="admin-filter-reset" onClick={resetFilters}>
+                                    <i className="fa-solid fa-filter-circle-xmark" style={{ marginRight: '6px' }}></i>
+                                    Réinitialiser
+                                </button>
+                            )}
+
+                            <Button size="small" variant="secondary" onClick={fetchCompanies}>
+                                <i className="fa-solid fa-rotate" style={{ marginRight: '6px' }}></i>
+                                Actualiser
+                            </Button>
                         </div>
 
                         {error && <div className="error-message inline-error">{error}</div>}
@@ -172,9 +216,15 @@ const CompanyManagementPage: React.FC = () => {
                                     </div>
                                 ))}
                             </div>
-                        ) : allCompanies.length === 0 ? (
+                        ) : filteredCompanies.length === 0 ? (
                             <div className="empty-state">
-                                <p>Aucune entreprise trouvée.</p>
+                                <i className="fa-solid fa-building-circle-xmark" style={{ fontSize: '2rem', color: '#cbd5e1', marginBottom: '12px', display: 'block' }}></i>
+                                <p>{hasActiveFilters ? 'Aucune entreprise ne correspond aux filtres.' : 'Aucune entreprise trouvée.'}</p>
+                                {hasActiveFilters && (
+                                    <button className="admin-filter-reset" onClick={resetFilters} style={{ margin: '8px auto 0' }}>
+                                        Réinitialiser les filtres
+                                    </button>
+                                )}
                             </div>
                         ) : (
                             <>
@@ -186,7 +236,6 @@ const CompanyManagementPage: React.FC = () => {
 
                                         return (
                                             <div key={item.user.id} className={`admin-accordion-item ${isOpen ? 'accordion-open' : ''}`}>
-                                                {/* Row */}
                                                 <div className="admin-item-content">
                                                     <div className="admin-item-avatar company">
                                                         <i className="fa-solid fa-building"></i>
@@ -203,32 +252,22 @@ const CompanyManagementPage: React.FC = () => {
                             <span className="admin-item-date">
                               {new Date(item.user.createdAt).toLocaleDateString('fr-FR')}
                             </span>
-                                                        <Button
-                                                            variant="secondary"
-                                                            size="small"
-                                                            onClick={() => toggleAccordion(item.user.id, item.user.entityId)}
-                                                        >
+                                                        <Button variant="secondary" size="small" onClick={() => toggleAccordion(item.user.id, item.user.entityId)}>
                                                             <i className={`fa-solid fa-chevron-${isOpen ? 'up' : 'down'}`} style={{ marginRight: '6px' }}></i>
                                                             {isOpen ? 'Masquer' : 'Détails'}
                                                         </Button>
-                                                        <Button
-                                                            variant="danger"
-                                                            size="small"
-                                                            onClick={() => handleDeleteCompany(item.user.id, displayName)}
-                                                        >
+                                                        <Button variant="danger" size="small" onClick={() => handleDeleteCompany(item.user.id, displayName)}>
                                                             <i className="fa-solid fa-trash"></i>
                                                         </Button>
                                                     </div>
                                                 </div>
 
-                                                {/* Accordion panel */}
                                                 {isOpen && (
                                                     <div className="accordion-panel">
                                                         {!item.company ? (
                                                             <p className="accordion-empty">Détails indisponibles pour cette entreprise.</p>
                                                         ) : (
                                                             <>
-                                                                {/* Infos */}
                                                                 <div className="accordion-section">
                                                                     <h4 className="accordion-section-title">Informations</h4>
                                                                     <div className="accordion-info-grid">
@@ -255,7 +294,6 @@ const CompanyManagementPage: React.FC = () => {
                                                                     </div>
                                                                 </div>
 
-                                                                {/* Offres */}
                                                                 <div className="accordion-section">
                                                                     <h4 className="accordion-section-title">Offres publiées</h4>
                                                                     {data?.loading ? (
@@ -280,7 +318,6 @@ const CompanyManagementPage: React.FC = () => {
                                                                                     </div>
                                                                                 </div>
                                                                             )}
-
                                                                             {data?.offers.length === 0 ? (
                                                                                 <p className="accordion-empty">Aucune offre publiée pour le moment.</p>
                                                                             ) : (
@@ -298,11 +335,7 @@ const CompanyManagementPage: React.FC = () => {
                                                 <span className={`status-badge ${offer.offerOpen ? 'status-accepted' : 'status-rejected'}`}>
                                                   {offer.offerOpen ? 'Ouverte' : 'Clôturée'}
                                                 </span>
-                                                                                                <Button
-                                                                                                    variant="danger"
-                                                                                                    size="small"
-                                                                                                    onClick={() => handleDeleteOffer(offer.id, offer.title, item.user.id, item.user.entityId)}
-                                                                                                >
+                                                                                                <Button variant="danger" size="small" onClick={() => handleDeleteOffer(offer.id, offer.title, item.user.id, item.user.entityId)}>
                                                                                                     <i className="fa-solid fa-trash"></i>
                                                                                                 </Button>
                                                                                             </div>
@@ -314,13 +347,8 @@ const CompanyManagementPage: React.FC = () => {
                                                                     )}
                                                                 </div>
 
-                                                                {/* Supprimer entreprise */}
                                                                 <div className="accordion-section accordion-danger-zone">
-                                                                    <Button
-                                                                        variant="danger"
-                                                                        size="small"
-                                                                        onClick={() => handleDeleteCompany(item.user.id, displayName)}
-                                                                    >
+                                                                    <Button variant="danger" size="small" onClick={() => handleDeleteCompany(item.user.id, displayName)}>
                                                                         <i className="fa-solid fa-trash" style={{ marginRight: '8px' }}></i>
                                                                         Supprimer l'entreprise
                                                                     </Button>
@@ -336,21 +364,11 @@ const CompanyManagementPage: React.FC = () => {
 
                                 {totalPages > 1 && (
                                     <div className="pagination">
-                                        <Button
-                                            variant="secondary"
-                                            size="small"
-                                            disabled={page === 0}
-                                            onClick={() => setPage(p => p - 1)}
-                                        >
+                                        <Button variant="secondary" size="small" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
                                             Précédent
                                         </Button>
                                         <span className="page-info">Page {page + 1} sur {totalPages}</span>
-                                        <Button
-                                            variant="secondary"
-                                            size="small"
-                                            disabled={page >= totalPages - 1}
-                                            onClick={() => setPage(p => p + 1)}
-                                        >
+                                        <Button variant="secondary" size="small" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
                                             Suivant
                                         </Button>
                                     </div>

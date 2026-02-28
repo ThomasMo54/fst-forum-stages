@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Header from '../../../components/header/Header';
 import Footer from '../../../components/footer/Footer';
 import Button from '../../../components/button/Button';
@@ -35,8 +35,44 @@ const StudentManagementPage: React.FC = () => {
     const [openAccordions, setOpenAccordions] = useState<Set<string>>(new Set());
     const [accordionData, setAccordionData] = useState<Record<string, AccordionData>>({});
 
-    const totalPages = Math.ceil(allStudents.length / PAGE_SIZE);
-    const pagedStudents = allStudents.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+    // Filtres
+    const [searchName, setSearchName] = useState('');
+    const [filterField, setFilterField] = useState('');
+    const [filterLevel, setFilterLevel] = useState('');
+
+    // Valeurs uniques pour les selects
+    const uniqueFields = useMemo(() =>
+            [...new Set(allStudents.map(s => s.student?.fieldOfStudy).filter(Boolean))] as string[],
+        [allStudents]
+    );
+    const uniqueLevels = useMemo(() =>
+            [...new Set(allStudents.map(s => s.student?.educationLevel).filter(Boolean))] as string[],
+        [allStudents]
+    );
+
+    const filteredStudents = useMemo(() => {
+        return allStudents.filter(item => {
+            const name = item.student
+                ? `${item.student.firstName} ${item.student.lastName}`.toLowerCase()
+                : item.user.email.toLowerCase();
+            const matchName = !searchName || name.includes(searchName.toLowerCase());
+            const matchField = !filterField || item.student?.fieldOfStudy === filterField;
+            const matchLevel = !filterLevel || item.student?.educationLevel === filterLevel;
+            return matchName && matchField && matchLevel;
+        });
+    }, [allStudents, searchName, filterField, filterLevel]);
+
+    const totalPages = Math.ceil(filteredStudents.length / PAGE_SIZE);
+    const pagedStudents = filteredStudents.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+    const resetFilters = () => {
+        setSearchName('');
+        setFilterField('');
+        setFilterLevel('');
+        setPage(0);
+    };
+
+    const hasActiveFilters = searchName || filterField || filterLevel;
 
     const fetchStudents = async () => {
         setLoading(true);
@@ -44,13 +80,11 @@ const StudentManagementPage: React.FC = () => {
         setPage(0);
         setOpenAccordions(new Set());
         setAccordionData({});
+        resetFilters();
         try {
-            // Charge tout (taille large pour tout récupérer)
             const response = await UserService.getUsers(0, 1000, roles.STUDENT);
-            const users = response.content;
-
             const withDetails: StudentWithDetails[] = await Promise.all(
-                users.map(async (user) => {
+                response.content.map(async (user) => {
                     if (!user.entityId) return { user };
                     try {
                         const student = await StudentService.getStudentById(user.entityId);
@@ -73,50 +107,31 @@ const StudentManagementPage: React.FC = () => {
         fetchStudents();
     }, []);
 
+    // Reset page quand les filtres changent
+    useEffect(() => {
+        setPage(0);
+    }, [searchName, filterField, filterLevel]);
+
     const toggleAccordion = async (userId: string, entityId: string | null) => {
         const isOpen = openAccordions.has(userId);
-
         if (isOpen) {
-            setOpenAccordions(prev => {
-                const next = new Set(prev);
-                next.delete(userId);
-                return next;
-            });
+            setOpenAccordions(prev => { const next = new Set(prev); next.delete(userId); return next; });
             return;
         }
-
         setOpenAccordions(prev => new Set([...prev, userId]));
-
         if (!entityId) return;
-
-        // Toujours recharger à chaque ouverture
-        setAccordionData(prev => ({
-            ...prev,
-            [userId]: { applications: [], loading: true, loaded: false }
-        }));
-
+        setAccordionData(prev => ({ ...prev, [userId]: { applications: [], loading: true, loaded: false } }));
         try {
             const appsData = await ApplicationService.getAllApplicationForStudent(entityId);
             const appsWithOffers = await Promise.all(
                 appsData.map(async (app) => {
-                    try {
-                        const offer = await OfferService.getOfferById(app.offerId);
-                        return { ...app, offer };
-                    } catch {
-                        return app;
-                    }
+                    try { const offer = await OfferService.getOfferById(app.offerId); return { ...app, offer }; }
+                    catch { return app; }
                 })
             );
-            setAccordionData(prev => ({
-                ...prev,
-                [userId]: { applications: appsWithOffers, loading: false, loaded: true }
-            }));
-        } catch (err) {
-            console.error(err);
-            setAccordionData(prev => ({
-                ...prev,
-                [userId]: { applications: [], loading: false, loaded: true }
-            }));
+            setAccordionData(prev => ({ ...prev, [userId]: { applications: appsWithOffers, loading: false, loaded: true } }));
+        } catch {
+            setAccordionData(prev => ({ ...prev, [userId]: { applications: [], loading: false, loaded: true } }));
         }
     };
 
@@ -124,15 +139,10 @@ const StudentManagementPage: React.FC = () => {
         if (!window.confirm(`Supprimer l'étudiant "${name}" ?`)) return;
         try {
             await UserService.deleteUser(userId);
-            setOpenAccordions(prev => {
-                const next = new Set(prev);
-                next.delete(userId);
-                return next;
-            });
+            setOpenAccordions(prev => { const next = new Set(prev); next.delete(userId); return next; });
             fetchStudents();
-        } catch (err) {
+        } catch {
             alert("Erreur lors de la suppression.");
-            console.error(err);
         }
     };
 
@@ -150,16 +160,59 @@ const StudentManagementPage: React.FC = () => {
                     <section className="admin-hero">
                         <p className="eyebrow">Administration</p>
                         <h1>Gestion des étudiants</h1>
+                        <p className="lead">
+                            {loading ? '...' : `${filteredStudents.length} étudiant${filteredStudents.length !== 1 ? 's' : ''}${hasActiveFilters ? ' trouvé' + (filteredStudents.length !== 1 ? 's' : '') : ' inscrit' + (filteredStudents.length !== 1 ? 's' : '')}`}
+                        </p>
                     </section>
 
                     <section className="admin-section">
-                        <div className="section-header">
-                            <div className="filters">
-                                <Button size="small" variant="secondary" onClick={fetchStudents}>
-                                    <i className="fa-solid fa-rotate" style={{ marginRight: '6px' }}></i>
-                                    Actualiser
-                                </Button>
+                        {/* Barre de filtres */}
+                        <div className="admin-filters-bar">
+                            <div className="admin-filter-search">
+                                <i className="fa-solid fa-magnifying-glass admin-filter-icon"></i>
+                                <input
+                                    type="text"
+                                    placeholder="Rechercher par nom..."
+                                    value={searchName}
+                                    onChange={e => setSearchName(e.target.value)}
+                                    className="admin-filter-input"
+                                />
+                                {searchName && (
+                                    <button className="admin-filter-clear" onClick={() => setSearchName('')}>
+                                        <i className="fa-solid fa-xmark"></i>
+                                    </button>
+                                )}
                             </div>
+
+                            <select
+                                value={filterField}
+                                onChange={e => setFilterField(e.target.value)}
+                                className={`admin-filter-select ${filterField ? 'active' : ''}`}
+                            >
+                                <option value="">Toutes les filières</option>
+                                {uniqueFields.map(f => <option key={f} value={f}>{f}</option>)}
+                            </select>
+
+                            <select
+                                value={filterLevel}
+                                onChange={e => setFilterLevel(e.target.value)}
+                                className={`admin-filter-select ${filterLevel ? 'active' : ''}`}
+                            >
+                                <option value="">Tous les niveaux</option>
+                                {uniqueLevels.map(l => <option key={l} value={l}>{l}</option>)}
+                            </select>
+
+                            {hasActiveFilters && (
+                                <button className="admin-filter-reset" onClick={resetFilters}>
+                                    <i className="fa-solid fa-filter-circle-xmark" style={{ marginRight: '6px' }}></i>
+                                    Réinitialiser
+                                </button>
+                            )}
+
+                            <Button size="small" variant="secondary" onClick={fetchStudents}>
+                                <i className="fa-solid fa-rotate" style={{ marginRight: '6px' }}></i>
+                                Actualiser
+                            </Button>
                         </div>
 
                         {error && <div className="error-message inline-error">{error}</div>}
@@ -172,9 +225,15 @@ const StudentManagementPage: React.FC = () => {
                                     </div>
                                 ))}
                             </div>
-                        ) : allStudents.length === 0 ? (
+                        ) : filteredStudents.length === 0 ? (
                             <div className="empty-state">
-                                <p>Aucun étudiant trouvé.</p>
+                                <i className="fa-solid fa-user-slash" style={{ fontSize: '2rem', color: '#cbd5e1', marginBottom: '12px', display: 'block' }}></i>
+                                <p>{hasActiveFilters ? 'Aucun étudiant ne correspond aux filtres.' : 'Aucun étudiant trouvé.'}</p>
+                                {hasActiveFilters && (
+                                    <button className="admin-filter-reset" onClick={resetFilters} style={{ margin: '8px auto 0' }}>
+                                        Réinitialiser les filtres
+                                    </button>
+                                )}
                             </div>
                         ) : (
                             <>
@@ -188,7 +247,6 @@ const StudentManagementPage: React.FC = () => {
 
                                         return (
                                             <div key={item.user.id} className={`admin-accordion-item ${isOpen ? 'accordion-open' : ''}`}>
-                                                {/* Row */}
                                                 <div className="admin-item-content">
                                                     <div className="admin-item-avatar student">
                                                         <i className="fa-solid fa-user-graduate"></i>
@@ -205,32 +263,22 @@ const StudentManagementPage: React.FC = () => {
                             <span className="admin-item-date">
                               {new Date(item.user.createdAt).toLocaleDateString('fr-FR')}
                             </span>
-                                                        <Button
-                                                            variant="secondary"
-                                                            size="small"
-                                                            onClick={() => toggleAccordion(item.user.id, item.user.entityId)}
-                                                        >
+                                                        <Button variant="secondary" size="small" onClick={() => toggleAccordion(item.user.id, item.user.entityId)}>
                                                             <i className={`fa-solid fa-chevron-${isOpen ? 'up' : 'down'}`} style={{ marginRight: '6px' }}></i>
                                                             {isOpen ? 'Masquer' : 'Détails'}
                                                         </Button>
-                                                        <Button
-                                                            variant="danger"
-                                                            size="small"
-                                                            onClick={() => handleDelete(item.user.id, displayName)}
-                                                        >
+                                                        <Button variant="danger" size="small" onClick={() => handleDelete(item.user.id, displayName)}>
                                                             <i className="fa-solid fa-trash"></i>
                                                         </Button>
                                                     </div>
                                                 </div>
 
-                                                {/* Accordion panel */}
                                                 {isOpen && (
                                                     <div className="accordion-panel">
                                                         {!item.student ? (
                                                             <p className="accordion-empty">Détails indisponibles pour cet étudiant.</p>
                                                         ) : (
                                                             <>
-                                                                {/* Profil */}
                                                                 <div className="accordion-section">
                                                                     <h4 className="accordion-section-title">Profil</h4>
                                                                     <div className="accordion-info-grid">
@@ -271,7 +319,6 @@ const StudentManagementPage: React.FC = () => {
                                                                     )}
                                                                 </div>
 
-                                                                {/* Stats + Candidatures */}
                                                                 <div className="accordion-section">
                                                                     <h4 className="accordion-section-title">Candidatures</h4>
                                                                     {data?.loading ? (
@@ -300,7 +347,6 @@ const StudentManagementPage: React.FC = () => {
                                                                                     </div>
                                                                                 </div>
                                                                             )}
-
                                                                             {data?.applications.length === 0 ? (
                                                                                 <p className="accordion-empty">Aucune candidature pour le moment.</p>
                                                                             ) : (
@@ -319,9 +365,7 @@ const StudentManagementPage: React.FC = () => {
                                                     </span>
                                                                                                     )}
                                                                                                 </div>
-                                                                                                <span className={`status-badge ${status.className}`}>
-                                                  {status.label}
-                                                </span>
+                                                                                                <span className={`status-badge ${status.className}`}>{status.label}</span>
                                                                                             </div>
                                                                                         );
                                                                                     })}
@@ -339,24 +383,13 @@ const StudentManagementPage: React.FC = () => {
                                     })}
                                 </div>
 
-                                {/* Pagination frontend */}
                                 {totalPages > 1 && (
                                     <div className="pagination">
-                                        <Button
-                                            variant="secondary"
-                                            size="small"
-                                            disabled={page === 0}
-                                            onClick={() => setPage(p => p - 1)}
-                                        >
+                                        <Button variant="secondary" size="small" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
                                             Précédent
                                         </Button>
                                         <span className="page-info">Page {page + 1} sur {totalPages}</span>
-                                        <Button
-                                            variant="secondary"
-                                            size="small"
-                                            disabled={page >= totalPages - 1}
-                                            onClick={() => setPage(p => p + 1)}
-                                        >
+                                        <Button variant="secondary" size="small" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
                                             Suivant
                                         </Button>
                                     </div>
