@@ -5,6 +5,7 @@ import Button from '../../../components/button/Button';
 import UserService, { type UserDto } from '../../../services/user.service';
 import CompanyService, { type CompanyDto } from '../../../services/company.service';
 import OfferService, { type OfferDto } from '../../../services/offer.service';
+import ApplicationService from '../../../services/application.service';
 import roles from '../../../constants/user_roles';
 import '../admin-shared.css';
 import '../../../styles/global.css';
@@ -14,8 +15,12 @@ interface CompanyWithDetails {
     company?: CompanyDto;
 }
 
+interface OfferWithApplicationCount extends OfferDto {
+    applicationCount: number;
+}
+
 interface AccordionData {
-    offers: OfferDto[];
+    offers: OfferWithApplicationCount[];
     loading: boolean;
     loaded: boolean;
 }
@@ -30,7 +35,6 @@ const CompanyManagementPage: React.FC = () => {
     const [openAccordions, setOpenAccordions] = useState<Set<string>>(new Set());
     const [accordionData, setAccordionData] = useState<Record<string, AccordionData>>({});
 
-    // Filtres
     const [searchName, setSearchName] = useState('');
     const [filterCity, setFilterCity] = useState('');
     const [filterCountry, setFilterCountry] = useState('');
@@ -56,7 +60,6 @@ const CompanyManagementPage: React.FC = () => {
 
     const totalPages = Math.ceil(filteredCompanies.length / PAGE_SIZE);
     const pagedCompanies = filteredCompanies.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-
     const hasActiveFilters = searchName || filterCity || filterCountry;
 
     const resetFilters = () => {
@@ -95,13 +98,8 @@ const CompanyManagementPage: React.FC = () => {
         }
     };
 
-    useEffect(() => {
-        fetchCompanies();
-    }, []);
-
-    useEffect(() => {
-        setPage(0);
-    }, [searchName, filterCity, filterCountry]);
+    useEffect(() => { fetchCompanies(); }, []);
+    useEffect(() => { setPage(0); }, [searchName, filterCity, filterCountry]);
 
     const toggleAccordion = async (userId: string, entityId: string | null) => {
         const isOpen = openAccordions.has(userId);
@@ -111,10 +109,28 @@ const CompanyManagementPage: React.FC = () => {
         }
         setOpenAccordions(prev => new Set([...prev, userId]));
         if (!entityId) return;
+
         setAccordionData(prev => ({ ...prev, [userId]: { offers: [], loading: true, loaded: false } }));
+
         try {
             const data = await OfferService.getOffersByCompany(entityId, 0);
-            setAccordionData(prev => ({ ...prev, [userId]: { offers: data.content, loading: false, loaded: true } }));
+
+            // Pour chaque offre, on charge le nombre de candidatures en parallèle
+            const offersWithCounts: OfferWithApplicationCount[] = await Promise.all(
+                data.content.map(async (offer) => {
+                    try {
+                        const applications = await ApplicationService.getAllApplicationsForOffer(offer.id);
+                        return { ...offer, applicationCount: applications.length };
+                    } catch {
+                        return { ...offer, applicationCount: 0 };
+                    }
+                })
+            );
+
+            setAccordionData(prev => ({
+                ...prev,
+                [userId]: { offers: offersWithCounts, loading: false, loaded: true }
+            }));
         } catch {
             setAccordionData(prev => ({ ...prev, [userId]: { offers: [], loading: false, loaded: true } }));
         }
@@ -138,7 +154,17 @@ const CompanyManagementPage: React.FC = () => {
             if (!entityId) return;
             setAccordionData(prev => ({ ...prev, [userId]: { ...prev[userId], loading: true } }));
             const data = await OfferService.getOffersByCompany(entityId, 0);
-            setAccordionData(prev => ({ ...prev, [userId]: { offers: data.content, loading: false, loaded: true } }));
+            const offersWithCounts: OfferWithApplicationCount[] = await Promise.all(
+                data.content.map(async (offer) => {
+                    try {
+                        const applications = await ApplicationService.getAllApplicationsForOffer(offer.id);
+                        return { ...offer, applicationCount: applications.length };
+                    } catch {
+                        return { ...offer, applicationCount: 0 };
+                    }
+                })
+            );
+            setAccordionData(prev => ({ ...prev, [userId]: { offers: offersWithCounts, loading: false, loaded: true } }));
         } catch {
             alert("Erreur lors de la suppression de l'offre.");
         }
@@ -149,12 +175,22 @@ const CompanyManagementPage: React.FC = () => {
             <Header />
             <main className="admin-main">
                 <div className="container">
+
                     <section className="admin-hero">
                         <p className="eyebrow">Administration</p>
                         <h1>Gestion des entreprises</h1>
-                        <p className="lead">
-                            {loading ? '...' : `${filteredCompanies.length} entreprise${filteredCompanies.length !== 1 ? 's' : ''}${hasActiveFilters ? ' trouvée' + (filteredCompanies.length !== 1 ? 's' : '') : ' inscrite' + (filteredCompanies.length !== 1 ? 's' : '')}`}
-                        </p>
+                        {!loading && (
+                            <div className="admin-hero-stats">
+                                <div className="admin-hero-stat">
+                                    <i className="fa-solid fa-building"></i>
+                                    <span className="admin-hero-stat-number">{filteredCompanies.length}</span>
+                                    <span className="admin-hero-stat-label">
+                    entreprise{filteredCompanies.length !== 1 ? 's' : ''}
+                                        {hasActiveFilters ? ' trouvée' + (filteredCompanies.length !== 1 ? 's' : '') : ' inscrite' + (filteredCompanies.length !== 1 ? 's' : '')}
+                  </span>
+                                </div>
+                            </div>
+                        )}
                     </section>
 
                     <section className="admin-section">
@@ -175,20 +211,12 @@ const CompanyManagementPage: React.FC = () => {
                                 )}
                             </div>
 
-                            <select
-                                value={filterCity}
-                                onChange={e => setFilterCity(e.target.value)}
-                                className={`admin-filter-select ${filterCity ? 'active' : ''}`}
-                            >
+                            <select value={filterCity} onChange={e => setFilterCity(e.target.value)} className={`admin-filter-select ${filterCity ? 'active' : ''}`}>
                                 <option value="">Toutes les villes</option>
                                 {uniqueCities.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
 
-                            <select
-                                value={filterCountry}
-                                onChange={e => setFilterCountry(e.target.value)}
-                                className={`admin-filter-select ${filterCountry ? 'active' : ''}`}
-                            >
+                            <select value={filterCountry} onChange={e => setFilterCountry(e.target.value)} className={`admin-filter-select ${filterCountry ? 'active' : ''}`}>
                                 <option value="">Tous les pays</option>
                                 {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
@@ -316,8 +344,15 @@ const CompanyManagementPage: React.FC = () => {
                                                                                         <span className="accordion-stat-number">{data.offers.filter(o => !o.offerOpen).length}</span>
                                                                                         <span className="accordion-stat-label">Clôturées</span>
                                                                                     </div>
+                                                                                    <div className="accordion-stat">
+                                            <span className="accordion-stat-number">
+                                              {data.offers.reduce((sum, o) => sum + o.applicationCount, 0)}
+                                            </span>
+                                                                                        <span className="accordion-stat-label">Candidatures</span>
+                                                                                    </div>
                                                                                 </div>
                                                                             )}
+
                                                                             {data?.offers.length === 0 ? (
                                                                                 <p className="accordion-empty">Aucune offre publiée pour le moment.</p>
                                                                             ) : (
@@ -331,9 +366,15 @@ const CompanyManagementPage: React.FC = () => {
                                                                                                     {' · '}Limite : {new Date(offer.limitApplicationDate).toLocaleDateString('fr-FR')}
                                                 </span>
                                                                                             </div>
-                                                                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+                                                                                            <div className="accordion-list-item-right">
                                                 <span className={`status-badge ${offer.offerOpen ? 'status-accepted' : 'status-rejected'}`}>
                                                   {offer.offerOpen ? 'Ouverte' : 'Clôturée'}
+                                                </span>
+                                                                                                <span className="application-count-badge">
+                                                  <i className="fa-solid fa-users"></i>
+                                                                                                    {offer.applicationCount > 0
+                                                                                                        ? `${offer.applicationCount} candidature${offer.applicationCount > 1 ? 's' : ''}`
+                                                                                                        : 'Aucune candidature'}
                                                 </span>
                                                                                                 <Button variant="danger" size="small" onClick={() => handleDeleteOffer(offer.id, offer.title, item.user.id, item.user.entityId)}>
                                                                                                     <i className="fa-solid fa-trash"></i>

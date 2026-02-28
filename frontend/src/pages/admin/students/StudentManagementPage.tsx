@@ -160,9 +160,20 @@ const StudentManagementPage: React.FC = () => {
                     <section className="admin-hero">
                         <p className="eyebrow">Administration</p>
                         <h1>Gestion des étudiants</h1>
-                        <p className="lead">
-                            {loading ? '...' : `${filteredStudents.length} étudiant${filteredStudents.length !== 1 ? 's' : ''}${hasActiveFilters ? ' trouvé' + (filteredStudents.length !== 1 ? 's' : '') : ' inscrit' + (filteredStudents.length !== 1 ? 's' : '')}`}
-                        </p>
+                        {!loading && (
+                            <div className="admin-hero-stats">
+                                <div className="admin-hero-stat">
+                                    <i className="fa-solid fa-user-graduate"></i>
+                                    <span className="admin-hero-stat-number">{filteredStudents.length}</span>
+                                    <span className="admin-hero-stat-label">
+                                       étudiant{filteredStudents.length !== 1 ? 's' : ''}
+                                          {hasActiveFilters
+                                              ? ' trouvé' + (filteredStudents.length !== 1 ? 's' : '')
+                                              : ' inscrit' + (filteredStudents.length !== 1 ? 's' : '')}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
                     </section>
 
                     <section className="admin-section">
