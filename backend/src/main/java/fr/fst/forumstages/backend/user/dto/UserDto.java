@@ -20,28 +20,16 @@ public record UserDto(
     @NotBlank
     UserRole role,
 
-    @Schema(description = "Le nom d'affichage de l'utilisateur")
-    String displayName,
-
     @Schema(description = "La date de création de l'utilisateur")
     @NotBlank
     String createdAt
 ) {
 
     public static UserDto fromEntity(UserEntity userEntity) {
-        String displayName = null;
-        if (userEntity.getRole() == UserRole.STUDENT && userEntity.getStudent() != null) {
-            String firstName = userEntity.getStudent().getFirstName() == null ? "" : userEntity.getStudent().getFirstName();
-            String lastName = userEntity.getStudent().getLastName() == null ? "" : userEntity.getStudent().getLastName();
-            String fullName = (firstName + " " + lastName).trim();
-            displayName = fullName.isEmpty() ? null : fullName;
-        }
-
         return new UserDto(
                 userEntity.getId(),
                 userEntity.getEmail(),
                 userEntity.getRole(),
-                displayName,
                 userEntity.getCreatedAt().toString()
         );
     }

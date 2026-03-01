@@ -4,7 +4,6 @@ export interface UserDto {
   id: string;
   email: string;
   role: string;
-  displayName?: string;
   createdAt: string;
 }
 
