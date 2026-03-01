@@ -98,7 +98,9 @@ const UserManagementPage: React.FC = () => {
                   <div key={user.id} className="user-list-item">
                     <div className="user-item-content">
                       <div className="user-info">
-                        <span className="user-email">{user.email}</span>
+                        <span className="user-email">
+                          {user.role === roles.STUDENT ? (user.displayName ?? user.email) : user.email}
+                        </span>
                         <span className={`role-badge ${user.role.toLowerCase()}`}>
                           {user.role === roles.ADMIN ? 'Administrateur' : 
                            user.role === roles.COMPANY ? 'Entreprise' : 

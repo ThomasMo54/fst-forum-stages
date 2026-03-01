@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import '../../styles/global.css';
 import './OffersPage.css';
 import Header from '../../components/header/Header';
@@ -21,6 +21,21 @@ const formatDate = (date?: string | null) => {
 };
 
 type ViewMode = 'list' | 'map';
+type OfferFiltersState = {
+  keyword: string;
+  city: string;
+  studyLevel: string;
+  remoteWorkPolicy: string;
+  duration: string;
+};
+
+const initialFilters: OfferFiltersState = {
+  keyword: '',
+  city: '',
+  studyLevel: '',
+  remoteWorkPolicy: '',
+  duration: ''
+};
 
 const OffersPage: React.FC = () => {
   const [offers, setOffers] = useState<PaginatedOffers>({
@@ -34,26 +49,29 @@ const OffersPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [listError, setListError] = useState<string>('');
 
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [filters, setFilters] = useState<OfferFiltersState>(initialFilters);
+  const [draftFilters, setDraftFilters] = useState<OfferFiltersState>(initialFilters);
+  const [isFiltersModalOpen, setIsFiltersModalOpen] = useState<boolean>(false);
   const [selectedOffer, setSelectedOffer] = useState<OfferDto | null>(null);
   const [studentApplications, setStudentApplications] = useState<ApplicationDto[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPage = Math.max(Number(searchParams.get('page')) || 1, 1);
 
-  useEffect(() => {
-    void fetchOffersAndApplications();
-  }, []);
-
-  const searchParams = new URLSearchParams(window.location.search);
-  const currentPage = Number(searchParams.get('page')) || 1;
-
-  const fetchOffersAndApplications = async () => {
+  const fetchOffersAndApplications = async (page: number) => {
     setLoading(true);
     setListError('');
     try {
-      const data = await OfferService.getAllOffers();
+      const data = await OfferService.getAllOffers(page, {
+        keyword: filters.keyword,
+        city: filters.city,
+        studyLevel: filters.studyLevel,
+        remoteWorkPolicy: filters.remoteWorkPolicy,
+        duration: filters.duration
+      });
       setOffers(data);
 
       const companyIds = [...new Set(data.content.map(offer => offer.companyId))];
@@ -99,23 +117,52 @@ const OffersPage: React.FC = () => {
     }
   };
 
-  const filteredOffers = useMemo(() => {
-    if (!searchTerm.trim()) return offers.content;
+  useEffect(() => {
+    void fetchOffersAndApplications(currentPage - 1);
+  }, [currentPage, filters]);
 
-    const term = searchTerm.toLowerCase();
-    return offers.content.filter((offer) => {
-      const hasTextMatch =
-          offer.title.toLowerCase().includes(term) ||
-          offer.description.toLowerCase().includes(term) ||
-          (companyNames[offer.companyId] || '').toLowerCase().includes(term);
+  const activeFilterCount = [
+    filters.keyword,
+    filters.city,
+    filters.studyLevel,
+    filters.remoteWorkPolicy,
+    filters.duration
+  ].filter((value) => value.trim().length > 0).length;
 
-      const hasTagMatch = (offer.tags ?? []).some((tag) =>
-          tag.toLowerCase().includes(term)
-      );
+  const resetToFirstPage = () => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', '1');
+    setSearchParams(params);
+  };
 
-      return hasTextMatch || hasTagMatch;
-    });
-  }, [offers.content, searchTerm, companyNames]);
+  const updateMainFilter = (field: keyof OfferFiltersState, value: string) => {
+    setFilters((prev) => ({ ...prev, [field]: value }));
+    if (currentPage !== 1) {
+      resetToFirstPage();
+    }
+  };
+
+  const openFiltersModal = () => {
+    setDraftFilters(filters);
+    setIsFiltersModalOpen(true);
+  };
+
+  const applyAdvancedFilters = () => {
+    setFilters(draftFilters);
+    if (currentPage !== 1) {
+      resetToFirstPage();
+    }
+    setIsFiltersModalOpen(false);
+  };
+
+  const clearAllFilters = () => {
+    setFilters(initialFilters);
+    setDraftFilters(initialFilters);
+    if (currentPage !== 1) {
+      resetToFirstPage();
+    }
+    setIsFiltersModalOpen(false);
+  };
 
   const handleApplyRedirect = (offer: OfferDto) => {
     setSelectedOffer(null);
@@ -158,25 +205,52 @@ const OffersPage: React.FC = () => {
 
             <section className="offers-section">
               <div className="section-header">
-                <div>
-                  <p className="eyebrow">Catalogue</p>
-                  <h2>Les dernières offres publiées</h2>
-                </div>
+                <div className="offers-filter-shell">
+                  <div className="offers-filter-top">
+                    <div className="offers-filter-main-search">
+                      <i className="fa-solid fa-magnifying-glass"></i>
+                      <input
+                          type="text"
+                          placeholder="Rechercher par offre, entreprise ou mot-cle..."
+                          value={filters.keyword}
+                          onChange={(e) => updateMainFilter('keyword', e.target.value)}
+                      />
+                    </div>
 
-                <div className="filters">
-                  <input
-                      type="text"
-                      placeholder="Rechercher une offre, une entreprise ou un tag..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                  <Button
-                      size="small"
-                      variant="secondary"
-                      onClick={() => void fetchOffersAndApplications()}
-                  >
-                    Actualiser
-                  </Button>
+                    <div className="filter-static-pill">
+                      <i className="fa-solid fa-briefcase"></i>
+                      <span>Stage</span>
+                    </div>
+
+                    <div className="filter-chip">{activeFilterCount} x</div>
+
+                    <div className="offers-filter-city">
+                      <i className="fa-solid fa-location-dot"></i>
+                      <input
+                          type="text"
+                          placeholder="Ville, departement..."
+                          value={filters.city}
+                          onChange={(e) => updateMainFilter('city', e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="offers-filter-bottom">
+                    <button type="button" className="all-filters-btn" onClick={openFiltersModal}>
+                      <i className="fa-solid fa-filter"></i>
+                      Tous les filtres
+                      <span className="all-filters-count">{activeFilterCount}</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        className="refresh-search-btn"
+                        onClick={() => void fetchOffersAndApplications(currentPage - 1)}
+                    >
+                      <i className="fa-regular fa-bell"></i>
+                      Actualiser cette recherche
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -213,11 +287,11 @@ const OffersPage: React.FC = () => {
                         </div>
                     ))}
                   </div>
-              ) : filteredOffers.length === 0 ? (
+              ) : offers.content.length === 0 ? (
                   <div className="empty-state">
                     <p>Aucune offre ne correspond à votre recherche.</p>
-                    <Button variant="secondary" onClick={() => setSearchTerm('')}>
-                      Réinitialiser la recherche
+                    <Button variant="secondary" onClick={clearAllFilters}>
+                      Réinitialiser les filtres
                     </Button>
                   </div>
               ) : (
@@ -225,7 +299,7 @@ const OffersPage: React.FC = () => {
                     {/* Vue Carte */}
                     {viewMode === 'map' && (
                         <OffersMap
-                            offers={filteredOffers}
+                            offers={offers.content}
                             companyNames={companyNames}
                             companyCities={companyCities}
                             companyAddresses={companyAddresses}
@@ -237,7 +311,7 @@ const OffersPage: React.FC = () => {
                     {/* Vue Liste */}
                     {viewMode === 'list' && (
                         <div className="offers-linear-list">
-                          {filteredOffers.map((offer) => (
+                          {offers.content.map((offer) => (
                               <div
                                   key={offer.id}
                                   className="offer-list-item"
@@ -284,6 +358,74 @@ const OffersPage: React.FC = () => {
                                 </div>
                               </div>
                           ))}
+                        </div>
+                    )}
+
+                    {isFiltersModalOpen && (
+                        <div className="filters-modal-overlay" onClick={() => setIsFiltersModalOpen(false)}>
+                          <div className="filters-modal" onClick={(e) => e.stopPropagation()}>
+                            <div className="filters-modal-header">
+                              <h3>Plus de filtres</h3>
+                              <button
+                                  className="filters-close"
+                                  type="button"
+                                  onClick={() => setIsFiltersModalOpen(false)}
+                              >
+                                <i className="fa-solid fa-xmark"></i>
+                              </button>
+                            </div>
+
+                            <div className="filters-grid">
+                              <label>
+                                Niveau d'etude
+                                <select
+                                    value={draftFilters.studyLevel}
+                                    onChange={(e) => setDraftFilters((prev) => ({ ...prev, studyLevel: e.target.value }))}
+                                >
+                                  <option value="">Tous</option>
+                                  <option value="Bac+2">Bac+2</option>
+                                  <option value="Bac+3">Bac+3</option>
+                                  <option value="Bac+4">Bac+4</option>
+                                  <option value="Bac+5">Bac+5</option>
+                                </select>
+                              </label>
+
+                              <label>
+                                Duree
+                                <select
+                                    value={draftFilters.duration}
+                                    onChange={(e) => setDraftFilters((prev) => ({ ...prev, duration: e.target.value }))}
+                                >
+                                  <option value="">Toutes</option>
+                                  <option value="1">1 mois</option>
+                                  <option value="2">2 mois</option>
+                                  <option value="3">3 mois</option>
+                                  <option value="4">4 mois</option>
+                                  <option value="5">5 mois</option>
+                                  <option value="6">6 mois</option>
+                                  <option value="12">12 mois</option>
+                                </select>
+                              </label>
+
+                              <label>
+                                Teletravail
+                                <select
+                                    value={draftFilters.remoteWorkPolicy}
+                                    onChange={(e) => setDraftFilters((prev) => ({ ...prev, remoteWorkPolicy: e.target.value }))}
+                                >
+                                  <option value="">Tous</option>
+                                  <option value="Oui">Oui</option>
+                                  <option value="Non">Non</option>
+                                  <option value="Hybride">Hybride</option>
+                                </select>
+                              </label>
+                            </div>
+
+                            <div className="filters-modal-actions">
+                              <Button variant="secondary" onClick={clearAllFilters}>Tout effacer</Button>
+                              <Button onClick={applyAdvancedFilters}>Appliquer</Button>
+                            </div>
+                          </div>
                         </div>
                     )}
 

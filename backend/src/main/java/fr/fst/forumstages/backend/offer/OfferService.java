@@ -5,6 +5,7 @@ import fr.fst.forumstages.backend.company.CompanyRepository;
 import fr.fst.forumstages.backend.offer.dto.CreateOfferDto;
 import fr.fst.forumstages.backend.offer.dto.OfferDto;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -66,6 +67,62 @@ public class OfferService {
         return offerRepository.findByOfferOpenTrue(pageable);
     }
 
+    public Page<OfferEntity> getAllOffers(
+            int page,
+            int size,
+            String keyword,
+            String city,
+            String studyLevel,
+            String remoteWorkPolicy,
+            String duration
+    ) {
+        boolean hasFilters =
+                isNotBlank(keyword) ||
+                isNotBlank(city) ||
+                isNotBlank(studyLevel) ||
+                isNotBlank(remoteWorkPolicy) ||
+                isNotBlank(duration);
+
+        if (!hasFilters) {
+            return getAllOffers(page, size);
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("creationDate").descending());
+        List<OfferEntity> offers = offerRepository.findByOfferOpenTrue(Sort.by("creationDate").descending());
+
+        String keywordFilter = normalize(keyword);
+        String cityFilter = normalize(city);
+        String studyLevelFilter = normalize(studyLevel);
+        String remoteWorkPolicyFilter = normalize(remoteWorkPolicy);
+        String durationFilter = normalize(duration);
+
+        List<OfferEntity> filteredOffers = offers.stream()
+                .filter(offer -> {
+                    if (keywordFilter == null) return true;
+
+                    boolean inTitle = containsIgnoreCase(offer.getTitle(), keywordFilter);
+                    boolean inDescription = containsIgnoreCase(offer.getDescription(), keywordFilter);
+                    boolean inTags = offer.getTags() != null &&
+                            offer.getTags().stream().anyMatch(tag -> containsIgnoreCase(tag, keywordFilter));
+                    boolean inCompanyName = offer.getCompany() != null &&
+                            containsIgnoreCase(offer.getCompany().getName(), keywordFilter);
+
+                    return inTitle || inDescription || inTags || inCompanyName;
+                })
+                .filter(offer -> cityFilter == null ||
+                        (offer.getCompany() != null && containsIgnoreCase(offer.getCompany().getCity(), cityFilter)))
+                .filter(offer -> studyLevelFilter == null || containsIgnoreCase(offer.getStudyLevel(), studyLevelFilter))
+                .filter(offer -> remoteWorkPolicyFilter == null || containsIgnoreCase(offer.getRemoteWorkPolicy(), remoteWorkPolicyFilter))
+                .filter(offer -> durationFilter == null || containsIgnoreCase(offer.getInternshipDuration(), durationFilter))
+                .toList();
+
+        int total = filteredOffers.size();
+        int fromIndex = Math.min(page * size, total);
+        int toIndex = Math.min(fromIndex + size, total);
+
+        return new PageImpl<>(filteredOffers.subList(fromIndex, toIndex), pageable, total);
+    }
+
     public void updateOffer(String offerId, CreateOfferDto createOfferDto) {
         OfferEntity existingOffer = offerRepository.findById(offerId)
                 .orElseThrow(() -> new NoSuchElementException(("Offer with id " + offerId + " not found")));
@@ -102,5 +159,23 @@ public class OfferService {
 
         existingOffer.setOfferOpen(!existingOffer.isOfferOpen());
         return offerRepository.save(existingOffer);
+    }
+
+    private static boolean isNotBlank(String value) {
+        return value != null && !value.isBlank();
+    }
+
+    private static String normalize(String value) {
+        if (!isNotBlank(value)) {
+            return null;
+        }
+        return value.trim().toLowerCase();
+    }
+
+    private static boolean containsIgnoreCase(String source, String needle) {
+        if (source == null || needle == null) {
+            return false;
+        }
+        return source.toLowerCase().contains(needle);
     }
 }
