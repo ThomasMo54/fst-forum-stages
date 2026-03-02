@@ -36,4 +36,8 @@ public class NotificationEntity {
     @DBRef(lazy = true)
     @Field(write = Field.Write.NON_NULL)
     private OfferEntity offer;
+
+    @DBRef(lazy = true)
+    @Field(write = Field.Write.NON_NULL)
+    private UserEntity relatedUser;   // ← nouveau champ pour l'étudiant / entreprise qui vient de s'inscrire
 }

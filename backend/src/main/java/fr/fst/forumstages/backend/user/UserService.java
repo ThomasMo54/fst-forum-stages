@@ -133,6 +133,7 @@ public class UserService {
         userEntity.setVerificationCode(null);
         userEntity.setVerificationCodeExpiry(null);
         userRepository.save(userEntity);
+        notificationService.notifyAdminNewUser(userEntity);
         return true;
     }
 

@@ -74,6 +74,9 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onClose, on
                     navigate(`/offers/${notification.offerId}/applications`);
                 }
             }
+            else if (user?.roles.includes(user_roles.ADMIN)) {
+                navigate('/admin/users');
+            }
 
             onClose();
         } catch (error) {
@@ -93,6 +96,10 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onClose, on
                 return '📨';
             case NotificationType.OFFER_MATCH:
                 return '🎯';
+            case NotificationType.NEW_STUDENT_REGISTERED:
+                return '🎓';
+            case NotificationType.NEW_COMPANY_REGISTERED:
+                return '🏢';
             default:
                 return '🔔';
         }
