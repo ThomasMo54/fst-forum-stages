@@ -1,0 +1,427 @@
+import React, { useEffect, useState, useMemo } from 'react';
+import Header from '../../../components/header/Header';
+import Footer from '../../../components/footer/Footer';
+import Button from '../../../components/button/Button';
+import UserService, { type UserDto } from '../../../services/user.service';
+import CompanyService, { type CompanyDto } from '../../../services/company.service';
+import OfferService, { type OfferDto } from '../../../services/offer.service';
+import ApplicationService from '../../../services/application.service';
+import roles from '../../../constants/user_roles';
+import '../admin-shared.css';
+import '../../../styles/global.css';
+
+interface CompanyWithDetails {
+    user: UserDto;
+    company?: CompanyDto;
+}
+
+interface OfferWithApplicationCount extends OfferDto {
+    applicationCount: number;
+}
+
+interface AccordionData {
+    offers: OfferWithApplicationCount[];
+    loading: boolean;
+    loaded: boolean;
+}
+
+const PAGE_SIZE = 10;
+
+const CompanyManagementPage: React.FC = () => {
+    const [allCompanies, setAllCompanies] = useState<CompanyWithDetails[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string>('');
+    const [page, setPage] = useState<number>(0);
+    const [openAccordions, setOpenAccordions] = useState<Set<string>>(new Set());
+    const [accordionData, setAccordionData] = useState<Record<string, AccordionData>>({});
+
+    const [searchName, setSearchName] = useState('');
+    const [filterCity, setFilterCity] = useState('');
+    const [filterCountry, setFilterCountry] = useState('');
+
+    const uniqueCities = useMemo(() =>
+            [...new Set(allCompanies.map(c => c.company?.city).filter(Boolean))] as string[],
+        [allCompanies]
+    );
+    const uniqueCountries = useMemo(() =>
+            [...new Set(allCompanies.map(c => c.company?.country).filter(Boolean))] as string[],
+        [allCompanies]
+    );
+
+    const filteredCompanies = useMemo(() => {
+        return allCompanies.filter(item => {
+            const name = (item.company?.name || item.user.email).toLowerCase();
+            const matchName = !searchName || name.includes(searchName.toLowerCase());
+            const matchCity = !filterCity || item.company?.city === filterCity;
+            const matchCountry = !filterCountry || item.company?.country === filterCountry;
+            return matchName && matchCity && matchCountry;
+        });
+    }, [allCompanies, searchName, filterCity, filterCountry]);
+
+    const totalPages = Math.ceil(filteredCompanies.length / PAGE_SIZE);
+    const pagedCompanies = filteredCompanies.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+    const hasActiveFilters = searchName || filterCity || filterCountry;
+
+    const resetFilters = () => {
+        setSearchName('');
+        setFilterCity('');
+        setFilterCountry('');
+        setPage(0);
+    };
+
+    const fetchCompanies = async () => {
+        setLoading(true);
+        setError('');
+        setPage(0);
+        setOpenAccordions(new Set());
+        setAccordionData({});
+        resetFilters();
+        try {
+            const response = await UserService.getUsers(0, 1000, roles.COMPANY);
+            const withDetails: CompanyWithDetails[] = await Promise.all(
+                response.content.map(async (user) => {
+                    if (!user.entityId) return { user };
+                    try {
+                        const company = await CompanyService.getCompanyById(user.entityId);
+                        return { user, company };
+                    } catch {
+                        return { user };
+                    }
+                })
+            );
+            setAllCompanies(withDetails);
+        } catch (err) {
+            setError('Erreur lors de la récupération des entreprises.');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => { fetchCompanies(); }, []);
+    useEffect(() => { setPage(0); }, [searchName, filterCity, filterCountry]);
+
+    const toggleAccordion = async (userId: string, entityId: string | null) => {
+        const isOpen = openAccordions.has(userId);
+        if (isOpen) {
+            setOpenAccordions(prev => { const next = new Set(prev); next.delete(userId); return next; });
+            return;
+        }
+        setOpenAccordions(prev => new Set([...prev, userId]));
+        if (!entityId) return;
+
+        setAccordionData(prev => ({ ...prev, [userId]: { offers: [], loading: true, loaded: false } }));
+
+        try {
+            const data = await OfferService.getOffersByCompany(entityId, 0);
+
+            // Pour chaque offre, on charge le nombre de candidatures en parallèle
+            const offersWithCounts: OfferWithApplicationCount[] = await Promise.all(
+                data.content.map(async (offer) => {
+                    try {
+                        const applications = await ApplicationService.getAllApplicationsForOffer(offer.id);
+                        return { ...offer, applicationCount: applications.length };
+                    } catch {
+                        return { ...offer, applicationCount: 0 };
+                    }
+                })
+            );
+
+            setAccordionData(prev => ({
+                ...prev,
+                [userId]: { offers: offersWithCounts, loading: false, loaded: true }
+            }));
+        } catch {
+            setAccordionData(prev => ({ ...prev, [userId]: { offers: [], loading: false, loaded: true } }));
+        }
+    };
+
+    const handleDeleteCompany = async (userId: string, name: string) => {
+        if (!window.confirm(`Supprimer l'entreprise "${name}" ?`)) return;
+        try {
+            await UserService.deleteUser(userId);
+            setOpenAccordions(prev => { const next = new Set(prev); next.delete(userId); return next; });
+            fetchCompanies();
+        } catch {
+            alert("Erreur lors de la suppression.");
+        }
+    };
+
+    const handleDeleteOffer = async (offerId: string, offerTitle: string, userId: string, entityId: string | null) => {
+        if (!window.confirm(`Supprimer l'offre "${offerTitle}" ?`)) return;
+        try {
+            await OfferService.deleteOffer(offerId);
+            if (!entityId) return;
+            setAccordionData(prev => ({ ...prev, [userId]: { ...prev[userId], loading: true } }));
+            const data = await OfferService.getOffersByCompany(entityId, 0);
+            const offersWithCounts: OfferWithApplicationCount[] = await Promise.all(
+                data.content.map(async (offer) => {
+                    try {
+                        const applications = await ApplicationService.getAllApplicationsForOffer(offer.id);
+                        return { ...offer, applicationCount: applications.length };
+                    } catch {
+                        return { ...offer, applicationCount: 0 };
+                    }
+                })
+            );
+            setAccordionData(prev => ({ ...prev, [userId]: { offers: offersWithCounts, loading: false, loaded: true } }));
+        } catch {
+            alert("Erreur lors de la suppression de l'offre.");
+        }
+    };
+
+    return (
+        <div className="page-wrapper">
+            <Header />
+            <main className="admin-main">
+                <div className="container">
+
+                    <section className="admin-hero">
+                        <p className="eyebrow">Administration</p>
+                        <h1>Gestion des entreprises</h1>
+                        {!loading && (
+                            <div className="admin-hero-stats">
+                                <div className="admin-hero-stat">
+                                    <i className="fa-solid fa-building"></i>
+                                    <span className="admin-hero-stat-number">{filteredCompanies.length}</span>
+                                    <span className="admin-hero-stat-label">
+                    entreprise{filteredCompanies.length !== 1 ? 's' : ''}
+                                        {hasActiveFilters ? ' trouvée' + (filteredCompanies.length !== 1 ? 's' : '') : ' inscrite' + (filteredCompanies.length !== 1 ? 's' : '')}
+                  </span>
+                                </div>
+                            </div>
+                        )}
+                    </section>
+
+                    <section className="admin-section">
+                        <div className="admin-filters-bar">
+                            <div className="admin-filter-search">
+                                <i className="fa-solid fa-magnifying-glass admin-filter-icon"></i>
+                                <input
+                                    type="text"
+                                    placeholder="Rechercher par nom..."
+                                    value={searchName}
+                                    onChange={e => setSearchName(e.target.value)}
+                                    className="admin-filter-input"
+                                />
+                                {searchName && (
+                                    <button className="admin-filter-clear" onClick={() => setSearchName('')}>
+                                        <i className="fa-solid fa-xmark"></i>
+                                    </button>
+                                )}
+                            </div>
+
+                            <select value={filterCity} onChange={e => setFilterCity(e.target.value)} className={`admin-filter-select ${filterCity ? 'active' : ''}`}>
+                                <option value="">Toutes les villes</option>
+                                {uniqueCities.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+
+                            <select value={filterCountry} onChange={e => setFilterCountry(e.target.value)} className={`admin-filter-select ${filterCountry ? 'active' : ''}`}>
+                                <option value="">Tous les pays</option>
+                                {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+
+                            {hasActiveFilters && (
+                                <button className="admin-filter-reset" onClick={resetFilters}>
+                                    <i className="fa-solid fa-filter-circle-xmark" style={{ marginRight: '6px' }}></i>
+                                    Réinitialiser
+                                </button>
+                            )}
+
+                            <Button size="small" variant="secondary" onClick={fetchCompanies}>
+                                <i className="fa-solid fa-rotate" style={{ marginRight: '6px' }}></i>
+                                Actualiser
+                            </Button>
+                        </div>
+
+                        {error && <div className="error-message inline-error">{error}</div>}
+
+                        {loading ? (
+                            <div className="admin-list loading">
+                                {[1, 2, 3, 4, 5].map(i => (
+                                    <div key={i} className="admin-list-item skeleton-item">
+                                        <div className="skeleton-line" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : filteredCompanies.length === 0 ? (
+                            <div className="empty-state">
+                                <i className="fa-solid fa-building-circle-xmark" style={{ fontSize: '2rem', color: '#cbd5e1', marginBottom: '12px', display: 'block' }}></i>
+                                <p>{hasActiveFilters ? 'Aucune entreprise ne correspond aux filtres.' : 'Aucune entreprise trouvée.'}</p>
+                                {hasActiveFilters && (
+                                    <button className="admin-filter-reset" onClick={resetFilters} style={{ margin: '8px auto 0' }}>
+                                        Réinitialiser les filtres
+                                    </button>
+                                )}
+                            </div>
+                        ) : (
+                            <>
+                                <div className="admin-list">
+                                    {pagedCompanies.map((item) => {
+                                        const displayName = item.company?.name || item.user.email;
+                                        const isOpen = openAccordions.has(item.user.id);
+                                        const data = accordionData[item.user.id];
+
+                                        return (
+                                            <div key={item.user.id} className={`admin-accordion-item ${isOpen ? 'accordion-open' : ''}`}>
+                                                <div className="admin-item-content">
+                                                    <div className="admin-item-avatar company">
+                                                        <i className="fa-solid fa-building"></i>
+                                                    </div>
+                                                    <div className="admin-item-info">
+                                                        <span className="admin-item-name">{displayName}</span>
+                                                        <span className="admin-item-sub">
+                              {item.company
+                                  ? `${item.company.city || 'Ville inconnue'} · ${item.company.country || ''} · ${item.user.email}`
+                                  : item.user.email}
+                            </span>
+                                                    </div>
+                                                    <div className="admin-item-actions">
+                            <span className="admin-item-date">
+                              {new Date(item.user.createdAt).toLocaleDateString('fr-FR')}
+                            </span>
+                                                        <Button variant="secondary" size="small" onClick={() => toggleAccordion(item.user.id, item.user.entityId)}>
+                                                            <i className={`fa-solid fa-chevron-${isOpen ? 'up' : 'down'}`} style={{ marginRight: '6px' }}></i>
+                                                            {isOpen ? 'Masquer' : 'Détails'}
+                                                        </Button>
+                                                        <Button variant="danger" size="small" onClick={() => handleDeleteCompany(item.user.id, displayName)}>
+                                                            <i className="fa-solid fa-trash"></i>
+                                                        </Button>
+                                                    </div>
+                                                </div>
+
+                                                {isOpen && (
+                                                    <div className="accordion-panel">
+                                                        {!item.company ? (
+                                                            <p className="accordion-empty">Détails indisponibles pour cette entreprise.</p>
+                                                        ) : (
+                                                            <>
+                                                                <div className="accordion-section">
+                                                                    <h4 className="accordion-section-title">Informations</h4>
+                                                                    <div className="accordion-info-grid">
+                                                                        <div className="accordion-info-item">
+                                                                            <span className="accordion-info-label">Email de contact</span>
+                                                                            <span className="accordion-info-value">{item.company.contactEmail || 'Non renseigné'}</span>
+                                                                        </div>
+                                                                        <div className="accordion-info-item">
+                                                                            <span className="accordion-info-label">Adresse</span>
+                                                                            <span className="accordion-info-value">{item.company.streetAddress || 'Non renseignée'}</span>
+                                                                        </div>
+                                                                        <div className="accordion-info-item">
+                                                                            <span className="accordion-info-label">Ville</span>
+                                                                            <span className="accordion-info-value">{item.company.city || 'Non renseignée'}</span>
+                                                                        </div>
+                                                                        <div className="accordion-info-item">
+                                                                            <span className="accordion-info-label">Code postal</span>
+                                                                            <span className="accordion-info-value">{item.company.postalCode || 'Non renseigné'}</span>
+                                                                        </div>
+                                                                        <div className="accordion-info-item">
+                                                                            <span className="accordion-info-label">Pays</span>
+                                                                            <span className="accordion-info-value">{item.company.country || 'Non renseigné'}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="accordion-section">
+                                                                    <h4 className="accordion-section-title">Offres publiées</h4>
+                                                                    {data?.loading ? (
+                                                                        <div className="accordion-loading">
+                                                                            <i className="fa-solid fa-spinner fa-spin"></i> Chargement...
+                                                                        </div>
+                                                                    ) : (
+                                                                        <>
+                                                                            {data?.loaded && (
+                                                                                <div className="accordion-stats">
+                                                                                    <div className="accordion-stat">
+                                                                                        <span className="accordion-stat-number">{data.offers.length}</span>
+                                                                                        <span className="accordion-stat-label">Total</span>
+                                                                                    </div>
+                                                                                    <div className="accordion-stat accepted">
+                                                                                        <span className="accordion-stat-number">{data.offers.filter(o => o.offerOpen).length}</span>
+                                                                                        <span className="accordion-stat-label">Ouvertes</span>
+                                                                                    </div>
+                                                                                    <div className="accordion-stat rejected">
+                                                                                        <span className="accordion-stat-number">{data.offers.filter(o => !o.offerOpen).length}</span>
+                                                                                        <span className="accordion-stat-label">Clôturées</span>
+                                                                                    </div>
+                                                                                    <div className="accordion-stat">
+                                            <span className="accordion-stat-number">
+                                              {data.offers.reduce((sum, o) => sum + o.applicationCount, 0)}
+                                            </span>
+                                                                                        <span className="accordion-stat-label">Candidatures</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+
+                                                                            {data?.offers.length === 0 ? (
+                                                                                <p className="accordion-empty">Aucune offre publiée pour le moment.</p>
+                                                                            ) : (
+                                                                                <div className="accordion-list">
+                                                                                    {data?.offers.map((offer) => (
+                                                                                        <div key={offer.id} className="accordion-list-item">
+                                                                                            <div className="accordion-list-item-info">
+                                                                                                <span className="accordion-list-item-title">{offer.title}</span>
+                                                                                                <span className="accordion-list-item-sub">
+                                                  Créée le {new Date(offer.creationDate).toLocaleDateString('fr-FR')}
+                                                                                                    {' · '}Limite : {new Date(offer.limitApplicationDate).toLocaleDateString('fr-FR')}
+                                                </span>
+                                                                                            </div>
+                                                                                            <div className="accordion-list-item-right">
+                                                <span className={`status-badge ${offer.offerOpen ? 'status-accepted' : 'status-rejected'}`}>
+                                                  {offer.offerOpen ? 'Ouverte' : 'Clôturée'}
+                                                </span>
+                                                                                                <span className="application-count-badge">
+                                                  <i className="fa-solid fa-users"></i>
+                                                                                                    {offer.applicationCount > 0
+                                                                                                        ? `${offer.applicationCount} candidature${offer.applicationCount > 1 ? 's' : ''}`
+                                                                                                        : 'Aucune candidature'}
+                                                </span>
+                                                                                                <Button variant="danger" size="small" onClick={() => handleDeleteOffer(offer.id, offer.title, item.user.id, item.user.entityId)}>
+                                                                                                    <i className="fa-solid fa-trash"></i>
+                                                                                                </Button>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            )}
+                                                                        </>
+                                                                    )}
+                                                                </div>
+
+                                                                <div className="accordion-section accordion-danger-zone">
+                                                                    <Button variant="danger" size="small" onClick={() => handleDeleteCompany(item.user.id, displayName)}>
+                                                                        <i className="fa-solid fa-trash" style={{ marginRight: '8px' }}></i>
+                                                                        Supprimer l'entreprise
+                                                                    </Button>
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {totalPages > 1 && (
+                                    <div className="pagination">
+                                        <Button variant="secondary" size="small" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
+                                            Précédent
+                                        </Button>
+                                        <span className="page-info">Page {page + 1} sur {totalPages}</span>
+                                        <Button variant="secondary" size="small" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
+                                            Suivant
+                                        </Button>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </section>
+                </div>
+            </main>
+            <Footer />
+        </div>
+    );
+};
+
+export default CompanyManagementPage;
