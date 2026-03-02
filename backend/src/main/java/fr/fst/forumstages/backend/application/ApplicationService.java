@@ -54,6 +54,10 @@ public class ApplicationService {
         return applicationRepository.findByOfferId(offerId);
     }
 
+    public int getNumberOfApplicationsForOffer(String offerId) {
+        return applicationRepository.countByOfferId(offerId);
+    }
+
     public List<ApplicationEntity> getApplicationsForStudent(String studentId) {
         return applicationRepository.findByStudentId(studentId);
     }
