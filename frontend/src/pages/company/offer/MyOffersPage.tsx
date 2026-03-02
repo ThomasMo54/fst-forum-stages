@@ -4,6 +4,7 @@ import Footer from "../../../components/footer/Footer";
 import './MyOffersPage.css';
 import { useAuth } from "../../../context/AuthContext.tsx";
 import OfferService, { type PaginatedOffers } from "../../../services/offer.service.ts";
+import ApplicationService from "../../../services/application.service.ts";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "../../../components/button/Button.tsx";
 import {Pagination} from "../../../components/pagination/Pagination.tsx";
@@ -11,6 +12,7 @@ import {Pagination} from "../../../components/pagination/Pagination.tsx";
 const MyOffersPage: React.FC = () => {
   const {user} = useAuth();
   const [offers, setOffers] = useState<PaginatedOffers>({content: [], page: {size: 0, number: 0, totalElements: 0, totalPages: 0}});
+  const [applicationCounts, setApplicationCounts] = useState<{[key: string]: number}>({});
   const navigate = useNavigate();
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +30,14 @@ const MyOffersPage: React.FC = () => {
         try {
             const companyOffers = await OfferService.getOffersByCompany(user.entityId);
             setOffers(companyOffers);
+
+             // Fetch application counts for each offer
+            const counts: {[key: string]: number} = {};
+            for (const offer of companyOffers.content) {
+                const count = await ApplicationService.getNumberOfApplicationsForOffer(offer.id);
+                counts[offer.id] = count;
+            }
+            setApplicationCounts(counts);
         } catch (err) {
             setError("Erreur lors du chargement de vos offres. Veuillez réessayer.");
         } finally {
@@ -109,8 +119,9 @@ const MyOffersPage: React.FC = () => {
                 </div>
 
                 <div className="offer-actions">
-                  <Link to={`/offers/${offer.id}/applications`}>
+                  <Link to={`/offers/${offer.id}/applications`} className="application-button-container">
                     <Button variant='icon'><i className="fas fa-list"></i></Button>
+                    <span className="application-badge">{applicationCounts[offer.id] || 0}</span>
                   </Link>
                   <Button variant="icon" onClick={() => handleEdit(offer.id)}>
                     <i className="fas fa-pencil-alt"></i>

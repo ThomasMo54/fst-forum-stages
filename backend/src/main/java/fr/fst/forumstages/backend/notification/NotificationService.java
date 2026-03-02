@@ -5,10 +5,13 @@ import fr.fst.forumstages.backend.application.ApplicationRepository;
 import fr.fst.forumstages.backend.offer.OfferRepository;
 import fr.fst.forumstages.backend.user.UserEntity;
 import fr.fst.forumstages.backend.user.UserRepository;
+import fr.fst.forumstages.backend.user.UserRole;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.management.relation.Role;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -129,7 +132,7 @@ public class NotificationService {
         NotificationEntity notification = new NotificationEntity();
         notification.setUser(studentUser);
         notification.setType(NotificationType.APPLICATION_ACCEPTED);
-        notification.setTitle("Félicitations ! 🎉");
+        notification.setTitle("Félicitations !");
         notification.setMessage(String.format("Votre candidature pour l'offre \"%s\" chez %s a été acceptée !", offerTitle, companyName));
         notification.setApplication(application);
         notification.setOffer(application.getOffer());
@@ -156,5 +159,42 @@ public class NotificationService {
 
         notificationRepository.save(notification);
         log.info("Notification created: Application rejected for student {}", studentUser.getEmail());
+    }
+
+    public void notifyAdminNewUser(UserEntity newUser) {
+
+        List<UserEntity> admins = userRepository.findByRole(UserRole.ADMIN);
+
+        for (UserEntity admin : admins) {
+
+            NotificationEntity notification = new NotificationEntity();
+            notification.setUser(admin);
+            notification.setCreatedAt(LocalDateTime.now());
+            notification.setRead(false);
+            notification.setRelatedUser(newUser);
+
+            if (newUser.getRole() == UserRole.STUDENT) {
+                notification.setType(NotificationType.NEW_STUDENT_REGISTERED);
+                notification.setTitle("Nouvel étudiant inscrit");
+                notification.setMessage(
+                        "Nouvel étudiant "
+                                + newUser.getStudent().getFirstName() + " "
+                                + newUser.getStudent().getLastName()
+                                + " vient de s'inscrire."
+                );
+            }
+
+            if (newUser.getRole() == UserRole.COMPANY) {
+                notification.setType(NotificationType.NEW_COMPANY_REGISTERED);
+                notification.setTitle("Nouvelle entreprise inscrite");
+                notification.setMessage(
+                        "Nouvelle entreprise "
+                                + newUser.getCompany().getName()
+                                + " vient de s'inscrire."
+                );
+            }
+
+            notificationRepository.save(notification);
+        }
     }
 }

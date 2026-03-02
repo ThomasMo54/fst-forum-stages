@@ -20,7 +20,8 @@ import ApplicationPage from "./pages/offers/ApplicationPage.tsx";
 import StudentMyApplicationsPage from "./pages/student/applications/MyApplicationsPage.tsx";
 import AdminRoute from "./components/route/AdminRoute.tsx";
 import StatsPage from "./pages/admin/stats/StatsPage.tsx";
-import UserManagementPage from "./pages/admin/users/UserManagementPage.tsx";
+import StudentManagementPage from "./pages/admin/students/StudentManagementPage.tsx";
+import CompanyManagementPage from "./pages/admin/companies/CompanyManagementPage.tsx";
 
 function App() {
   return (
@@ -53,7 +54,8 @@ function App() {
           </Route>
           <Route element={<AdminRoute />}>
             <Route path="/admin/stats" element={<StatsPage />} />
-            <Route path="/admin/users" element={<UserManagementPage />} />
+            <Route path="/admin/students" element={<StudentManagementPage />} />
+            <Route path="/admin/companies" element={<CompanyManagementPage />} />
           </Route>
         </Routes>
       </AuthProvider>
@@ -61,4 +63,4 @@ function App() {
   )
 }
 
-export default App
+export default App;

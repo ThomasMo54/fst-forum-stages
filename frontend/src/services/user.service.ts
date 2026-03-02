@@ -5,6 +5,7 @@ export interface UserDto {
   email: string;
   role: string;
   createdAt: string;
+  entityId: string | null;
 }
 
 export interface PageResponse<T> {
