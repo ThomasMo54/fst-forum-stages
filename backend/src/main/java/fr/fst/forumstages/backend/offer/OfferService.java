@@ -1,5 +1,7 @@
 package fr.fst.forumstages.backend.offer;
 
+import fr.fst.forumstages.backend.application.ApplicationEntity;
+import fr.fst.forumstages.backend.application.ApplicationService;
 import fr.fst.forumstages.backend.company.CompanyEntity;
 import fr.fst.forumstages.backend.company.CompanyRepository;
 import fr.fst.forumstages.backend.offer.dto.CreateOfferDto;
@@ -10,7 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -19,9 +20,12 @@ public class OfferService {
 
     private final CompanyRepository companyRepository;
 
-    public OfferService(OfferRepository offerRepository, CompanyRepository companyRepository) {
+    private final ApplicationService applicationService;
+
+    public OfferService(OfferRepository offerRepository, CompanyRepository companyRepository, ApplicationService applicationService) {
         this.offerRepository = offerRepository;
         this.companyRepository = companyRepository;
+        this.applicationService = applicationService;
     }
 
     public OfferEntity createOffer(CreateOfferDto createOfferDto) {
@@ -89,9 +93,15 @@ public class OfferService {
     }
 
     public void deleteOfferById(String id) {
-        if (this.offerRepository.existsById(id)) {
+        if (offerRepository.existsById(id)) {
+            var applications = applicationService.getApplicationsForOffer(id);
+
+            for (ApplicationEntity applicationEntity : applications) {
+                applicationService.deleteApplication(applicationEntity.getId());
+            }
+
             this.offerRepository.deleteById(id);
-        } else {
+        }else {
             throw new NoSuchElementException(("Offer with id " + id + " not found"));
         }
     }

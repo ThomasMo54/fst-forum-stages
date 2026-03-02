@@ -3,6 +3,7 @@ package fr.fst.forumstages.backend.company;
 import fr.fst.forumstages.backend.company.dto.UpdateCompanyDto;
 import fr.fst.forumstages.backend.offer.OfferEntity;
 import fr.fst.forumstages.backend.offer.OfferRepository;
+import fr.fst.forumstages.backend.offer.OfferService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,9 +20,12 @@ public class CompanyService {
 
     private final OfferRepository offerRepository;
 
-    public CompanyService(CompanyRepository companyRepository, OfferRepository offerRepository) {
+    private final OfferService offerService;
+
+    public CompanyService(CompanyRepository companyRepository, OfferRepository offerRepository, OfferService offerService) {
         this.companyRepository = companyRepository;
         this.offerRepository = offerRepository;
+        this.offerService = offerService;
     }
 
     public CompanyEntity findCompanyById(String id) {
@@ -54,7 +58,19 @@ public class CompanyService {
 
     public void deleteCompany(String id) {
         CompanyEntity existingCompany = findCompanyById(id);
+
+        var offers = this.getAllCompanyOffers(id);
+
+        for (OfferEntity offer : offers) {
+            offerService.deleteOfferById(offer.getId());
+        }
+
         companyRepository.delete(existingCompany);
+    }
+
+    private List<OfferEntity> getAllCompanyOffers(String companyId) {
+        CompanyEntity company = findCompanyById(companyId);
+        return this.offerRepository.findOfferEntitiesByCompany_Id(companyId);
     }
 
     public Page<OfferEntity> getCompanyOffers(String companyId, int page, int size) {
