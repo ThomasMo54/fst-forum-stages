@@ -32,7 +32,6 @@ function App() {
             <Route path="/offers" element={<OffersPage />} />
             <Route path="/offers/:offerId/apply" element={<ApplyOfferPage />} />
             <Route path="/offers/:offerId/apply/:applicationId" element={<ApplyOfferPage />} />
-            <Route path="/offers/:offerId/applications" element={<ApplicationPage />} />
           </Route>
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<LoginPage />} />
@@ -46,6 +45,7 @@ function App() {
             <Route path="/company/edit-offer/:offerId" element={<OfferFormPage mode="edit" />}/>
             <Route path="/company/my-offers" element={<MyOffersPage />} />
             <Route path="/company/modify-infos" element={<ModifyCompanyInfosPage />} />
+            <Route path="/offers/:offerId/applications" element={<ApplicationPage />} />
           </Route>
           <Route element={<StudentRoute />}>
             <Route path="/student/modify-infos" element={<ModifyStudentInfosPage />} />
