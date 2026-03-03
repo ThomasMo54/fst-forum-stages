@@ -3,6 +3,8 @@ package fr.fst.forumstages.backend.auth.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
+import java.time.LocalDateTime;
+
 @Schema(description = "Réponse d'authentification contenant le token JWT et le token de rafraîchissement.")
 public record AuthResponseDto(
     @Schema(description = "Le token JWT")
@@ -11,5 +13,8 @@ public record AuthResponseDto(
 
     @Schema(description = "Le token de rafraîchissement")
     @NotBlank
-    String refreshToken
+    String refreshToken,
+
+    @Schema(description = "La date de la dernière connexion")
+    LocalDateTime lastLoginAt
 ) {}

@@ -37,6 +37,8 @@ public class UserEntity implements UserDetails {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    private LocalDateTime lastLoginAt;
+
     @DBRef
     private CompanyEntity company;
 

@@ -197,4 +197,9 @@ public class UserService {
             studentRepository.delete(existingUser.getStudent());
         }
     }
+
+    public void updateLastLogin(UserEntity user) {
+        user.setLastLoginAt(LocalDateTime.now());
+        userRepository.save(user);
+    }
 }
