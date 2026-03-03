@@ -13,11 +13,19 @@ import { useAuth } from '../../context/AuthContext';
 import user_roles from "../../constants/user_roles.ts";
 import { Pagination } from "../../components/pagination/Pagination.tsx";
 import OffersMap from './OffersMap';
+import AuthService from '../../services/auth.service';
 
 const formatDate = (date?: string | null) => {
   if (!date) return 'Non renseignée';
   const parsed = new Date(`${date}T00:00:00`);
   return parsed.toLocaleDateString('fr-FR');
+};
+
+const lastLoginAt = AuthService.getLastLoginAt();
+
+const isNew = (offer: OfferDto): boolean => {
+  if (!lastLoginAt) return false;
+  return new Date(offer.creationDate) > new Date(lastLoginAt);
 };
 
 type ViewMode = 'list' | 'map';
@@ -245,7 +253,11 @@ const OffersPage: React.FC = () => {
                               >
                                 <div className="offer-item-content">
                                   <div className="offer-item-primary">
-                                    <h3 className="offer-title">{offer.title}</h3>
+                                    <h3 className="offer-title">
+                                      {offer.title}
+                                      {isNew(offer) && <span className="badge-new">Nouveau</span>}
+                                    </h3>
+
                                     <span className="offer-company">
                               {companyNames[offer.companyId] || `Entreprise #${offer.companyId}`}
                             </span>
