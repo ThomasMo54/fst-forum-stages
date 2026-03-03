@@ -4,6 +4,7 @@ import api from "./api.ts";
 interface LoginResponse {
   token: string;
   refreshToken: string;
+  lastLoginAt: string | null;
 }
 
 export interface DecodedToken {
@@ -17,9 +18,12 @@ export interface DecodedToken {
 const login = async (email: string, password: string): Promise<LoginResponse> => {
   const response = await api.post(`/auth/login`, { email, password });
   const data: LoginResponse = response.data;
-  if (data.token && data.refreshToken) {
+  if (data.token && data.refreshToken && data.lastLoginAt) {
     localStorage.setItem('token', data.token);
     localStorage.setItem('refreshToken', data.refreshToken);
+    if (data.lastLoginAt) {
+      localStorage.setItem('lastLoginAt', data.lastLoginAt);
+    }
   }
   return data;
 };
@@ -27,6 +31,7 @@ const login = async (email: string, password: string): Promise<LoginResponse> =>
 const logout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('refreshToken');
+  localStorage.removeItem('lastLoginAt');
 };
 
 const getCurrentUser = (): DecodedToken | null => {
@@ -48,13 +53,16 @@ const updateTokens = (token: string, refreshToken: string) => {
   localStorage.setItem('refreshToken', refreshToken);
 };
 
+const getLastLoginAt = () => localStorage.getItem('lastLoginAt');
+
 const AuthService = {
   login,
   logout,
   getCurrentUser,
   getToken,
   getRefreshToken,
-  updateTokens
+  updateTokens,
+  getLastLoginAt
 };
 
 export default AuthService;

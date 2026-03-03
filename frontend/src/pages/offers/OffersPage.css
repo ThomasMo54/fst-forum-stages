@@ -464,3 +464,17 @@
         justify-content: center;
     }
 }
+
+.badge-new {
+    display: inline-block;
+    margin-left: 0.6rem;
+    padding: 0.15rem 0.55rem;
+    background: var(--secondary-color);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    vertical-align: middle;
+}
