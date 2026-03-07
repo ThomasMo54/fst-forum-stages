@@ -65,38 +65,190 @@
 
 .section-header {
     display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
+    width: 100%;
+    margin-bottom: 1.5rem;
 }
 
-.section-header h2 {
+.offers-filter-shell {
+    width: 100%;
+    background: #2f435a;
+    border-radius: 16px;
+    padding: 0.75rem;
+}
+
+.offers-filter-top {
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid #d7e0ea;
+    min-height: 50px;
+    display: grid;
+    grid-template-columns: 1.5fr auto auto 1fr;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.45rem 0.75rem;
+}
+
+.offers-filter-main-search,
+.offers-filter-city {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+}
+
+.offers-filter-main-search i,
+.offers-filter-city i {
+    color: #6b7f94;
+    font-size: 0.95rem;
+}
+
+.offers-filter-main-search input,
+.offers-filter-city input {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    min-width: 0;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+}
+
+.filter-static-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-dark);
+    font-weight: 600;
+    padding: 0 0.4rem;
+}
+
+.filter-static-pill i {
+    color: #6b7f94;
+}
+
+.filter-chip {
+    background: #24384e;
+    color: #ffffff;
+    border-radius: 7px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    min-width: 2.9rem;
+    text-align: center;
+    padding: 0.26rem 0.5rem;
+}
+
+.offers-filter-bottom {
+    margin-top: 0.7rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.all-filters-btn {
+    border: 2px solid #b9c8d8;
+    background: #24384e;
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 0.5rem 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.all-filters-count {
+    background: #ffffff;
+    color: #24384e;
+    border-radius: 999px;
+    min-width: 1.3rem;
+    text-align: center;
+    font-size: 0.82rem;
+    padding: 0.05rem 0.3rem;
+}
+
+.refresh-search-btn {
+    border: none;
+    background: #2fcb66;
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 0.6rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.filters-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.52);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+    padding: 1rem;
+}
+
+.filters-modal {
+    width: min(840px, 96vw);
+    background: var(--white);
+    border-radius: 14px;
+    box-shadow: 0 22px 48px rgba(15, 23, 42, 0.25);
+    padding: 1.5rem;
+}
+
+.filters-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.filters-modal-header h3 {
     margin: 0;
     color: var(--text-dark);
-    font-size: 1.8rem;
 }
 
-.filters {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-}
-
-.filters input {
-    padding: 0.75rem 1.25rem;
+.filters-close {
+    border: 1px solid #dbe4ef;
+    background: #f8fafc;
+    color: var(--text-dark);
     border-radius: 8px;
-    border: 1px solid var(--border-color);
-    min-width: 320px;
-    background: var(--white);
-    transition: all 0.3s;
+    width: 2rem;
+    height: 2rem;
+    cursor: pointer;
 }
 
-.filters input:focus {
-    outline: none;
-    border-color: var(--secondary-color);
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.filters-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.filters-grid select {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--white);
+    padding: 0.7rem 0.8rem;
+}
+
+.filters-modal-actions {
+    margin-top: 1.25rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
 }
 
 /* View Toggle */
@@ -434,18 +586,31 @@
         text-align: center;
     }
 
-    .section-header {
+    .offers-filter-top {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+    }
+
+    .filter-static-pill {
+        padding: 0.2rem 0;
+    }
+
+    .offers-filter-bottom {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
     }
 
-    .filters {
-        width: 100%;
+    .all-filters-btn,
+    .refresh-search-btn {
+        justify-content: center;
     }
 
-    .filters input {
-        min-width: 0;
-        width: 100%;
+    .filters-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .filters-modal {
+        padding: 1.1rem;
     }
 
     .offer-list-item {

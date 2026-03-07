@@ -18,7 +18,7 @@ export function Pagination({
                            }: PaginationProps) {
     const navigate = useNavigate();
     const location = useLocation();
-    const searchParams = useSearchParams()
+    const [searchParams] = useSearchParams()
     const [isPending, startTransition] = useTransition()
 
     const navigateToPage = (page: number, replace = false) => {

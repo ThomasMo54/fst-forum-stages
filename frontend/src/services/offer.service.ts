@@ -39,6 +39,14 @@ export interface PaginatedOffers {
   }
 }
 
+export interface OfferFilters {
+  keyword?: string;
+  city?: string;
+  studyLevel?: string;
+  remoteWorkPolicy?: string;
+  duration?: string;
+}
+
 export interface ApplyOfferDto {
   fullName: string;
   email: string;
@@ -53,8 +61,16 @@ const createOffer = async (offerData: CreateOfferDto): Promise<void> => {
   await api.post('/offers', offerData);
 };
 
-const getAllOffers = async (page:number = 0): Promise<PaginatedOffers> => {
-  const response = await api.get('/offers?page=' + page);
+const getAllOffers = async (page: number = 0, filters?: OfferFilters): Promise<PaginatedOffers> => {
+  const params: Record<string, string | number> = { page };
+
+  if (filters?.keyword?.trim()) params.keyword = filters.keyword.trim();
+  if (filters?.city?.trim()) params.city = filters.city.trim();
+  if (filters?.studyLevel?.trim()) params.studyLevel = filters.studyLevel.trim();
+  if (filters?.remoteWorkPolicy?.trim()) params.remoteWorkPolicy = filters.remoteWorkPolicy.trim();
+  if (filters?.duration?.trim()) params.duration = filters.duration.trim();
+
+  const response = await api.get('/offers', { params });
   return response.data;
 };
 

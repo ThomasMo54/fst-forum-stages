@@ -14,8 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/offers")
 @Tag(name = "Offres de stage", description = "Endpoints pour la gestion des offres de stage")
@@ -55,8 +53,18 @@ public class OfferController {
             @ApiResponse(responseCode = "200", description = "Offres de stage récupérées avec succès")
     })
     @GetMapping
-    public Page<OfferDto> findAllOffers(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "12") int size) {
-        Page<OfferEntity> offers = offerService.getAllOffers(page, size);
+    public Page<OfferDto> findAllOffers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String studyLevel,
+            @RequestParam(required = false) String remoteWorkPolicy,
+            @RequestParam(required = false) String duration
+    ) {
+        Page<OfferEntity> offers = offerService.getAllOffers(
+                page, size, keyword, city, studyLevel, remoteWorkPolicy, duration
+        );
         return offers.map(OfferDto::fromEntity);
     }
 
@@ -94,7 +102,6 @@ public class OfferController {
     @PutMapping("/{offerId}/change-status")
     public OfferDto changeOfferStatus(@PathVariable String offerId) {
         var offerEntity = offerService.changeOfferStatus(offerId);
-        var offerDto = OfferDto.fromEntity(offerEntity);
         return OfferDto.fromEntity(offerEntity);
     }
 }
