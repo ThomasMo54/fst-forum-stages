@@ -219,7 +219,7 @@ const ApplyOfferPage: React.FC = () => {
         });
         uploadLink = await ApplicationService.uploadCoverLetter(result.id);
       }else {
-        uploadLink = await ApplicationService.uploadCoverLetter(applicationId!);
+        uploadLink = await ApplicationService.updateCoverLetter(applicationId!);
       }
       
 

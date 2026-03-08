@@ -121,6 +121,27 @@ public class NotificationService {
     }
 
     @Transactional
+    public void notifyApplicationModified(ApplicationEntity application) {
+        // Récupérer le UserEntity depuis le CompanyEntity
+        UserEntity companyUser = userRepository.findByCompanyId(application.getOffer().getCompany().getId())
+                .orElseThrow(() -> new NoSuchElementException("User not found for company"));
+
+        String studentName = application.getStudent().getFirstName() + " " + application.getStudent().getLastName();
+        String offerTitle = application.getOffer().getTitle();
+
+        NotificationEntity notification = new NotificationEntity();
+        notification.setUser(companyUser);
+        notification.setType(NotificationType.APPLICATION_MODIFIED);
+        notification.setTitle("Candidature modifiée");
+        notification.setMessage(String.format("%s a modifié sa candidature pour votre offre \"%s\".", studentName, offerTitle));
+        notification.setApplication(application);
+        notification.setOffer(application.getOffer());
+
+        notificationRepository.save(notification);
+        log.info("Notification created: Application modified for company {}", companyUser.getEmail());
+    }
+
+    @Transactional
     public void notifyApplicationAccepted(ApplicationEntity application) {
         // Récupérer le UserEntity depuis le StudentEntity
         UserEntity studentUser = userRepository.findByStudentId(application.getStudent().getId())
