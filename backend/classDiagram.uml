@@ -1,0 +1,270 @@
+@startuml
+
+class BackendApplication {
+  +{static} main(args: String[]): void
+}
+
+package application {
+    package dto {
+        record ApplicationDto
+
+        record CreateApplicationDto
+    }
+
+    class ApplicationController 
+
+    interface ApplicationRepository
+
+    class ApplicationService
+
+    class ApplicationEntity
+
+}
+
+package auth {
+    package dto {
+        record AuthResponseDto
+
+        record LoginDto
+
+        record RefreshDto
+    }
+
+    package exception {
+        class ExpiredRefreshTokenException
+    }
+
+    class AuthController 
+
+    interface RefreshTokenRepository
+
+    class RefreshTokenEntity 
+
+    class RefreshTokenService
+
+    class JwtService
+}
+
+package company {
+    package annotation {
+        interface isAdminOrCompanyOwner
+    }
+
+    package dto {
+        record CompanyDto
+
+        record CreateCompanyDto
+
+        record UpdateCompanyDto
+    }
+
+    class CompanyEntity 
+
+    class CompanySecurity 
+
+    interface CompanyRepository 
+
+    class CompanyController 
+
+    class CompanyService 
+
+}
+
+package config {
+    class GlobalExceptionHandler 
+
+    class MinioConfig
+    class SecurityConfig 
+    class MongoConfig 
+    class OpenApiConfig 
+}
+
+package email {
+    class EmailService
+}
+
+package error.dto {
+    record ErrorResponseDto
+}
+
+package notification {
+    package dto {
+        record MarkAsReadDto
+        record NotificationDto
+    }
+    class NotificationEntity
+
+    class NotificationService
+
+    class NotificationController 
+
+    interface NotificationRepository
+
+    enum NotificationType
+}
+
+package offer {
+    package annotation {
+        interface IsAdminOrOfferOwner
+    }
+
+    package dto {
+        record CreateOfferDto
+        record OfferDto
+    }
+
+    class OfferController 
+
+    class OfferService 
+
+    class OfferEntity 
+
+    interface OfferRepository 
+
+    class OfferSecurity 
+
+}
+
+package stats {
+    package dto {
+        record GlobalApplicationStatsDto
+
+        record GlobalOfferStatsDto
+
+        record GlobalUserStatsDto
+
+        record TemporalApplicationStatsDto
+
+        record TemporalOfferStatsDto
+
+        record TemporalUserStatsDto
+    }
+
+    class StatsController
+
+    enum StatsPeriod
+}
+
+package storage {
+    class FileStorageService
+}
+
+package student {
+    package annotation {
+        interface IsAdminOrStudentOwner
+    }
+
+    package dto {
+        record CreateStudentDto
+
+        record StudentDto
+
+        record UpdateStudentDto
+    }
+
+    class StudentSecurity
+
+    class StudentController 
+
+    class StudentService 
+
+    interface StudentRepository 
+
+    class StudentEntity 
+}
+
+package user {
+    package annotation {
+        interface IsAdminOrUserOwner
+    }
+
+    package dto {
+        record CreateAdminUserDto
+        record RefreshVerificationCodeDto
+        record UpdateUserDto
+        record UserDto
+        record VerifyRequestDto
+    }
+
+    package exception {
+        class TooManyRequestsException 
+    }
+
+    class UserSecurity
+
+    interface UserRepository 
+
+    class UserController 
+
+    class UserService
+
+    class UserEntity 
+}
+
+
+NotificationEntity *-- UserEntity
+NotificationEntity *-- ApplicationEntity
+NotificationEntity *-- OfferEntity
+NotificationService *-- NotificationRepository
+NotificationService *-- UserRepository
+NotificationService *-- ApplicationRepository
+NotificationService *-- OfferRepository
+NotificationService ..> ApplicationEntity
+NotificationService ..> UserEntity
+NotificationController *-- NotificationService
+NotificationController *-- UserService
+UserSecurity *-- UserRepository
+UserController *-- UserService
+UserController *-- EmailService
+UserService *-- UserRepository
+UserService *-- CompanyRepository
+UserService *-- StudentRepository
+UserService *-- NotificationService
+UserService ..> UserEntity
+UserEntity *-- CompanyEntity
+UserEntity *-- StudentEntity
+GlobalExceptionHandler ..> ExpiredRefreshTokenException
+GlobalExceptionHandler ..> TooManyRequestsException
+SecurityConfig *-- UserRepository
+CompanyEntity o-- OfferEntity
+CompanyEntity ..> CompanyEntity
+CompanySecurity *-- UserRepository
+CompanyController *-- CompanyService
+CompanyService *-- CompanyRepository
+CompanyService *-- OfferRepository
+CompanyService ..> CompanyEntity
+StudentSecurity *-- UserRepository
+StudentController *-- StudentService
+StudentController *-- FileStorageService
+StudentService *-- StudentRepository
+StudentService ..> StudentEntity
+StudentEntity ..> StudentEntity
+OfferController *-- OfferService
+OfferService *-- OfferRepository
+OfferService *-- CompanyRepository
+OfferService ..> OfferEntity
+OfferEntity *-- CompanyEntity
+OfferEntity ..> OfferEntity
+OfferSecurity *-- UserRepository
+OfferSecurity ..> OfferRepository
+ApplicationController *-- ApplicationService
+ApplicationController *-- FileStorageService
+ApplicationService *-- ApplicationRepository
+ApplicationService *-- OfferRepository
+ApplicationService *-- StudentRepository
+ApplicationService *-- NotificationService
+ApplicationService ..> ApplicationEntity
+ApplicationEntity *-- StudentEntity
+ApplicationEntity *-- OfferEntity
+ApplicationEntity ..> ApplicationEntity
+StatsController *-- UserRepository
+StatsController *-- OfferRepository
+StatsController *-- ApplicationRepository
+AuthController *-- JwtService
+AuthController *-- RefreshTokenService
+RefreshTokenRepository ..> UserEntity
+RefreshTokenEntity *-- UserEntity
+RefreshTokenService *-- RefreshTokenRepository
+RefreshTokenService *-- UserRepository
+RefreshTokenService ..> RefreshTokenEntity
+@enduml
