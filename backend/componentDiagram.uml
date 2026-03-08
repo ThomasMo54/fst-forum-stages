@@ -1,0 +1,56 @@
+@startuml
+skinparam componentStyle rectangle
+
+component Application
+
+component Email
+
+component Notification
+
+component Offer
+
+component Stats
+
+component Storage
+
+database MongoDB
+
+node Frontend
+
+node "Serveur mail"
+
+node MinIO
+
+package authentification {
+    component Auth
+
+    component Company
+
+    component Student
+
+    component User
+}
+
+authentification --> MongoDB
+Application --> MongoDB
+Offer --> MongoDB
+Notification --> MongoDB
+Stats --> MongoDB
+
+Student --> User
+Company --> User
+
+Frontend --> authentification
+Frontend --> Stats
+Frontend --> Offer
+Frontend --> Notification
+Frontend --> Application
+
+Application --> Storage
+Student --> Storage
+User --> Email
+
+Email --> "Serveur mail"
+Storage --> MinIO
+
+@enduml
