@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.fst.forumstages.backend.application.dto.CreateApplicationDto;
 import fr.fst.forumstages.backend.company.CompanyEntity;
+import fr.fst.forumstages.backend.notification.NotificationService;
 import fr.fst.forumstages.backend.storage.FileStorageService;
 import fr.fst.forumstages.backend.student.StudentEntity;
 import fr.fst.forumstages.backend.student.StudentService;
@@ -45,6 +46,9 @@ public class ApplicationControllerTests {
 
     @MockitoBean
     private FileStorageService fileStorageService;
+
+    @MockitoBean
+    private NotificationService notificationService;
 
     @Test
     @WithMockUser(roles = "USER")
