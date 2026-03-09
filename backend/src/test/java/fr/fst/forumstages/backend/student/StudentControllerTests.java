@@ -45,7 +45,6 @@ class StudentControllerTests {
         UpdateStudentDto request = new UpdateStudentDto(
                 "Jean",
                 "Dupont",
-                "jean.dupont@example.com",
                 "STU123456",
                 "+33612345678",
                 "Master",

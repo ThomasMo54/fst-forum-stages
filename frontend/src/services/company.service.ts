@@ -12,7 +12,6 @@ export interface CompanyDto {
 
 export interface UpdateCompanyDto {
     name: string;
-    contactEmail: string | null;
     streetAddress: string | null;
     city: string | null;
     postalCode: string | null;

@@ -17,7 +17,6 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -83,13 +82,13 @@ public class CompanyServiceTests {
         CompanyEntity mockCompany = new CompanyEntity();
         mockCompany.setId(companyId);
         mockCompany.setName("Old Name");
+        mockCompany.setContactEmail("a@b.fr");
 
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(mockCompany));
         when(companyRepository.save(any(CompanyEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         var updateDto = new UpdateCompanyDto(
                 "New Name",
-                "a@b.fr",
                 "1 Main St",
                 "Cityville",
                 "12345",
@@ -124,7 +123,6 @@ public class CompanyServiceTests {
         when(companyRepository.save(any(CompanyEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         var updateDto = new UpdateCompanyDto(
-                null,
                 null,
                 null,
                 null,

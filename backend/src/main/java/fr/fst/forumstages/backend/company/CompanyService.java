@@ -38,9 +38,7 @@ public class CompanyService {
         if (updateCompanyDto.name() != null) {
             existingCompany.setName(updateCompanyDto.name());
         }
-        if (updateCompanyDto.contactEmail() != null) {
-            existingCompany.setContactEmail(updateCompanyDto.contactEmail());
-        }
+
         if (updateCompanyDto.streetAddress() != null) {
             existingCompany.setStreetAddress(updateCompanyDto.streetAddress());
         }

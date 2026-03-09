@@ -20,7 +20,6 @@ export interface StudentDto {
 export interface UpdateStudentDto {
   firstName: string;
   lastName: string;
-  email: string;
   studentNumber: string;
   phone: string;
   educationLevel: string;

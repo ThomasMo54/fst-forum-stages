@@ -36,11 +36,6 @@ public class StudentService {
         StudentEntity student = studentRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Student not found with ID: " + id));
 
-        // Vérification de l'unicité de l'email si modifié
-        if (!student.getEmail().equals(requestDto.email())
-                && studentRepository.existsByEmail(requestDto.email())) {
-            throw new DuplicateKeyException("A student with this email already exists: " + requestDto.email());
-        }
 
         // Vérification de l'unicité du numéro étudiant si modifié
         if (!student.getStudentNumber().equals(requestDto.studentNumber())

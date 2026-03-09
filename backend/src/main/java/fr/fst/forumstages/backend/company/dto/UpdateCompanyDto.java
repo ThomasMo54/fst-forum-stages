@@ -10,10 +10,6 @@ public record UpdateCompanyDto(
     @Length(max = 100, message = "Name must be shorter or equal to 100 characters")
     String name,
 
-    @Schema(description = "L'email de contact de l'entreprise")
-    @Email(message = "Contact email must be a valid email address")
-    String contactEmail,
-
     @Schema(description = "L'adresse de l'entreprise")
     @Length(max = 200, message = "Street address must be shorter or equal to 200 characters")
     String streetAddress,

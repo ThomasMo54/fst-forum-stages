@@ -71,7 +71,6 @@ public class StudentEntity {
     public void updateFromRequestDto(UpdateStudentDto dto) {
         this.firstName = dto.firstName();
         this.lastName = dto.lastName();
-        this.email = dto.email();
         this.studentNumber = dto.studentNumber();
         this.phone = dto.phone();
         this.educationLevel = dto.educationLevel();
