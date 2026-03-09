@@ -19,6 +19,15 @@ Avant de lancer l'application backend, assurez-vous de configurer les variables 
 - `MONGODB_URI` : L'URI de connexion à la base de données MongoDB.
 - `MONGODB_DATABASE` : Le nom de la base de données MongoDB à utiliser.
 - `JWT_SECRET` : La clé secrète pour la génération des tokens JWT.
+- `EMAIL_HOST` : L'adresse du serveur SMTP pour l'envoi d'e-mails.
+- `EMAIL_PORT` : Le port du serveur SMTP.
+- `EMAIL_USERNAME` : Le nom d'utilisateur pour l'authentification SMTP.
+- `EMAIL_PASSWORD` : Le mot de passe pour l'authentification SMTP.
+- `MINIO_URL` : L'URL du serveur MinIO pour le stockage des fichiers.
+- `MINIO_ACCESS_KEY` : La clé d'accès pour MinIO.
+- `MINIO_SECRET_KEY` : La clé secrète pour MinIO.
+- `MINIO_BUCKET_RESUMES` : Le nom du bucket MinIO pour stocker les CVs.
+- `MINIO_BUCKET_COVERLETTERS` : Le nom du bucket MinIO pour stocker les lettres de motivation.
 
 #### Lancement (sans Docker)
 
