@@ -2,14 +2,18 @@ package fr.fst.forumstages.backend.user;
 
 import fr.fst.forumstages.backend.company.CompanyEntity;
 import fr.fst.forumstages.backend.company.CompanyRepository;
+import fr.fst.forumstages.backend.company.CompanyService;
 import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
 import fr.fst.forumstages.backend.notification.NotificationService;
 import fr.fst.forumstages.backend.student.StudentEntity;
 import fr.fst.forumstages.backend.student.StudentRepository;
+import fr.fst.forumstages.backend.student.StudentService;
 import fr.fst.forumstages.backend.student.dto.CreateStudentDto;
 import fr.fst.forumstages.backend.user.dto.CreateAdminUserDto;
 import fr.fst.forumstages.backend.user.dto.UpdateUserDto;
 import fr.fst.forumstages.backend.user.exception.TooManyRequestsException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -19,20 +23,20 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Arrays;
-import java.util.List;
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTests {
@@ -53,6 +57,17 @@ public class UserServiceTests {
 
     @Mock
     private NotificationService notificationService;
+
+    @Mock
+    private StudentService studentService;
+
+    @Mock
+    private CompanyService companyService;
+
+    @BeforeEach
+    void setUp() {
+        // Initialisation si nécessaire
+    }
 
     @Test
     public void createAdminUser_success() {
@@ -400,39 +415,158 @@ public class UserServiceTests {
     }
 
     @Test
-    public void deleteUser_company_success() {
-        String userId = "123";
+    @DisplayName("Should delete user with student profile successfully")
+    void testDeleteUser_WithStudent() {
+        // Arrange
+        String userId = "test-user-id";
+        StudentEntity student = new StudentEntity();
+        student.setId("student-id");
         UserEntity mockUser = new UserEntity();
         mockUser.setId(userId);
-
-        CompanyEntity mockCompany = new CompanyEntity();
-        mockCompany.setId("comp-123");
-        mockUser.setCompany(mockCompany);
+        mockUser.setStudent(student);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
 
+        // Act
         userService.deleteUser(userId);
 
+        // Assert
+        verify(notificationService, times(1)).deleteUserNotifications(userId);
+        verify(userRepository, times(1)).findById(userId);
         verify(userRepository, times(1)).delete(mockUser);
-        verify(companyRepository, times(1)).delete(mockCompany);
+        verify(studentService, times(1)).deleteStudentById("student-id");
+        verify(companyService, never()).deleteCompany(anyString());
     }
 
     @Test
-    public void deleteUser_student_success() {
-        String userId = "123";
+    @DisplayName("Should delete user with company profile successfully")
+    void testDeleteUser_WithCompany() {
+        // Arrange
+        String userId = "test-user-id";
+        CompanyEntity company = new CompanyEntity();
+        company.setId("company-id");
         UserEntity mockUser = new UserEntity();
         mockUser.setId(userId);
-
-        StudentEntity mockStudent = new StudentEntity();
-        mockStudent.setId("student-123");
-        mockUser.setStudent(mockStudent);
+        mockUser.setCompany(company);
+        mockUser.setStudent(null);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
 
+        // Act
         userService.deleteUser(userId);
 
+        // Assert
+        verify(notificationService, times(1)).deleteUserNotifications(userId);
+        verify(userRepository, times(1)).findById(userId);
         verify(userRepository, times(1)).delete(mockUser);
-        verify(studentRepository, times(1)).delete(mockStudent);
+        verify(companyService, times(1)).deleteCompany("company-id");
+        verify(studentService, never()).deleteStudentById(anyString());
+    }
+
+    @Test
+    @DisplayName("Should delete user with both student and company profiles")
+    void testDeleteUser_WithBothProfiles() {
+        // Arrange
+        String userId = "test-user-id";
+        StudentEntity student = new StudentEntity();
+        student.setId("student-id");
+        CompanyEntity company = new CompanyEntity();
+        company.setId("company-id");
+        UserEntity mockUser = new UserEntity();
+        mockUser.setId(userId);
+        mockUser.setStudent(student);
+        mockUser.setCompany(company);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+
+        // Act
+        userService.deleteUser(userId);
+
+        // Assert
+        verify(notificationService, times(1)).deleteUserNotifications(userId);
+        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).delete(mockUser);
+        verify(studentService, times(1)).deleteStudentById("student-id");
+        verify(companyService, times(1)).deleteCompany("company-id");
+    }
+
+    @Test
+    @DisplayName("Should delete user with no profiles successfully")
+    void testDeleteUser_WithoutProfiles() {
+        // Arrange
+        String userId = "test-user-id";
+        UserEntity mockUser = new UserEntity();
+        mockUser.setId(userId);
+        mockUser.setStudent(null);
+        mockUser.setCompany(null);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+
+        // Act
+        userService.deleteUser(userId);
+
+        // Assert
+        verify(notificationService, times(1)).deleteUserNotifications(userId);
+        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).delete(mockUser);
+        verify(studentService, never()).deleteStudentById(anyString());
+        verify(companyService, never()).deleteCompany(anyString());
+    }
+
+    @Test
+    @DisplayName("Should throw NoSuchElementException when user doesn't exist")
+    void testDeleteUser_UserNotFound() {
+        // Arrange
+        String userId = "test-user-id";
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        NoSuchElementException exception = assertThrows(
+                NoSuchElementException.class,
+                () -> userService.deleteUser(userId)
+        );
+        assertTrue(exception.getMessage().contains("User with id"));
+        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, never()).delete(any());
+        verify(notificationService, times(1)).deleteUserNotifications(userId);
+    }
+
+    @Test
+    @DisplayName("Should always delete notifications regardless of user existence")
+    void testDeleteUser_DeletesNotificationsBeforeDeletingUser() {
+        // Arrange
+        String userId = "test-user-id";
+        UserEntity mockUser = new UserEntity();
+        mockUser.setId(userId);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+
+        // Act
+        userService.deleteUser(userId);
+
+        // Assert
+        verify(notificationService, times(1)).deleteUserNotifications(userId);
+        verify(userRepository, times(1)).delete(mockUser);
+    }
+
+    @Test
+    @DisplayName("Should handle null student in user profile")
+    void testDeleteUser_NullStudent() {
+        // Arrange
+        String userId = "test-user-id";
+        UserEntity mockUser = new UserEntity();
+        mockUser.setId(userId);
+        mockUser.setStudent(null);
+        mockUser.setCompany(null);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+
+        // Act
+        userService.deleteUser(userId);
+
+        // Assert
+        verify(studentService, never()).deleteStudentById(anyString());
+        verify(companyService, never()).deleteCompany(anyString());
     }
 
 }

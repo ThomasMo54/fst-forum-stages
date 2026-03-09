@@ -1,5 +1,7 @@
 package fr.fst.forumstages.backend.student;
 
+import fr.fst.forumstages.backend.application.ApplicationEntity;
+import fr.fst.forumstages.backend.application.ApplicationService;
 import fr.fst.forumstages.backend.student.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,8 @@ import java.util.NoSuchElementException;
 public class StudentService {
 
     private final StudentRepository studentRepository;
+
+    private final ApplicationService applicationService;
 
     public StudentEntity getStudentById(String id) {
         return studentRepository.findById(id)
@@ -52,5 +56,18 @@ public class StudentService {
         log.info("Student updated successfully. ID: {}", updatedStudent.getId());
 
         return updatedStudent.toDto();
+    }
+
+    public void deleteStudentById(String id) {
+        if(studentRepository.existsById(id)) {
+            var applications = applicationService.getApplicationsForStudent(id);
+            for (ApplicationEntity application : applications) {
+                applicationService.deleteApplication(application.getId());
+            }
+
+            studentRepository.deleteById(id);
+        }else  {
+            throw new NoSuchElementException("Offer with id " + id + " not found");
+        }
     }
 }

@@ -1,7 +1,5 @@
 package fr.fst.forumstages.backend.application;
 
-import fr.fst.forumstages.backend.application.ApplicationEntity;
-import fr.fst.forumstages.backend.application.ApplicationRepository;
 import fr.fst.forumstages.backend.application.dto.CreateApplicationDto;
 import fr.fst.forumstages.backend.notification.NotificationService;
 import fr.fst.forumstages.backend.offer.OfferEntity;
@@ -9,6 +7,8 @@ import fr.fst.forumstages.backend.offer.OfferRepository;
 import fr.fst.forumstages.backend.student.StudentEntity;
 import fr.fst.forumstages.backend.student.StudentRepository;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -41,6 +41,18 @@ public class ApplicationServiceTests {
 
     @Mock
     private NotificationService notificationService;
+
+    private String applicationId;
+    private ApplicationEntity mockApplication;
+
+    @BeforeEach
+    void setUp() {
+        applicationId = "test-application-id";
+        mockApplication = new ApplicationEntity();
+        mockApplication.setId(applicationId);
+        mockApplication.setAccepted(false);
+        mockApplication.setRejected(false);
+    }
 
     @Test
     public void testCreateApplication_success() {
@@ -100,5 +112,85 @@ public class ApplicationServiceTests {
         List<ApplicationEntity> result = applicationService.getApplicationsForStudent(studentId);
 
         assertEquals(mockApplication, result.getFirst());
+    }
+
+    @Test
+    @DisplayName("Should delete application successfully")
+    void testDeleteApplication_Success() {
+        // Arrange
+        when(applicationRepository.findById(applicationId)).thenReturn(Optional.of(mockApplication));
+
+        // Act
+        ApplicationEntity result = applicationService.deleteApplication(applicationId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(applicationId, result.getId());
+        verify(applicationRepository, times(1)).findById(applicationId);
+        verify(applicationRepository, times(1)).delete(mockApplication);
+    }
+
+    @Test
+    @DisplayName("Should throw NoSuchElementException when application doesn't exist")
+    void testDeleteApplication_ApplicationNotFound() {
+        // Arrange
+        when(applicationRepository.findById(applicationId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        NoSuchElementException exception = assertThrows(
+                NoSuchElementException.class,
+                () -> applicationService.deleteApplication(applicationId)
+        );
+        assertTrue(exception.getMessage().contains("application with id"));
+        verify(applicationRepository, times(1)).findById(applicationId);
+        verify(applicationRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("Should delete accepted application successfully")
+    void testDeleteApplication_AcceptedApplication() {
+        // Arrange
+        mockApplication.setAccepted(true);
+        when(applicationRepository.findById(applicationId)).thenReturn(Optional.of(mockApplication));
+
+        // Act
+        ApplicationEntity result = applicationService.deleteApplication(applicationId);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isAccepted());
+        verify(applicationRepository, times(1)).delete(mockApplication);
+    }
+
+    @Test
+    @DisplayName("Should delete rejected application successfully")
+    void testDeleteApplication_RejectedApplication() {
+        // Arrange
+        mockApplication.setRejected(true);
+        when(applicationRepository.findById(applicationId)).thenReturn(Optional.of(mockApplication));
+
+        // Act
+        ApplicationEntity result = applicationService.deleteApplication(applicationId);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isRejected());
+        verify(applicationRepository, times(1)).delete(mockApplication);
+    }
+
+    @Test
+    @DisplayName("Should return the deleted application entity")
+    void testDeleteApplication_ReturnsEntity() {
+        // Arrange
+        when(applicationRepository.findById(applicationId)).thenReturn(Optional.of(mockApplication));
+
+        // Act
+        ApplicationEntity result = applicationService.deleteApplication(applicationId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(applicationId, result.getId());
+        assertFalse(result.isAccepted());
+        assertFalse(result.isRejected());
     }
 }

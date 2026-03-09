@@ -2,11 +2,13 @@ package fr.fst.forumstages.backend.user;
 
 import fr.fst.forumstages.backend.company.CompanyEntity;
 import fr.fst.forumstages.backend.company.CompanyRepository;
+import fr.fst.forumstages.backend.company.CompanyService;
 import fr.fst.forumstages.backend.company.dto.CompanyDto;
 import fr.fst.forumstages.backend.company.dto.CreateCompanyDto;
 import fr.fst.forumstages.backend.notification.NotificationService;
 import fr.fst.forumstages.backend.student.StudentEntity;
 import fr.fst.forumstages.backend.student.StudentRepository;
+import fr.fst.forumstages.backend.student.StudentService;
 import fr.fst.forumstages.backend.student.dto.CreateStudentDto;
 import fr.fst.forumstages.backend.email.EmailService;
 import fr.fst.forumstages.backend.student.dto.StudentDto;
@@ -32,6 +34,8 @@ public class UserService {
     private final CompanyRepository companyRepository;
     private final StudentRepository studentRepository;
     private final NotificationService notificationService;
+    private final StudentService studentService;
+    private final CompanyService companyService;
 
 
     private final PasswordEncoder passwordEncoder;
@@ -41,13 +45,15 @@ public class UserService {
     public UserService(
             UserRepository userRepository,
             CompanyRepository companyRepository,
-            StudentRepository studentRepository, NotificationService notificationService,
+            StudentRepository studentRepository, NotificationService notificationService, StudentService studentService, CompanyService companyService,
             PasswordEncoder passwordEncoder
     ) {
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
         this.studentRepository = studentRepository;
         this.notificationService = notificationService;
+        this.studentService = studentService;
+        this.companyService = companyService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -191,10 +197,10 @@ public class UserService {
         UserEntity existingUser = findById(id);
         userRepository.delete(existingUser);
         if (existingUser.getCompany() != null) {
-            companyRepository.delete(existingUser.getCompany());
+            companyService.deleteCompany(existingUser.getCompany().getId());
         }
         if (existingUser.getStudent() != null) {
-            studentRepository.delete(existingUser.getStudent());
+            studentService.deleteStudentById(existingUser.getStudent().getId());
         }
     }
 }
