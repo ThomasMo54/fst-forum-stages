@@ -9,6 +9,7 @@ public enum NotificationType {
 
     // Notifications entreprises
     NEW_APPLICATION_RECEIVED("Nouvelle candidature"),
+    APPLICATION_MODIFIED("Candidature modifiée"),
 
     // Notifications admin
     NEW_STUDENT_REGISTERED("Nouvel étudiant inscrit"),

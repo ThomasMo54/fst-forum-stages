@@ -60,6 +60,12 @@ const uploadCoverLetter = async (applicationId: string): Promise<string> => {
     return response.data;
 }
 
+const updateCoverLetter = async (applicationId: string): Promise<string> => {
+    const response = await api.put<string>(`/applications/${applicationId}/coverLetter/update`);
+    return response.data;
+}
+
+
 const getCoverLetterUrl = async (applicationId: string): Promise<string> => {
     const response = await api.get<string>(`/applications/${applicationId}/coverLetter`);
     return response.data;
@@ -80,6 +86,7 @@ const ApplicationService = {
     resetApplicationStatus,
     deleteApplication,
     uploadCoverLetter,
+    updateCoverLetter,
     getCoverLetterUrl,
     getCoverLetterDeleteUrl
 };

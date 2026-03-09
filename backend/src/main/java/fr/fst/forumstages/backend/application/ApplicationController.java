@@ -2,6 +2,7 @@ package fr.fst.forumstages.backend.application;
 
 import java.util.List;
 
+import fr.fst.forumstages.backend.notification.NotificationService;
 import fr.fst.forumstages.backend.offer.annotation.IsAdminOrOfferOwner;
 import fr.fst.forumstages.backend.storage.FileStorageService;
 import fr.fst.forumstages.backend.student.annotation.IsAdminOrStudentOwner;
@@ -23,10 +24,12 @@ import jakarta.validation.Valid;
 public class ApplicationController {
     private final ApplicationService applicationService;
     private final FileStorageService fileStorageService;
+    private final NotificationService notificationService;
 
-    public ApplicationController(ApplicationService applicationService, FileStorageService fileStorageService) {
+    public ApplicationController(ApplicationService applicationService, FileStorageService fileStorageService, NotificationService notificationService) {
         this.applicationService = applicationService;
         this.fileStorageService = fileStorageService;
+        this.notificationService = notificationService;
     }
 
     @Operation(summary = "Créer une nouvelle candidature", description = "Permet de créer une nouvelle candidature à une offre de stage")
@@ -152,6 +155,23 @@ public class ApplicationController {
             throw new RuntimeException(e);
         }
     }
+
+    @Operation(summary = "Récupérer l'URL de téléversement de la lettre de motivation pour une offre", description = "Permet de récupérer l'URL pré-signée pour téléverser la lettre de motivation d'un étudiant à une offre et d'envoyer une notification de modification à l'entreprise concernée.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "URL de téléversement récupérée avec succès"),
+            @ApiResponse(responseCode = "404", description = "Candidature non trouvée")
+    })
+    @PutMapping("/{id}/coverLetter/update")
+//    @IsAdminOrStudentOwner
+    public String updateCoverLetter(@PathVariable String id){
+        try {
+            this.notificationService.notifyApplicationModified(this.applicationService.getApplicationById(id));
+            return fileStorageService.getCoverLetterUploadUrl(id + "_cover_letter.pdf");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     @Operation(summary = "Récupérer l'URL de téléchargement de la lettre de motivation d'un étudiant pour une offre", description = "Permet de récupérer l'URL pré-signée pour télécharger la lettre de motivation d'un étudiant à une offre.")
     @ApiResponses(value = {
